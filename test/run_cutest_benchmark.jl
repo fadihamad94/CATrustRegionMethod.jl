@@ -1,10 +1,10 @@
-using JuMP, NLPModels, NLPModelsJuMP, LinearAlgebra, Optim, CUTEst, CSV, Test, DataFrames, SparseArrays
+using JuMP, NLPModels, NLPModelsJuMP, LinearAlgebra, Optim, CUTEst, CSV, Test, DataFrames, SparseArrays, StatsBase, Random
 include("../src/CAT.jl")
 include("../src/tru.jl")
 include("../src/arc.jl")
 
 const problems_paper_list =  ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
-
+#const problems_paper_list =  ["ALLINITU", "ARGLINA"]
 const optimization_method_CAT = "CAT"
 const optimization_method_CAT_theta_0 = "CAT_THETA_ZERO"
 const optimization_metnod_newton_trust_region = "NewtonTrustRegion"
@@ -41,6 +41,63 @@ function get_problem_list(min_nvar, max_nvar)
 	return CUTEst.select(min_var = min_nvar, max_var = max_nvar, max_con = 0, only_free_var = true)
 end
 
+
+function run_cutest_with_CAT(
+    folder_name::String,
+    default_problems::Bool,
+    max_it::Int64,
+    max_time::Float64,
+    tol_opt::Float64,
+    θ::Float64,
+    β::Float64,
+	ω::Float64,
+    γ_2::Float64,
+    r_1::Float64,
+	δ::Float64,
+    min_nvar::Int64,
+    max_nvar::Int64,
+	optimization_method::String
+    )
+    cutest_problems = problems_paper_list
+    if !default_problems
+        cutest_problems = get_problem_list(min_nvar, max_nvar)
+    end
+	trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
+	if θ == 0.0
+		optimization_method = optimization_method_CAT_theta_0
+	end
+    train_size = 0.8
+    number_of_problems = length(cutest_problems)
+    #=
+    train_cutest_problems = cutest_problems[1:Int(round(0.8 * number_of_problems)) + 1]
+    executeCUTEST_Models_benchmark(train_cutest_problems, string(folder_name, "_train"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+    test_cutest_problems = cutest_problems[Int(round(0.8 * number_of_problems)) + 1 : number_of_problems] 
+    executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+    =#
+
+    #This code is for trying some syntax and logic
+    #=
+    Random.seed!(0)
+    cutest_problem_indixes = collect(1:number_of_problems)
+    cutest_problem_indixes = shuffle(cutest_problem_indixes)
+    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, 0.8 * number_of_problems) + 1]]
+    executeCUTEST_Models_benchmark(train_cutest_problems, string(folder_name, "_train"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+    test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(0.8 * number_of_problems)) + 1 : number_of_problems]]
+    executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+    =#
+
+    Random.seed!(0)
+    cutest_problem_indixes = collect(1:number_of_problems)
+    cutest_problem_indixes = shuffle(cutest_problem_indixes)
+    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, 0.8 * number_of_problems) + 1]]
+    train_cutest_problems = cutest_problems
+    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+    #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(0.8 * number_of_problems)) + 1 : number_of_problems]]
+    #executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+end
+
+#OLD_CODE
+#=
 function run_cutest_with_CAT(
     folder_name::String,
     default_problems::Bool,
@@ -67,6 +124,7 @@ function run_cutest_with_CAT(
 	end
 	executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
 end
+=#
 
 function run_cutest_with_newton_trust_region(
     folder_name::String,
@@ -161,7 +219,8 @@ function runModelFromProblem(
 			println("------------------------MODEL SOLVED WITH STATUS: ", status)
 			directory_name = string(folder_name, "/", "$optimization_method")
 			outputResultsToCSVFile(directory_name, cutest_problem, iteration_stats)
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method)
+			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
+			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
 			# outputHowOftenNearConvexityConditionHolds(directory_name, cutest_problem, status, optimization_method, iteration_stats)
 		elseif optimization_method == optimization_metnod_newton_trust_region
 			d = Optim.TwiceDifferentiable(f, g!, h!, nlp.meta.x0)
@@ -247,16 +306,42 @@ function executeCUTEST_Models_benchmark(
 	δ::Float64=0.0,
 	trust_region_method_subproblem_solver::String=consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 	)
-
-	total_results_output_directory =  string(folder_name, "/$optimization_method")
-	total_results_output_file_name = "table_cutest_$optimization_method.csv"
-	total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
-    rm(total_results_output_file_path, force=true)
-    mkpath(total_results_output_directory);
-    open(total_results_output_file_path,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,graient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation\n");
-    end
-
+	#=
+	all_runs_results_output_file_path = string(folder_name, "/all_runs_results.csv")
+	open(all_runs_results_output_file_path,"a") do all_runs_status_csv_file
+		write(all_runs_status_csv_file, "optimization_method,beta,theta,geomean_total_iterations_count,geomean_count_factorization\n");
+    	end
+	
+	optimization_method_possible_values = ["CAT", "CAT_GALAHAD_FACTORIZATION"]
+	beta_possible_values = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4]
+	theta_possible_values = [0.01, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4]
+	possible_scenarios = [[optimization_method_, beta, theta] for optimization_method_ in optimization_method_possible_values for beta in beta_possible_values for theta in theta_possible_values]
+	=#
+	#for possible_scenario in possible_scenarios
+	#	optimization_method = possible_scenario[1]
+	#	θ = possible_scenario[3]
+	#	β = possible_scenario[2]
+		#Old Code
+		#=
+		total_results_output_directory =  string(folder_name, "/$optimization_method")
+		total_results_output_file_name = "table_cutest_$optimization_method.csv"
+		total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
+    		rm(total_results_output_file_path, force=true)
+	    	mkpath(total_results_output_directory);
+    		open(total_results_output_file_path,"a") do iteration_status_csv_file
+			write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,graient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+    		end
+		=#
+		total_results_output_directory =  string(folder_name, "/$optimization_method")
+		total_results_output_file_name = "table_cutest_$optimization_method.csv"
+		total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
+		if !isfile(total_results_output_file_path)
+			mkpath(total_results_output_directory);
+    			open(total_results_output_file_path,"a") do iteration_status_csv_file
+				write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,graient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+	    		end
+		end
+		
 	# if occursin(optimization_method_CAT, optimization_method)
 	# 	near_convexity_rate_csv_file_name = "table_near_convexity_rate_$optimization_method.csv"
 	# 	near_convexity_rate_csv_file_path = string(total_results_output_directory, "/", near_convexity_rate_csv_file_name)
@@ -264,10 +349,35 @@ function executeCUTEST_Models_benchmark(
 	# 		write(near_convexity_rate_csv_file, "problem_name,status,rate\n");
 	#     end
 	# end
+		
+		for problem in cutest_problems
+			problem_output_file_path = string(total_results_output_directory, "/", problem, ".csv")
+			if isfile(problem_output_file_path) || problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
+				@show problem
+				continue
+			else
+        			runModelFromProblem(problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+			end
+    		end
+		df = DataFrame(CSV.File(total_results_output_file_path))
+		geomean_total_iterations_count = geomean(df.total_iterations_count)
+		geomean_count_factorization = geomean(df.count_factorization)
 
-	for problem in cutest_problems
-        runModelFromProblem(problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-    end
+
+    		geomean_total_function_evaluation = geomean(df.total_function_evaluation)
+    		geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation)
+		geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation)
+
+
+		@show geomean_total_iterations_count
+		@show geomean_count_factorization
+		@show geomean_total_function_evaluation
+		@show geomean_total_gradient_evaluation
+		@show geomean_total_hessian_evaluation
+	#	open(all_runs_results_output_file_path,"a") do all_runs_status_csv_file
+	#		write(all_runs_status_csv_file, "$optimization_method,$β,$θ,$geomean_total_iterations_count,$geomean_count_factorization\n")
+    	#	end
+	#end
 end
 
 function outputResultsToCSVFile(directory_name::String, cutest_problem::String, results::DataFrame)
@@ -280,8 +390,9 @@ function outputIterationsStatusToCSVFile(
 	cutest_problem::String,
 	status::String,
 	computation_stats::Dict,
-	total_iterations_count::Int64,
-	optimization_method::String
+	total_iterations_count::Int32,
+	optimization_method::String,
+	count_factorization::Int64=0
 	)
     total_function_evaluation = Int(computation_stats["total_function_evaluation"])
     total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
@@ -291,7 +402,28 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation\n")
+		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+    end
+end
+
+function outputIterationsStatusToCSVFile(
+	directory_name::String,
+	cutest_problem::String,
+	status::String,
+	computation_stats::Dict,
+	total_iterations_count::Int64,
+	optimization_method::String,
+	count_factorization::Int64=0
+	)
+    total_function_evaluation = Int(computation_stats["total_function_evaluation"])
+    total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
+    total_hessian_evaluation  = Int(computation_stats["total_hessian_evaluation"])
+
+    function_value = computation_stats["function_value"]
+    gradient_value = computation_stats["gradient_value"]
+	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
+    open(file_name,"a") do iteration_status_csv_file
+		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
