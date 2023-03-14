@@ -16,6 +16,7 @@ struct userdata_type_tru {
 	int total_function_evaluation;
 	int total_gradient_evaluation;
 	int total_hessian_evaluation;
+	int total_inner_iterations_or_factorizations;
 	double* solution;
 };
 
@@ -24,7 +25,7 @@ int fun( int n, const double x[], double *f, const void * );
 int grad( int n, const double x[], double g[], const void * );
 int hess( int n, int ne, const double x[], double hval[], const void * );
 
-struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, bool subproblem_direct){
+struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, double stop_g_absolute, double stop_g_relative, double stop_s,  bool subproblem_direct, int max_inner_iterations_or_factorizations, double clock_time_limit){
 	// Derived types
 	void *data;
 	struct tru_control_type control;
@@ -42,6 +43,26 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 	control.stop_print=maxit;
 	control.initial_radius = initial_radius;
 	control.subproblem_direct = subproblem_direct;
+	control.clock_time_limit = clock_time_limit;
+	//printf("%f: ", control.stop_g_absolute);
+        //printf("%e: ", control.stop_g_relative);
+        //printf("%e: ", control.stop_s);
+	if(subproblem_direct){
+		int max_factorizations = max_inner_iterations_or_factorizations;
+		control.trs_control.max_factorizations = max_factorizations;
+	}else{
+		int max_iterations = max_inner_iterations_or_factorizations;
+		control.gltr_control.itmax = max_iterations;
+	}
+	if(stop_g_absolute >= 0.0){
+        	control.stop_g_absolute = stop_g_absolute;
+	}
+	if(stop_g_relative >= 0.0){
+		control.stop_g_relative = stop_g_relative;
+	}
+	if(stop_s >= 0.0){
+		control.stop_s = stop_s;
+	}
 
 	tru_import( &control, &data, &status, userdata.n, "dense",
 		userdata.n*(userdata.n+1)/2, NULL, NULL, NULL );
@@ -54,8 +75,14 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 	userdata.total_function_evaluation = inform.f_eval;
 	userdata.total_gradient_evaluation = inform.g_eval;
 	userdata.total_hessian_evaluation = inform.h_eval;
+	if(subproblem_direct){
+                userdata.total_inner_iterations_or_factorizations = inform.trs_inform.factorizations;
+        }else{
+                userdata.total_inner_iterations_or_factorizations = inform.gltr_inform.iter;
+        }
 	userdata.solution = x;
-
+	printf("%e: \n", inform.obj);
+	printf("%e: \n", inform.norm_g);
 	// Delete internal workspace
 	tru_terminate( &data, &control, &inform );
 	return userdata;
@@ -89,3 +116,4 @@ int hess( int n, int ne, const double x[], double hval[], const void *userdata )
   }
   return 0;
 }
+
