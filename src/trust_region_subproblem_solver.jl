@@ -85,15 +85,6 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	full_Path = string(@__DIR__ ,"/test")
 	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint), length(g), f, d, g, H_dense, r, print_level, max_factorizations)
 	if userdata.status != 0
-		#=try
-			#@show norm(H, 2) * norm(inv(H), 2)
-			#inv(H)
-			#@show H
-		catch e
-			@show H
-			#@show e
-			@show "H is invertible"
-		end=#
 		#throw(error("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."))
 		return optimizeSecondOrderModel(g, H, δ, ϵ, r)
 	end
@@ -101,17 +92,12 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 end
 
 function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64)
-	#@show "---------------------------------------"
-	#@show "---------------------------------------"
 	print_level = 0
-    	iter = 10000
+    iter = 10000
 	H_dense = getHessianLowerTriangularPart(H)
 	d = zeros(length(g))
 	stop_relative = 1.5e-8
 	#stop_relative = 1.5e-7
-	#=if (1e-5 * min_grad) <= 1e-6
-		@show "**************************************************************************************************+++++++++++++++++++++++++++++++++++++++"
-	end=#
 	stop_relative = min(1e-6 * min_grad, 1e-6)
 	stop_absolute = 0.0
 	#stop_relative = 1e-10 * min_grad
@@ -121,7 +107,6 @@ function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64)
 	steihaug_toint = false
 	userdata = ccall((:gltr, LIBRARY_PATH_GLTR), userdata_type_gltr, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cdouble, Cdouble, Cuchar), length(g), f, d, g, H_dense, r, print_level, iter, stop_relative, stop_absolute, steihaug_toint)
 	if userdata.status < 0
-		@show "ENTERED HERE TRYING AGAIN"			
 		steihaug_toint = true
 		stop_relative = min(0.1 * min_grad, 0.1)
 		d = zeros(length(g))
@@ -130,22 +115,6 @@ function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64)
 	if userdata.status != 0
 		throw(error("Failed to solve trust region subproblem using GLTR iterative method from GALAHAD. Status is $(userdata.status)."))
 	end
-	#=if norm(H * d + userdata.multiplier * I * d + g, 2) > 1e-1
-		@show norm(H * d + userdata.multiplier * I * d + g, 2)
-	end=#
-	#=if norm(H * d + userdata.multiplier * I * d + g, 2) - max(stop_relative * norm(g), stop_absolute) > 1e-1
-		@show norm(H * d + userdata.multiplier * I * d + g, 2)
-		@show max(stop_relative * norm(g), stop_absolute)
-		@show norm(d) - r		
-		@show userdata.iter
-	end
-	@assert(norm(H * d + userdata.multiplier * I * d + g, 2) - max(stop_relative * norm(g), stop_absolute) <= 1e-1)=#
-	#@show "---------------------------------------"
-	#@show userdata.iter
-	#@show userdata.multiplier
-	#@show norm(d, 2)
-	#@show norm(H * d + userdata.multiplier * I * d + g, 2)
-	#@show "---------------------------------------"
 	return userdata.multiplier, d, userdata.iter
 end
 
@@ -165,12 +134,12 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
     end
 
     try
-	δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r)
-	total_number_factorizations += temp_total_number_factorizations
+		δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r)
+		total_number_factorizations += temp_total_number_factorizations
         δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r)
-	total_number_factorizations += temp_total_number_factorizations
+		total_number_factorizations += temp_total_number_factorizations
         sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-	total_number_factorizations  += 1
+		total_number_factorizations  += 1
         d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
         return δ_m, d_k, total_number_factorizations
     catch e
