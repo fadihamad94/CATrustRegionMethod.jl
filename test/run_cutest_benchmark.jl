@@ -77,7 +77,7 @@ function run_cutest_with_CAT(
     Random.seed!(0)
     cutest_problem_indixes = collect(1:number_of_problems)
     cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, length(cutest_problem_indixes) / train_batch_count)
+	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
 	start_index = (train_batch_index - 1) * train_batch_size + 1
 	end_index = train_batch_index * train_batch_size
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
@@ -158,7 +158,7 @@ function run_cutest_with_arc(
 	number_of_problems = length(cutest_problems)
 	cutest_problem_indixes = collect(1:number_of_problems)
     cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, length(cutest_problem_indixes) / train_batch_count)
+	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
 	start_index = (train_batch_index - 1) * train_batch_size + 1
 	end_index = train_batch_index * train_batch_size
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
@@ -190,7 +190,7 @@ function run_cutest_with_tru(
     number_of_problems = length(cutest_problems)
     cutest_problem_indixes = collect(1:number_of_problems)
     cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, length(cutest_problem_indixes) / train_batch_count)
+	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
 	start_index = (train_batch_index - 1) * train_batch_size + 1
 	end_index = train_batch_index * train_batch_size
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
