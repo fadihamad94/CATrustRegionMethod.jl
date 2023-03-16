@@ -387,6 +387,8 @@ function executeCUTEST_Models_benchmark(
 			end
     		end
 		df = DataFrame(CSV.File(total_results_output_file_path))
+		df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
+
 		geomean_total_iterations_count = geomean(df.total_iterations_count)
 		geomean_count_factorization = geomean(df.count_factorization)
 
