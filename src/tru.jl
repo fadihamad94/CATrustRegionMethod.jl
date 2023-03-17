@@ -59,7 +59,7 @@ function eval_h(x::Ref{Cdouble})
 	return p
 end
 
-function tru(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int64, maxit::Int64, initial_radius::Float64, subproblem_direct::Bool, max_inner_iterations_or_factorizations::Int64)
+function tru(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int64, maxit::Int64, initial_radius::Float64, subproblem_direct::Bool, max_inner_iterations_or_factorizations::Int64, max_time::Float64=30*60.0)
 	eval_f_c = @cfunction(eval_f, Cdouble, (Ptr{Cdouble},));
 	eval_g_c = @cfunction(eval_g, Ptr{Cdouble}, (Ptr{Cdouble},));
 	eval_h_c = @cfunction(eval_h, Ptr{Cdouble}, (Ptr{Cdouble},));
@@ -71,7 +71,7 @@ function tru(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	userdata = userdata_type_tru(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0,p)
 	stop_g_absolute = 1e-5
 	stop_g_relative = stop_g_absolute / norm(g, 2)
-	clock_time_limit = 30 * 60.0
+	clock_time_limit = max_time
 	#stop_s = 1e-8
 	stop_s = -1.0
     userdata = ccall((:tru, LIBRARY_PATH_TRU), userdata_type_tru, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_tru, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_radius, stop_g_absolute, stop_g_relative, stop_s, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)

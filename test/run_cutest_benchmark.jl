@@ -282,8 +282,8 @@ function runModelFromProblem(
 			initial_x = nlp.meta.x0
 			print_level = 0
 			max_inner_iterations_or_factorizations = 10000
-			userdata, solution = tru(length(initial_x), initial_x, grad(nlp, initial_x), print_level, max_it, r_1, subproblem_direct, max_inner_iterations_or_factorizations)
-			status = userdata.status == 0 ? "OPTIMAL" : (userdata.status == -18 ? "ITERATION_LIMIT" : "FAILURE")
+			userdata, solution = tru(length(initial_x), initial_x, grad(nlp, initial_x), print_level, max_it, r_1, subproblem_direct, max_inner_iterations_or_factorizations, max_time)
+			status = userdata.status == 0 ? "OPTIMAL" : userdata.status == -18 ? "ITERATION_LIMIT" : userdata.status == -19 ? "MAX_TIME" : "FAILURE"
 			iter = userdata.iter
 			total_iterations_count = iter
 			total_function_evaluation = userdata.total_function_evaluation
