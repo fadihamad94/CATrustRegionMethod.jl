@@ -375,7 +375,7 @@ function computeNormalGeomeans(df::DataFrame)
 	computeShiftedGeomeans(df, 0)
 end
 
-function computeShiftedGeomeans(df::DataFrame, shift::Integer64)
+function computeShiftedGeomeans(df::DataFrame, shift::Int64)
 	geomean_total_iterations_count = geomean(df.total_iterations_count .+ shift) - shift
 	geomean_count_factorization = geomean(df.count_factorization .+ shift) - shift
 	geomean_total_function_evaluation = geomean(df.total_function_evaluation .+ shift) - shift
@@ -389,7 +389,7 @@ function computeShiftedGeomeans(df::DataFrame, shift::Integer64)
 	@show geomean_total_hessian_evaluation
 end
 
-function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Integer64, ϵ::Float64, time_limit::Float64, max_it::Float64)
+function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Float64)
 	total_iterations_count_vec = Vector{Float64}()
 	total_factorization_count_vec = Vector{Float64}()
 	total_function_evaluation_vec = Vector{Float64}()
