@@ -247,8 +247,8 @@ function runModelFromProblem(
 			total_gradient_evaluation = Optim.g_calls(results)
 			total_hessian_evaluation = Optim.h_calls(results)
 			function_value = obj(nlp, x)
-			graient_value = norm(grad(nlp, x), 2)
-			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => graient_value)
+			gradient_value = norm(grad(nlp, x), 2)
+			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
 			status = results.g_converged ? "OPTIMAL" : (Optim.iteration_limit_reached(results) ? "ITERATION_LIMIT" : "FAILURE")
 			if status == "ITERATION_LIMIT"
 				total_iterations_count = max_it + 1
@@ -267,13 +267,13 @@ function runModelFromProblem(
 			total_gradient_evaluation = userdata.total_gradient_evaluation
 			total_hessian_evaluation = userdata.total_hessian_evaluation
 			function_value = obj(nlp, solution)
-			graient_value = norm(grad(nlp, solution), 2)
-			if status != 0 || graient_value > tol_opt
+			gradient_value = norm(grad(nlp, solution), 2)
+			if status != 0 || gradient_value > tol_opt
 				iter = max_it + 1
 				total_function_evaluation = max_it + 1
 				total_gradient_evaluation = max_it + 1
 			end
-			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => graient_value)
+			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
 			println("------------------------MODEL SOLVED WITH STATUS: ", status)
 			directory_name = string(folder_name, "/", "$optimization_method")
 			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method)
@@ -343,7 +343,7 @@ function executeCUTEST_Models_benchmark(
 	if !isfile(total_results_output_file_path)
 		mkpath(total_results_output_directory);
 			open(total_results_output_file_path,"a") do iteration_status_csv_file
-			write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,graient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+			write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
     		end
 	end
 
@@ -368,7 +368,7 @@ function executeCUTEST_Models_benchmark(
 
 	@show "Computing Shifted & Corrected Geomeans with ϕ = θ^{3/2} shift = 10"
 	ϕ(θ) = θ ^ (3/ 2)
-	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, max_time, max_it)
+	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, max_time / 3600, max_it)
 end
 
 function computeNormalGeomeans(df::DataFrame)
@@ -389,7 +389,7 @@ function computeShiftedGeomeans(df::DataFrame, shift::Int64)
 	@show geomean_total_hessian_evaluation
 end
 
-function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Float64)
+function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
 	total_iterations_count_vec = Vector{Float64}()
 	total_factorization_count_vec = Vector{Float64}()
 	total_function_evaluation_vec = Vector{Float64}()

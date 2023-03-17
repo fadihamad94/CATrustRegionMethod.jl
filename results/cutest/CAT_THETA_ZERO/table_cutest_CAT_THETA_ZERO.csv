@@ -1,4 +1,4 @@
-problem_name,status,total_iterations_count,function_value,graient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation
+problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation
 ALLINITU,SUCCESS,10,5.74438491,2.28E-06,11,11,8
 ARGLINA,SUCCESS,3,200,1.06E-12,4,4,3
 BARD,SUCCESS,10,0.008214877,2.16E-09,11,11,10
