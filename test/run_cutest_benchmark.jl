@@ -368,7 +368,7 @@ function executeCUTEST_Models_benchmark(
 
 	@show "Computing Shifted & Corrected Geomeans with ϕ = θ^{3/2} shift = 10"
 	ϕ(θ) = θ ^ (3/ 2)
-	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, time_limit, max_it)
+	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, max_time, max_it)
 end
 
 function computeNormalGeomeans(df::DataFrame)
