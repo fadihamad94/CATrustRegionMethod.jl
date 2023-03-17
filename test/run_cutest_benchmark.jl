@@ -359,17 +359,75 @@ function executeCUTEST_Models_benchmark(
 	df = DataFrame(CSV.File(total_results_output_file_path))
 	df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
 
-	geomean_total_iterations_count = geomean(df.total_iterations_count)
-	geomean_count_factorization = geomean(df.count_factorization)
-	geomean_total_function_evaluation = geomean(df.total_function_evaluation)
-	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation)
-	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation)
+	@show "Computing Normal Geometric Means"
+	computeNormalGeomeans(df)
+
+	shift = 10
+	@show "Computing Shifted Geometric Means with Shift = 10"
+	computeShiftedGeomeans(df, shift)
+
+	@show "Computing Shifted & Corrected Geomeans with ϕ = θ^{3/2} shift = 10"
+	ϕ(θ) = θ ^ (3/ 2)
+	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, time_limit, max_it)
+end
+
+function computeNormalGeomeans(df::DataFrame)
+	computeShiftedGeomeans(df, 0)
+end
+
+function computeShiftedGeomeans(df::DataFrame, shift::Integer64)
+	geomean_total_iterations_count = geomean(df.total_iterations_count +. shift) - shift
+	geomean_count_factorization = geomean(df.count_factorization +. shift) - shift
+	geomean_total_function_evaluation = geomean(df.total_function_evaluation +. shift) - shift
+	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation +. shift) - shift
+	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation +. shift) - shift
 
 	@show geomean_total_iterations_count
 	@show geomean_count_factorization
 	@show geomean_total_function_evaluation
 	@show geomean_total_gradient_evaluation
 	@show geomean_total_hessian_evaluation
+end
+
+function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Integer64, ϵ::Float64, time_limit::Float64, max_it::Float64)
+	total_iterations_count_vec = Vector{Float64}()
+	total_factorization_count_vec = Vector{Float64}()
+	total_function_evaluation_vec = Vector{Float64}()
+	total_gradient_evaluation_vec = Vector{Float64}()
+	total_hessian_evaluation_vec = Vector{Float64}()
+	non_success_statuses = ["FAILURE", "ITERARION_LIMIT"]
+	for i in 1:size(df)[1]
+		if df[i, :].status == "SUCCESS"
+			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
+			push!(total_factorization_count_vec, df[i, :].count_factorization)
+			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
+			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
+			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
+		elseif df[i, :].status ∈ non_success_statuses
+			push!(total_iterations_count_vec, max_it)
+			push!(total_factorization_count_vec, max_it)
+			push!(total_function_evaluation_vec, max_it)
+			push!(total_gradient_evaluation_vec, max_it)
+			push!(total_hessian_evaluation_vec, max_it)
+		else
+			temp_ = ϕ(df[i, :].gradient_value / ϵ) * time_limit
+			push!(total_iterations_count_vec, temp_)
+			push!(total_factorization_count_vec, temp_)
+			push!(total_function_evaluation_vec, temp_)
+			push!(total_gradient_evaluation_vec, temp_)
+			push!(total_hessian_evaluation_vec, temp_)
+		end
+	end
+
+	df_results_new = DataFrame()
+	df_results_new.problem_name = df.problem_name
+	df_results_new.total_iterations_count = total_iterations_count_vec
+	df_results_new.count_factorization = total_factorization_count_vec
+	df_results_new.total_function_evaluation = total_function_evaluation_vec
+	df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
+	df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
+
+	computeShiftedGeomeans(df_results_new, shift)
 end
 
 function outputResultsToCSVFile(directory_name::String, cutest_problem::String, results::DataFrame)
