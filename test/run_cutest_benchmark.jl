@@ -376,11 +376,11 @@ function computeNormalGeomeans(df::DataFrame)
 end
 
 function computeShiftedGeomeans(df::DataFrame, shift::Integer64)
-	geomean_total_iterations_count = geomean(df.total_iterations_count +. shift) - shift
-	geomean_count_factorization = geomean(df.count_factorization +. shift) - shift
-	geomean_total_function_evaluation = geomean(df.total_function_evaluation +. shift) - shift
-	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation +. shift) - shift
-	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation +. shift) - shift
+	geomean_total_iterations_count = geomean(df.total_iterations_count .+ shift) - shift
+	geomean_count_factorization = geomean(df.count_factorization .+ shift) - shift
+	geomean_total_function_evaluation = geomean(df.total_function_evaluation .+ shift) - shift
+	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation .+ shift) - shift
+	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation .+ shift) - shift
 
 	@show geomean_total_iterations_count
 	@show geomean_count_factorization
