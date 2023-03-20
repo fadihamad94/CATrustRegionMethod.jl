@@ -124,7 +124,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
 
             if time() - start_time > MAX_TIME
-                computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+                # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				computation_stats = Dict("total_function_evaluation" => (MAX_ITERATION + 1), "total_gradient_evaluation" => (MAX_ITERATION + 1), "total_hessian_evaluation" => (MAX_ITERATION + 1), "total_number_factorizations" => (MAX_ITERATION + 1))
                 return x_k, "MAX_TIME", iteration_stats, computation_stats, k
             end
 
@@ -132,7 +133,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         end
     catch e
         @warn e
-        computation_stats = Dict("total_function_evaluation" => (MAX_ITERATION + 1), "total_gradient_evaluation" => (MAX_ITERATION + 1), "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => (MAX_ITERATION + 1))
+        computation_stats = Dict("total_function_evaluation" => (MAX_ITERATION + 1), "total_gradient_evaluation" => (MAX_ITERATION + 1), "total_hessian_evaluation" => (MAX_ITERATION + 1), "total_number_factorizations" => (MAX_ITERATION + 1))
         return x_k, "FAILURE", iteration_stats, computation_stats, (MAX_ITERATION + 1)
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
