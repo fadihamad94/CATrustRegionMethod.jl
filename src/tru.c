@@ -25,7 +25,7 @@ int fun( int n, const double x[], double *f, const void * );
 int grad( int n, const double x[], double g[], const void * );
 int hess( int n, int ne, const double x[], double hval[], const void * );
 
-struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, double stop_g_absolute, double stop_g_relative, double stop_s,  bool subproblem_direct, int max_inner_iterations_or_factorizations, double clock_time_limit){
+struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, double stop_g_absolute, double stop_g_relative, double stop_s,  bool subproblem_direct, int max_inner_iterations_or_factorizations, double clock_time_limit, int non_monotone){
 	// Derived types
 	void *data;
 	struct tru_control_type control;
@@ -44,6 +44,7 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 	control.initial_radius = initial_radius;
 	control.subproblem_direct = subproblem_direct;
 	control.clock_time_limit = clock_time_limit;
+	control.non_monotone = non_monotone;
 	//printf("%f: ", control.stop_g_absolute);
         //printf("%e: ", control.stop_g_relative);
         //printf("%e: ", control.stop_s);

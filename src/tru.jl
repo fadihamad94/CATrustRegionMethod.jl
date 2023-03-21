@@ -74,7 +74,8 @@ function tru(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	clock_time_limit = max_time
 	#stop_s = 1e-8
 	stop_s = -1.0
-    userdata = ccall((:tru, LIBRARY_PATH_TRU), userdata_type_tru, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_tru, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_radius, stop_g_absolute, stop_g_relative, stop_s, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
+	non_monotone = 25
+    userdata = ccall((:tru, LIBRARY_PATH_TRU), userdata_type_tru, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_tru, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble, Cint), x, g, userdata, print_level, maxit, initial_radius, stop_g_absolute, stop_g_relative, stop_s, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit, non_monotone)
 	solution = Vector{Float64}()
 	for i in 1:length(nlp.meta.x0)
 		push!(solution, unsafe_load(userdata.solution, i))

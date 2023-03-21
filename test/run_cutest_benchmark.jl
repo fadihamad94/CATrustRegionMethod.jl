@@ -77,9 +77,9 @@ function run_cutest_with_CAT(
     Random.seed!(0)
     cutest_problem_indixes = collect(1:number_of_problems)
     cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
-	start_index = (train_batch_index - 1) * train_batch_size + 1
-	end_index = train_batch_index * train_batch_size
+    train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
+    start_index = (train_batch_index - 1) * train_batch_size + 1
+    end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
     #train_cutest_problems = cutest_problems
     executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
@@ -259,13 +259,15 @@ function runModelFromProblem(
 		elseif optimization_method == optimization_method_arc_galahad
 			initial_weight = r_1
 			print_level = 0
-			userdata, solution = arc(length(nlp.meta.x0), nlp.meta.x0, grad(nlp, nlp.meta.x0), print_level, max_it, initial_weight)
-			status = userdata.status == 0 ? "OPTIMAL" : (userdata.status == -18 ? "ITERATION_LIMIT" : "FAILURE")
+			max_inner_iterations_or_factorizations = 10000
+			userdata, solution = arc(length(nlp.meta.x0), nlp.meta.x0, grad(nlp, nlp.meta.x0), print_level, max_it, initial_weight, max_inner_iterations_or_factorizations, max_time)
+			status = userdata.status == 0 ? "OPTIMAL" : userdata.status == -18 ? "ITERATION_LIMIT" : userdata.status == -19 ? "MAX_TIME" : "FAILURE"
 			iter = userdata.iter
 			total_iterations_count = iter
 			total_function_evaluation = userdata.total_function_evaluation
 			total_gradient_evaluation = userdata.total_gradient_evaluation
 			total_hessian_evaluation = userdata.total_hessian_evaluation
+			total_inner_iterations_or_factorizations = userdata.total_inner_iterations_or_factorizations
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
 			if userdata.status != 0 || gradient_value > tol_opt
@@ -278,7 +280,7 @@ function runModelFromProblem(
 			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
 			println("------------------------MODEL SOLVED WITH STATUS: ", status)
 			directory_name = string(folder_name, "/", "$optimization_method")
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method)
+			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		elseif optimization_method == optimization_method_tru_galahd_factorization || optimization_method == optimization_method_tru_galahd_iterative
 			subproblem_direct = optimization_method == optimization_method_tru_galahd_factorization ? true : false
 			initial_x = nlp.meta.x0
@@ -380,12 +382,12 @@ function executeCUTEST_Models_benchmark(
 end
 
 function computeNormalGeomeans(df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
-	ϕ(θ) = max_it\time_limit
+	ϕ(θ) = max_it/time_limit
 	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
 end
 
 function computeShiftedGeomeans(df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
-	ϕ(θ) = max_it\time_limit
+	ϕ(θ) = max_it/time_limit
 	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
 end
 
