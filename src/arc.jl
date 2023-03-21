@@ -13,6 +13,7 @@ struct userdata_type_arc
 	total_function_evaluation::Cint
 	total_gradient_evaluation::Cint
 	total_hessian_evaluation::Cint
+	total_inner_iterations_or_factorizations::Cint
 	solution::Ptr{Cdouble}
 end
 
@@ -58,7 +59,7 @@ function eval_h(x::Ref{Cdouble})
 	return p
 end
 
-function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int64, maxit::Int64, initial_weight::Float64)
+function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int64, maxit::Int64, initial_weight::Float64, max_inner_iterations_or_factorizations::Int64, clock_time_limit::Float64)
 	eval_f_c = @cfunction(eval_f, Cdouble, (Ptr{Cdouble},));
 	eval_g_c = @cfunction(eval_g, Ptr{Cdouble}, (Ptr{Cdouble},));
 	eval_h_c = @cfunction(eval_h, Ptr{Cdouble}, (Ptr{Cdouble},));
@@ -77,8 +78,8 @@ function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	stop_g_relative = stop_g_absolute / norm(g, 2)
 	@show stop_g_relative
 	stop_s = 1e-12
-	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, p)
-    userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct)
+	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p)
+    userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
 	solution = Vector{Float64}()
 	for i in 1:n
 		push!(solution, unsafe_load(userdata.solution, i))
