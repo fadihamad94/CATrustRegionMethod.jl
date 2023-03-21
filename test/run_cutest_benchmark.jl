@@ -268,7 +268,7 @@ function runModelFromProblem(
 			total_hessian_evaluation = userdata.total_hessian_evaluation
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
-			if status != 0 || gradient_value > tol_opt
+			if userdata.status != 0 || gradient_value > tol_opt
 				iter = max_it + 1
 				total_iterations_count = iter
 				total_function_evaluation = max_it + 1
@@ -316,6 +316,11 @@ function runModelFromProblem(
 			directory_name = string(folder_name, "/", "$optimization_method")
 			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		end
+	catch e
+		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
+		println("------------------------MODEL SOLVED WITH STATUS: ", status)
+		directory_name = string(folder_name, "/", "$optimization_method")
+		outputIterationsStatusToCSVFile(directory_name, cutest_problem, "INCOMPLETE", computation_stats, total_iterations_count, optimization_method, max_it + 1)
     finally
         if nlp != nothing
             finalize(nlp)
