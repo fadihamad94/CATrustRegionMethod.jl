@@ -323,7 +323,7 @@ function runModelFromProblem(
 		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
 		println("------------------------MODEL SOLVED WITH STATUS: ", status)
 		directory_name = string(folder_name, "/", "$optimization_method")
-		outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, max_it + 1)
+		outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, max_it + 1, optimization_method, max_it + 1)
         finally
             if nlp != nothing
                 finalize(nlp)
