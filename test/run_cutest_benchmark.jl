@@ -46,6 +46,78 @@ function get_problem_list(min_nvar, max_nvar)
 	return CUTEst.select(min_var = min_nvar, max_var = max_nvar, max_con = 0, only_free_var = true)
 end
 
+function get_problem_list_size(cutest_problems::Vector{String})
+	problems_list_size = Vector{Int64}()
+	problems_list_name = cutest_problems
+	for problem in cutest_problems
+        	nlp = nothing
+                try
+                	nlp = CUTEstModel(problem)
+                	push!(problems_list_size, nlp.meta.nvar)
+                catch e
+			deleteat!(problems_list_name, findall(name->name==problem,problems_list_name))
+		finally
+                	finalize(nlp)
+                end
+	end
+	return problems_list_name, problems_list_size
+end
+
+function get_problems_test_train_split(cutest_problems::Vector{String}, train_test_split::Float64)
+    @assert 0 < train_test_split < 1
+    number_of_problems = length(cutest_problems)
+    Random.seed!(0)
+    cutest_problem_indixes = collect(1:number_of_problems)
+    cutest_problem_indixes = shuffle(cutest_problem_indixes)
+    train_indixes = cutest_problem_indixes[1:floor(Int, train_test_split * length(cutest_problem_indixes))]
+    test_indixes = cutest_problem_indixes[floor(Int, train_test_split * length(cutest_problem_indixes)) + 1:length(cutest_problem_indixes)]
+    cutest_problems_train = cutest_problems[train_indixes]
+    cutest_problems_test = cutest_problems[test_indixes]
+    cutest_problems_train_sorted_alphabatically = sort(cutest_problems_train)
+    cutest_problems_test_sorted_alphabatically = sort(cutest_problems_test)
+    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size = get_problem_list_size(cutest_problems_train_sorted_alphabatically)
+    cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problem_list_size(cutest_problems_test_sorted_alphabatically)
+    return cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size
+end
+
+function get_problem_train_batch_default(train_batch_count::Int64, train_batch_index::Int64, cutest_problems_name_list::Vector{String}, cutest_problems_size_list::Vector{Int64})
+    @assert train_batch_count > 0
+    @assert 1 <= train_batch_index <= train_batch_count
+    number_of_problems = length(cutest_problems)
+    Random.seed!(0)
+    cutest_problem_indixes = collect(1:number_of_problems)
+    cutest_problem_indixes = shuffle(cutest_problem_indixes)
+    train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
+    start_index = (train_batch_index - 1) * train_batch_size + 1
+    end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
+    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
+    return train_cutest_problems
+end
+
+function get_problems_list_batch(train_batch_count::Int64, train_batch_index::Int64, cutest_problems_name_list::Vector{String}, cutest_problems_size_list::Vector{Int64})
+    @assert train_batch_count > 0
+    @assert 1 <= train_batch_index <= train_batch_count
+    total_problem_size_sum = sum(cutest_problems_size_list)
+    start_index = -1
+    end_index = -1
+    expected_total_size_of_problems_per_batch = floor(Int, total_problem_size_sum / train_batch_count)
+    expected_cumulative_total_size_of_problems = expected_total_size_of_problems_per_batch * (train_batch_index - 1)
+    cumulative_total_size_of_problems = 0
+    for i in 1:length(cutest_problems_size_list)
+        if cumulative_total_size_of_problems >= (expected_cumulative_total_size_of_problems + expected_total_size_of_problems_per_batch) 
+	    end_index = i - 1
+	    break
+	elseif start_index < 0 && cumulative_total_size_of_problems >= expected_cumulative_total_size_of_problems
+	    start_index = i
+        else
+	    #do nothing here we still didn't reach the batch of the problems to start including the problems for this batch
+	end
+	cumulative_total_size_of_problems += cutest_problems_size_list[i]
+    end
+    end_index = end_index == -1 ? length(cutest_problems_size_list) : end_index
+    start_index = start_index == -1 ? end_index - 1 : start_index
+    return cutest_problems_name_list[start_index:end_index]
+end
 
 function run_cutest_with_CAT(
     folder_name::String,
@@ -61,9 +133,9 @@ function run_cutest_with_CAT(
 	δ::Float64,
     min_nvar::Int64,
     max_nvar::Int64,
-	train_batch_count::Int64,
-	train_batch_index::Int64,
-	optimization_method::String
+    train_batch_count::Int64,
+    train_batch_index::Int64,
+    optimization_method::String
     )
     cutest_problems = problems_paper_list
     if !default_problems
@@ -73,7 +145,7 @@ function run_cutest_with_CAT(
 	if θ == 0.0
 		optimization_method = optimization_method_CAT_theta_0
 	end
-    number_of_problems = length(cutest_problems)
+    #=number_of_problems = length(cutest_problems)
     Random.seed!(0)
     cutest_problem_indixes = collect(1:number_of_problems)
     cutest_problem_indixes = shuffle(cutest_problem_indixes)
@@ -81,7 +153,11 @@ function run_cutest_with_CAT(
     start_index = (train_batch_index - 1) * train_batch_size + 1
     end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
+    =#
     #train_cutest_problems = cutest_problems
+    train_test_split = 0.8
+    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
+    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
     executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
     #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
     #executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
@@ -319,6 +395,7 @@ function runModelFromProblem(
 			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		end
 	catch e
+		@show e
 		status = "INCOMPLETE"
 		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
 		println("------------------------MODEL SOLVED WITH STATUS: ", status)
@@ -577,4 +654,5 @@ end
 # 	open(near_convexity_rate_csv_file_path,"a") do near_convexity_rate_csv_file
 # 		write(near_convexity_rate_csv_file, "$cutest_problem,$status,$rate\n")
 #     end
+
 # end
