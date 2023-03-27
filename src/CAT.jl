@@ -120,6 +120,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             else
 				#This logic is based on "Combining Trust Region and Line Search Techniques*" by Jorge Nocedal and Ya-xiang Yuan.
 				α_k = max(0.1, 0.5 / (1 + (fval_current - fval_next) / dot(transpose(d_k), gval_current)))
+				α_k = isnan(α_k) ? 0.1 : α_k
 				success, fval_next_temp, d_k_i, i = linesearch(nlp, α_k, fval_current, x_k, d_k)
 				total_function_evaluation += i
 				if success
