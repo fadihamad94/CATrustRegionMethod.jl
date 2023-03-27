@@ -47,10 +47,10 @@ function compute_ρ(fval_current::Float64, fval_next::Float64, gval_current::Vec
 end
 
 #This logic is based on "Combining Trust Region and Line Search Techniques*" by Jorge Nocedal and Ya-xiang Yuan.
-function linesearch(nlp, α_k::Float64, fval_current::Float64, d_k::Vector{Float64})
+function linesearch(nlp, α_k::Float64, fval_current::Float64, x_k::Vector{Float64}, d_k::Vector{Float64})
 	fval_next = -1.0
 	for i in 1:100
-		d_k_i = d_k + α_k ^ i
+		d_k_i = α_k ^ i * d_k
 		fval_next = obj(nlp, x_k + d_k_i)
 		if fval_next <= fval_current
 			return true, fval_next, d_k_i, i
@@ -118,12 +118,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				min_gval_norm = min(min_gval_norm, norm(gval_current, 2))
                 compute_hessian = true
             else
-				@show "here"
 				#This logic is based on "Combining Trust Region and Line Search Techniques*" by Jorge Nocedal and Ya-xiang Yuan.
-				α_k = max(0.1, 0.5 / (1 + (fval_current - fval_next) / dot(d_k, gval_current)))
-				success, fval_next_temp, d_k_i, i = linesearch(nlp, α_k, fval_current, d_k)
+				α_k = max(0.1, 0.5 / (1 + (fval_current - fval_next) / dot(transpose(d_k), gval_current)))
+				success, fval_next_temp, d_k_i, i = linesearch(nlp, α_k, fval_current, x_k, d_k)
 				total_function_evaluation += i
-				@show success
 				if success
 					x_k = x_k + d_k_i
 	                fval_current = fval_next_temp
