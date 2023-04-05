@@ -1,4 +1,4 @@
-using JuMP, NLPModels, NLPModelsJuMP, LinearAlgebra, Optim, CUTEst, CSV, Test, DataFrames, SparseArrays, StatsBase, Random
+using JuMP, NLPModels, NLPModelsJuMP, LinearAlgebra, Optim, CUTEst, CSV, Test, DataFrames, SparseArrays, StatsBase, Random, Dates
 include("../src/CAT.jl")
 include("../src/tru.jl")
 include("../src/arc.jl")
@@ -137,6 +137,15 @@ function run_cutest_with_CAT(
     train_batch_index::Int64,
     optimization_method::String
     )
+ #=
+    cutest_problems = ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
+    trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
+    if θ == 0.0
+        optimization_method = optimization_method_CAT_theta_0
+    end
+    executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+=#
+
     cutest_problems = problems_paper_list
     if !default_problems
         cutest_problems = get_problem_list(min_nvar, max_nvar)
@@ -161,6 +170,7 @@ function run_cutest_with_CAT(
     executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
     #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
     #executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+
 end
 
 #OLD_CODE
@@ -228,8 +238,16 @@ function run_cutest_with_arc(
     if !default_problems
         cutest_problems = get_problem_list(min_nvar, max_nvar)
     end
+
+    #cutest_problems = ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
+
     optimization_method = optimization_method_arc_galahad
 	θ = β = ω = γ_2 = 0.0
+	train_test_split = 0.8
+    	cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
+    	train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
+    	executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
+	#=
 	Random.seed!(0)
 	number_of_problems = length(cutest_problems)
 	cutest_problem_indixes = collect(1:number_of_problems)
@@ -241,6 +259,7 @@ function run_cutest_with_arc(
 	executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
 	#test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
 	# executeCUTEST_Models_benchmark(test_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
+	=#
 end
 
 function run_cutest_with_tru(
@@ -261,7 +280,11 @@ function run_cutest_with_tru(
         cutest_problems = get_problem_list(min_nvar, max_nvar)
     end
     θ = β = ω = γ_2 = 0.0
-
+    train_test_split = 0.8
+    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
+    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
+    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
+#=
     Random.seed!(0)
     number_of_problems = length(cutest_problems)
     cutest_problem_indixes = collect(1:number_of_problems)
@@ -273,6 +296,7 @@ function run_cutest_with_tru(
     executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
     #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
     #executeCUTEST_Models_benchmark(test_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
+=#
 end
 
 function runModelFromProblem(
@@ -346,6 +370,14 @@ function runModelFromProblem(
 			total_inner_iterations_or_factorizations = userdata.total_inner_iterations_or_factorizations
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
+			@show status 
+			@show userdata.status
+			@show total_iterations_count
+			@show total_function_evaluation
+			@show total_gradient_evaluation
+			@show total_hessian_evaluation
+			@show total_inner_iterations_or_factorizations
+			@show gradient_value <= tol_opt
 			if userdata.status != 0 || gradient_value > tol_opt
 				iter = max_it + 1
 				total_iterations_count = iter
@@ -430,7 +462,7 @@ function executeCUTEST_Models_benchmark(
 	if !isfile(total_results_output_file_path)
 		mkpath(total_results_output_directory);
 			open(total_results_output_file_path,"a") do iteration_status_csv_file
-			write(iteration_status_csv_file, "problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+			write(iteration_status_csv_file, "time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
     		end
 	end
 
@@ -475,7 +507,7 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
-	non_success_statuses = ["FAILURE", "ITERARION_LIMIT", "INCOMPLETE"]
+	non_success_statuses = ["FAILURE", "ITERARION_LIMIT", "INCOMPLETE", "LINRARY_STOP"]
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
@@ -546,7 +578,8 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
+		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
@@ -567,7 +600,8 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
+		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
@@ -588,7 +622,8 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
+		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
@@ -609,7 +644,8 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
+		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 

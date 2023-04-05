@@ -72,14 +72,19 @@ function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	eta_too_successful = 2.0
     eta_1 = 1e-8
 	eta_2 = 0.9
-	subproblem_direct = true
+	subproblem_direct = false
 	stop_g_absolute = 1e-5
 	stop_g_relative = 1e-16
 	stop_g_relative = stop_g_absolute / norm(g, 2)
 	@show stop_g_relative
-	stop_s = 1e-12
+	#stop_s = 1e-12
+	stop_s = 2.2e-16
 	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p)
-    userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
+	@show "Calling ARC method"
+	@time begin
+  	 userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
+	end
+	@show "ARC metod exit"
 	solution = Vector{Float64}()
 	for i in 1:n
 		push!(solution, unsafe_load(userdata.solution, i))

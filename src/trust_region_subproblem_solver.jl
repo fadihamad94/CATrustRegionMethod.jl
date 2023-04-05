@@ -83,7 +83,15 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	H_dense = getHessianLowerTriangularPart(H)
 	d = zeros(length(g))
 	full_Path = string(@__DIR__ ,"/test")
+	#@show "------------------------------Calling TRS-----------------"
+	#userdata = nothing
+        #try
 	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint), length(g), f, d, g, H_dense, r, print_level, max_factorizations)
+	#catch e
+	#     @show "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
+	#end
+	#@show "------------------------------Calling TRS-----------------"
+	#@show userdata.status
 	if userdata.status != 0
 		#throw(error("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."))
 		return optimizeSecondOrderModel(g, H, δ, ϵ, r)

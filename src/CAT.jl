@@ -118,6 +118,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				min_gval_norm = min(min_gval_norm, norm(gval_current, 2))
                 compute_hessian = true
             else
+		line_search = false
+		if line_search
 				#This logic is based on "Combining Trust Region and Line Search Techniques*" by Jorge Nocedal and Ya-xiang Yuan.
 				α_k = max(0.1, 0.5 / (1 + (fval_current - fval_next) / dot(transpose(d_k), gval_current)))
 				α_k = isnan(α_k) ? 0.1 : α_k
@@ -134,6 +136,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
                 	#else x_k+1 = x_k, fval_current, gval_current, hessian_current will not change
                 	compute_hessian = false
 				end
+		else
+			#else x_k+1 = x_k, fval_current, gval_current, hessian_current will not change
+			compute_hessian = false
+		end
             end
    	    	if ρ_k <= β
 				modification_3 = norm(d_k, 2) / 4

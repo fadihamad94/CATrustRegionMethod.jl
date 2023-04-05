@@ -86,6 +86,11 @@ function parse_command_line()
     help = "Starting δ for CAT"
     arg_type = Float64
     default = 0.0
+
+    "--execute"
+    help = "This parameter is needed to determine if the scripts to run different batches at the same time should be only created or created and executed."
+    arg_type = Bool
+    default = false
   end
 
   return ArgParse.parse_args(arg_parse)
@@ -102,6 +107,9 @@ end
 function getParsedArgsAsArray(parsed_args::Dict{String, Any}, train_batch_count::Int64, train_batch_index::Int64)
   parsed_args_str_vector = Vector{String}()
   for (key, value) in parsed_args
+    if key == "execute"
+      continue
+    end
     push!(parsed_args_str_vector, "--$key")
     if key == "output_dir"
       push!(parsed_args_str_vector, "$(value)_$train_batch_index")
@@ -117,12 +125,29 @@ function getParsedArgsAsArray(parsed_args::Dict{String, Any}, train_batch_count:
 end
 
 function main()
+  initialization_lock = ReentrantLock()
   parsed_args = parse_command_line()
+  execute = parsed_args["execute"]
   # parsed_args_str = strip(restoreParsed_argsAsString(parsed_args))
   train_batch_count = Threads.nthreads()
   Threads.@threads for train_batch_index in 1:train_batch_count
     parsedArgsAsStringArray = getParsedArgsAsArray(parsed_args, train_batch_count, train_batch_index)
-    run(Cmd(`julia ../CAt-Journal/scripts/solve_cutest.jl $parsedArgsAsStringArray`));
+    if execute
+      #This lockiing mechanism was added to give enough time for each process to setup and do the initializations as CUTEst fails if multiple threads run at the same time when reading the list of CUTEst problems and their size
+      #Another option would be later to be implemented is to make this thread reads the problems and then pass each batch to a different thread 
+      lock(initialization_lock)
+      string_command_arguments = join(parsedArgsAsStringArray, " ")
+      @show "Executing command julia -project=../CAT/CAT/scripts ../CAT-Journal/scripts/solve_cutest.jl $string_command_arguments"
+      run(Cmd(`julia --project=../CAT/CAT/scripts ../CAT-Journal/scripts/solve_cutest.jl $parsedArgsAsStringArray`, detach=true));
+      @show "Reach here"
+      sleep(5 * 60.0)
+      unlock(initialization_lock)
+    else
+      open("./scripts/solve_cutest_batch_$(train_batch_index).sh", "w") do file
+        string_command_arguments = join(parsedArgsAsStringArray, " ")
+    	write(file, "julia --project=../CAT/CAT/scripts ../CAT-Journal/scripts/solve_cutest.jl $string_command_arguments")
+      end
+    end
   end
 end
 
