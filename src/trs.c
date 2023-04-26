@@ -17,9 +17,14 @@ struct userdata_type_trs {
 	double multiplier;
 	double x_norm;
 	double* solution;
+	double time_clock_factorize;
+    	double time_clock_preprocess;
+    	double time_clock_solve;
+    	double time_clock_analyse;
+
 };
 
-struct userdata_type_trs trs(int n, double f, double x[], double g[], double H_dense[], double radius, int print_level, int max_factorizations, bool use_initial_multiplier, double initial_multiplier){
+struct userdata_type_trs trs(int n, double f, double x[], double g[], double H_dense[], double radius, int print_level, int max_factorizations, bool use_initial_multiplier, double initial_multiplier, bool use_stop_args, double stop_normal){
   // Derived types
   void *data;
   struct trs_control_type control;
@@ -38,6 +43,12 @@ struct userdata_type_trs trs(int n, double f, double x[], double g[], double H_d
 	if(use_initial_multiplier)
 	{
 		control.initial_multiplier = initial_multiplier;
+	}
+
+	if(use_stop_args)
+	{
+		control.stop_normal = stop_normal;
+		control.stop_absolute_normal = stop_normal * radius;
 	}
   // import the control parameters and structural data
   //printf("--------------Importing--------------\n");
@@ -73,6 +84,11 @@ struct userdata_type_trs trs(int n, double f, double x[], double g[], double H_d
 	userdata.x_norm = inform.x_norm;
 	//printf("x_norm: %f \n", userdata.x_norm);
 	//printf("===============REACHED HERE==================\n");
+	userdata.time_clock_factorize = inform.time.clock_factorize;
+	userdata.time_clock_preprocess = inform.time.clock_assemble;
+	userdata.time_clock_solve = inform.time.clock_solve;
+        userdata.time_clock_analyse = inform.time.clock_analyse;
+
   // Delete internal workspace
   //printf("----------Termination-------------\n");
   trs_terminate( &data, &control, &inform );
