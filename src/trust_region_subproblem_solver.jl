@@ -88,7 +88,9 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
         #try
 	use_initial_multiplier = true
 	initial_multiplier = δ
-	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cuchar, Cdouble), length(g), f, d, g, H_dense, r, print_level, max_factorizations, use_initial_multiplier, initial_multiplier)
+	use_stop_args = true
+	stop_normal = 0.2
+	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cuchar, Cdouble, Cuchar, Cdouble), length(g), f, d, g, H_dense, r, print_level, max_factorizations, use_initial_multiplier, initial_multiplier, use_stop_args, stop_normal)
 	#catch e
 	#     @show "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
 	#end
@@ -112,9 +114,11 @@ function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64)
 	stop_absolute = 0.0
 	#stop_relative = 1e-10 * min_grad
 	#stop_relative *= min_grad
-	stop_absolute = -1.0
+	#stop_absolute = -1.0
 	#stop_relative = -1.0
 	steihaug_toint = false
+	stop_absolute = 0.0
+	stop_relative = 0.0
 	userdata = ccall((:gltr, LIBRARY_PATH_GLTR), userdata_type_gltr, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cdouble, Cdouble, Cuchar), length(g), f, d, g, H_dense, r, print_level, iter, stop_relative, stop_absolute, steihaug_toint)
 	if userdata.status < 0
 		steihaug_toint = true

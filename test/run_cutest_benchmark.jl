@@ -388,6 +388,11 @@ function runModelFromProblem(
 			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
 			println("------------------------MODEL SOLVED WITH STATUS: ", status)
 			directory_name = string(folder_name, "/", "$optimization_method")
+			time_clock_factorize = userdata.time_clock_factorize
+			time_clock_preprocess = userdata.time_clock_preprocess
+			time_clock_solve = userdata.time_clock_solve
+			time_clock_analyse = userdata.time_clock_analyse
+			outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)			
 			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		elseif optimization_method == optimization_method_tru_galahd_factorization || optimization_method == optimization_method_tru_galahd_iterative
 			subproblem_direct = optimization_method == optimization_method_tru_galahd_factorization ? true : false
@@ -455,7 +460,7 @@ function executeCUTEST_Models_benchmark(
 	δ::Float64=0.0,
 	trust_region_method_subproblem_solver::String=consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 	)
-
+	println("CUTEst Problems are: $cutest_problems")
 	total_results_output_directory =  string(folder_name, "/$optimization_method")
 	total_results_output_file_name = "table_cutest_$optimization_method.csv"
 	total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
@@ -463,6 +468,13 @@ function executeCUTEST_Models_benchmark(
 		mkpath(total_results_output_directory);
 			open(total_results_output_file_path,"a") do iteration_status_csv_file
 			write(iteration_status_csv_file, "time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+    		end
+	end
+	total_time_output_file_name = "table_cutest_time_$optimization_method.csv"
+	total_time_output_file_path = string(total_results_output_directory, "/", total_time_output_file_name)
+	if !isfile(total_time_output_file_path)
+			open(total_time_output_file_path,"a") do iteration_time_csv_file
+			write(iteration_time_csv_file, "current_date_and_time,cutest_problem,time_clock_factorize,time_clock_preprocess,time_clock_solve,time_clock_analyse\n");
     		end
 	end
 
@@ -507,9 +519,9 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
-	non_success_statuses = ["FAILURE", "ITERARION_LIMIT", "INCOMPLETE", "LINRARY_STOP"]
+	non_success_statuses = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED"]
 	for i in 1:size(df)[1]
-		if df[i, :].status == "SUCCESS"
+		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
 			push!(total_factorization_count_vec, df[i, :].count_factorization)
 			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
@@ -647,6 +659,15 @@ function outputIterationsStatusToCSVFile(
 		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
 		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
+end
+
+function outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)
+	file_name = string(directory_name, "/", "table_cutest_time_$optimization_method.csv")
+	open(file_name,"a") do iteration_time_csv_file
+		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
+		write(iteration_time_csv_file, "$current_date_and_time,$cutest_problem,$time_clock_factorize,$time_clock_preprocess,$time_clock_solve,$time_clock_analyse\n")
+    	end
+
 end
 
 # function outputHowOftenNearConvexityConditionHolds(directory_name::String,

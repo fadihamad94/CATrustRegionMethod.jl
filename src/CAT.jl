@@ -81,12 +81,15 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     k = 1
     try
         gval_current = grad(nlp, x_k)
-		r_k = 0.1 * norm(gval_current, 2) #(BEST)
+	#r_k = 0.1 * norm(gval_current, 2) #(BEST)
         fval_current = obj(nlp, x_k)
         total_function_evaluation += 1
         total_gradient_evaluation += 1
-        hessian_current = nothing
-        compute_hessian = true
+        #hessian_current = nothing
+	hessian_current = restoreFullMatrix(hess(nlp, x_k))
+        total_hessian_evaluation += 1
+	r_k = norm(gval_current, 2) / norm(hessian_current, 2)
+        compute_hessian = false
         if norm(gval_current, 2) <= gradient_termination_tolerance
             computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
             println("*********************************Iteration Count: ", 1)
@@ -141,13 +144,23 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			compute_hessian = false
 		end
             end
-   	    	if ρ_k <= β
-				modification_3 = norm(d_k, 2) / 4
+		if isnan(ρ_k) || ρ_k <= β
+				modification_3 = norm(d_k, 2) / 2
 				r_k = modification_3
-            else
-				modification_3 = 8 * norm(d_k, 2)
+            	else
+				modification_3 = 4 * norm(d_k, 2)
 				r_k = modification_3
-            end
+		end
+   	    	#=if isnan(ρ_k) || ρ_k <= 0
+		 	modification_3 = norm(d_k, 2) / 4
+		elseif ρ_k <= β
+				modification_3 = norm(d_k, 2) / 2
+				r_k = modification_3
+            	else
+				modification_3 = 4 * norm(d_k, 2)
+				r_k = modification_3
+            	end=#
+		
             push!(iteration_stats, (k, δ_k, d_k, fval_current, norm(gval_current, 2)))
             if norm(gval_next, 2) <= gradient_termination_tolerance
                 push!(iteration_stats, (k, δ_k, d_k, fval_next, norm(gval_next, 2)))

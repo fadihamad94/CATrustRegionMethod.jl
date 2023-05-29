@@ -80,5 +80,6 @@ function tru(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	for i in 1:length(nlp.meta.x0)
 		push!(solution, unsafe_load(userdata.solution, i))
 	end
+	@show userdata.total_inner_iterations_or_factorizations
 	return userdata, solution
 end

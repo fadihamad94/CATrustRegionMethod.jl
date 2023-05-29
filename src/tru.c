@@ -79,7 +79,9 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 	if(subproblem_direct){
                 userdata.total_inner_iterations_or_factorizations = inform.trs_inform.factorizations;
         }else{
-                userdata.total_inner_iterations_or_factorizations = inform.gltr_inform.iter;
+		printf("inform.gltr_inform.iter is %i. \n", inform.gltr_inform.iter);
+		printf("inform.gltr_inform.iter_iter_pass2 is %i. \n", inform.gltr_inform.iter_pass2);
+                userdata.total_inner_iterations_or_factorizations = inform.gltr_inform.iter + inform.gltr_inform.iter_pass2;
         }
 	userdata.solution = x;
 	printf("%e: \n", inform.obj);

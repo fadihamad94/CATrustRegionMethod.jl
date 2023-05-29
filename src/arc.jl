@@ -15,6 +15,10 @@ struct userdata_type_arc
 	total_hessian_evaluation::Cint
 	total_inner_iterations_or_factorizations::Cint
 	solution::Ptr{Cdouble}
+	time_clock_factorize::Cdouble
+    	time_clock_preprocess::Cdouble
+	time_clock_solve::Cdouble
+    	time_clock_analyse::Cdouble
 end
 
 function eval_f(x::Ref{Cdouble})
@@ -76,11 +80,11 @@ function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	stop_g_absolute = 1e-5
 	stop_g_relative = 1e-16
 	stop_g_relative = stop_g_absolute / norm(g, 2)
-	@show stop_g_relative
+	#@show stop_g_relative
 	#stop_s = 1e-12
 	stop_s = 2.2e-16
-	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p)
-	@show "Calling ARC method"
+	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p, 0, 0, 0, 0)
+	#@show "Calling ARC method"
 	@time begin
   	 userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
 	end
