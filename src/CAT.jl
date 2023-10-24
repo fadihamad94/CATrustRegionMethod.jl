@@ -357,8 +357,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         gval_current = grad(nlp, x_k)
 		r_k = 0.1 * norm(gval_current, 2) #(BEST)
 		# r_k = 10 * norm(gval_current, 2)
-		# initial_radius = 1.0
-		initial_radius = r_k
+		initial_radius = 10.0
+		# initial_radius = r_k
 		r_k = initial_radius
         fval_current = obj(nlp, x_k)
 		fval_0 = fval_current
