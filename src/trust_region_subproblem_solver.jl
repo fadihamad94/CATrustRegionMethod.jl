@@ -87,8 +87,10 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	#userdata = nothing
         #try
 	use_initial_multiplier = true
+	# use_initial_multiplier = false
 	initial_multiplier = δ
 	use_stop_args = true
+	use_stop_args = false
 	stop_normal = 0.2
 	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cuchar, Cdouble, Cuchar, Cdouble), length(g), f, d, g, H_dense, r, print_level, max_factorizations, use_initial_multiplier, initial_multiplier, use_stop_args, stop_normal)
 	#catch e

@@ -7,6 +7,8 @@ include("../src/arc.jl")
 #const problems_paper_list =  ["DIXMAANI", "LIARWHD", "SCHMVETT", "LUKSAN13LS", "VAREIGVL", "JUDGE", "CYCLOOCFLS", "DIXMAANJ", "FBRAIN3LS", "SPIN2LS", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "BROWNDEN", "HILBERTA", "DMN37142LS", "PALMER5D", "BOXBODLS", "HIMMELBB", "ENGVAL2", "MUONSINELS", "ENSOLS", "PRICE4", "EIGENALS", "YATP1LS", "CERI651ELS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "SISSER", "TRIGON1", "MGH17SLS", "PENALTY1", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "GROWTHLS", "SINEVAL", "GAUSS2LS", "STRATEC", "NELSONLS", "HYDCAR6LS", "DQRTIC", "MISRA1ALS", "WAYSEA1", "BOX", "DMN37143LS", "TOINTGSS", "GAUSS3LS", "SPARSINE", "VESUVIALS", "INTEQNELS", "HAIRY", "YFITU", "CHNRSNBM", "HIMMELBCLS", "CYCLIC3LS", "MARATOSB", "LSC2LS", "PALMER1C", "BA-L49LS", "SSCOSINE", "POWELLBSLS", "NONCVXU2", "HIMMELBG", "BROYDN7D", "COSINE", "DIXMAANO", "DENSCHNF", "COOLHANSLS", "PRICE3", "VESUVIOULS", "KOWOSB", "LUKSAN12LS", "SPINLS", "HIMMELBH", "ZANGWIL2", "BROYDN3DLS", "PALMER2C", "HEART8LS", "CURLY20", "VANDANMSLS", "HATFLDD", "NONMSQRT", "MISRA1DLS", "BRKMCC", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "DENSCHNA", "YATP2CLS", "DMN15332LS", "METHANL8LS", "SCURLY20", "MISRA1BLS", "DENSCHNC", "NONDQUAR", "S308", "SNAIL", "SCURLY30", "LUKSAN21LS", "MANCINO", "EXPFIT", "BOX3", "ECKERLE4LS", "HAHN1LS", "MGH17LS", "LUKSAN22LS", "DMN15102LS", "PALMER1D", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "JENSMP", "CERI651DLS", "BROYDNBDLS", "GBRAINLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "PENALTY2", "BA-L1SPLS", "BA-L73LS", "ALLINITU", "VESUVIOLS", "DIAMON2DLS", "THURBERLS", "CERI651ALS", "VIBRBEAM", "GAUSS1LS", "PENALTY3", "DJTL", "LSC1LS", "MODBEALE", "PALMER6C", "DIXMAANN", "CERI651CLS", "LUKSAN17LS", "PALMER5C", "EIGENCLS", "INDEFM", "OSBORNEA", "BIGGS6", "PALMER7C", "BEALE", "SROSENBR", "MNISTS5LS", "MGH10SLS", "ARGLINA", "INDEF", "SENSORS", "ARWHEAD", "RAT43LS", "CLUSTERLS", "HELIX", "DIXON3DQ", "MEXHAT", "DENSCHNB", "MNISTS0LS", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "MEYER3", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "DENSCHND", "BROWNBS", "SSI", "NCB20", "FLETCBV3", "KSSLS", "CHAINWOO", "HATFLDE", "LUKSAN11LS", "KIRBY2LS", "LUKSAN16LS", "DIXMAANP", "COATING", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "BENNETT5LS", "MSQRTALS", "CURLY10", "DANWOODLS", "ARGTRIGLS", "BOXPOWER", "DANIWOODLS", "RAT42LS", "DQDRTIC", "DEVGLA1", "HATFLDFL", "OSCIGRAD", "STREG", "FLETCHBV", "AKIVA", "QING", "LANCZOS2LS", "ARGLINB", "DIXMAANF", "BA-L16LS", "PARKCH", "MOREBV", "ROSENBR", "NONDIA", "HYDC20LS", "HATFLDFLS", "ERRINROS", "LUKSAN14LS", "HIELOW", "MSQRTBLS", "BROWNAL", "HUMPS", "BARD", "HATFLDGLS", "SCURLY10", "MGH10LS", "TQUARTIC", "EXTROSNB", "DEVGLA2", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "LUKSAN15LS", "DIXMAANG", "EGGCRATE", "HILBERTB", "BA-L1LS", "DIXMAANK", "QUARTC", "RECIPELS", "EDENSCH", "CHNROSNB", "YATP1CLS", "TOINTPSP", "LANCZOS1LS", "PALMER3C", "SSBRYBND", "ELATVIDU", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "TOINTQOR", "ROSZMAN1LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "WATSON", "GAUSSIAN", "SINQUAD", "EG2", "DIXMAANL", "GENROSE", "PALMER4C", "TESTQUAD", "EIGENBLS", "MISRA1CLS", "DENSCHNE", "OSBORNEB", "CLIFF", "STRTCHDV", "TRIGON2", "HEART6LS", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS", "LOGHAIRY", "CERI651BLS", "CUBE"]
 
 const problems_paper_list = CUTEst.select(max_con=0, only_free_var=true)
+#const problems_paper_list = ["AKIVA", "ALLINITU",  "ARGLINA",   "ARGTRIGLS",  "BA-L1LS",  "BARD",  "BEALE",  "BENNETT5LS",  "BIGGS6",  "BOX3",  "BOXBODLS",  "BRKMCC",  "BROWNAL",  "BROWNBS",  "BROWNDEN"]
+const problems_paper_list = ["AKIVA", "ALLINITU",  "ARGLINA",   "ARGTRIGLS",  "BA-L1LS",  "BARD"]
 
 const optimization_method_CAT = "CAT"
 const optimization_method_CAT_theta_0 = "CAT_THETA_ZERO"
@@ -17,6 +19,8 @@ const optimization_method_CAT_galahad_iterative = "CAT_GALAHAD_ITERATIVE"
 const optimization_method_arc_galahad = "ARC"
 const optimization_method_tru_galahd_factorization = "TRU_GALAHAD_FACTORIZATION"
 const optimization_method_tru_galahd_iterative = "TRU_GALAHAD_ITERATIVE"
+
+const skip_list = ["ARGLINB", "DIAMON2DLS", "DIAMON3DLS", "DMN15102LS", "DMN15103LS", "DMN15332LS", "DMN15333LS", "DMN37142LS", "DMN37143LS", "FLETCHCR", "MNISTS5LS"]
 
 const train_test_split = 0.8
 
@@ -104,7 +108,7 @@ function get_problems_list_batch(train_batch_count::Int64, train_batch_index::In
     expected_cumulative_total_size_of_problems = expected_total_size_of_problems_per_batch * (train_batch_index - 1)
     cumulative_total_size_of_problems = 0
     for i in 1:length(cutest_problems_size_list)
-        if cumulative_total_size_of_problems >= (expected_cumulative_total_size_of_problems + expected_total_size_of_problems_per_batch) 
+        if cumulative_total_size_of_problems >= (expected_cumulative_total_size_of_problems + expected_total_size_of_problems_per_batch)
 	    end_index = i - 1
 	    break
 	elseif start_index < 0 && cumulative_total_size_of_problems >= expected_cumulative_total_size_of_problems
@@ -150,6 +154,7 @@ function run_cutest_with_CAT(
     if !default_problems
         cutest_problems = get_problem_list(min_nvar, max_nvar)
     end
+	# cutest_problems = ["ALLINITU", "BARD", "BIGGS6", "CERI651ALS", "CERI651BLS"]
 	trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
 	if θ == 0.0
 		optimization_method = optimization_method_CAT_theta_0
@@ -168,6 +173,7 @@ function run_cutest_with_CAT(
     cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
     train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
     executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+	# executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
     #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
     #executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
 
@@ -370,7 +376,7 @@ function runModelFromProblem(
 			total_inner_iterations_or_factorizations = userdata.total_inner_iterations_or_factorizations
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
-			@show status 
+			@show status
 			@show userdata.status
 			@show total_iterations_count
 			@show total_function_evaluation
@@ -392,7 +398,7 @@ function runModelFromProblem(
 			time_clock_preprocess = userdata.time_clock_preprocess
 			time_clock_solve = userdata.time_clock_solve
 			time_clock_analyse = userdata.time_clock_analyse
-			outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)			
+			outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)
 			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		elseif optimization_method == optimization_method_tru_galahd_factorization || optimization_method == optimization_method_tru_galahd_iterative
 			subproblem_direct = optimization_method == optimization_method_tru_galahd_factorization ? true : false
@@ -480,7 +486,7 @@ function executeCUTEST_Models_benchmark(
 
 	for problem in cutest_problems
 		problem_output_file_path = string(total_results_output_directory, "/", problem, ".csv")
-		if isfile(problem_output_file_path) || problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
+		if isfile(problem_output_file_path) || problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name || problem ∈ skip_list
 			@show problem
 			continue
 		else
