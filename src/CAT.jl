@@ -918,13 +918,12 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             # total_gradient_evaluation += 1
 			if success_subproblem_solve
 				ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k)
-				# if predicted_fct_decrease <= -1e-4 && hard_case
-				if predicted_fct_decrease <= 0
+				if predicted_fct_decrease <= -1e-4 && hard_case
 					println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 					@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
 					println("Solving trust-region subproblem using our approach.")
 					ϵ_machine = eps(Float64) #Machine accuracys
-					stop_normal = ϵ_machine ^ 0.75
+					stop_normal = ϵ_machine ^ 0.5
 					ϵ = stop_normal
 					success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(gval_current, hessian_current, δ_k, ϵ, r_k)
 					total_number_factorizations += temp_total_number_factorizations
