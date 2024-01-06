@@ -3,7 +3,7 @@ using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, DataFrames, SparseArr
 include("../src/CAT.jl")
 include("./test_TRS_solver.jl")
 
-function test_phi_negative_one()
+function test_phi_positive_one()
     problem = test_create_dummy_problem()
     nlp = problem.nlp
     x_k = [0.0, 0.0]
@@ -12,7 +12,7 @@ function test_phi_negative_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == -1
+    @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
 end
 
 function test_phi_zero()
@@ -27,16 +27,16 @@ function test_phi_zero()
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
 end
 
-function test_phi_positive_one()
+function test_phi_negative_one()
     problem = test_create_dummy_problem()
     nlp = problem.nlp
     x_k = nlp.meta.x0
     g = grad(nlp, x_k)
     H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
-    δ = 0.0
-    ϵ = 0.8
-    r = problem.r_1
-    @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
+    δ = 3.0
+    ϵ = 0.0
+    r = 1.0
+    @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == -1
 end
 
 function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
@@ -49,7 +49,7 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     ϵ = 0.8
     r = 0.2
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    @test δ == δ_prime == 64.0
+    @test δ == δ_prime == 2.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
 end
@@ -64,7 +64,7 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     ϵ = 0.8
     r = 0.2
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    @test δ == δ_prime == 8.0
+    @test δ == δ_prime == 4.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
 end
@@ -94,7 +94,7 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     ϵ = 0.8
     r = 0.3
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    @test (δ, δ_prime) == (500.0, 250.0)
+    @test (δ, δ_prime) == (250.0, 8000.0)
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == -1
 end
@@ -109,7 +109,7 @@ function test_bisection_with_starting_on_root_δ_zero()
     ϵ = 0.8
     r = 0.2
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
+    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
     # @test δ_m == δ == δ_prime == 0
     @test δ_m == δ == δ_prime
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
@@ -127,8 +127,8 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     ϵ = 0.8
     r = 0.2
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
-    @test δ_m == δ == δ_prime == 8.0
+    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    @test δ_m == δ == δ_prime == 4.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_m, ϵ, r) == 0
@@ -144,8 +144,8 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     ϵ = 0.8
     r = 0.3
     δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
-    @test δ_m == 406.25
+    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    @test δ_m == 734.375
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == -1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_m, ϵ, r) == 0
@@ -184,7 +184,7 @@ function test_compute_second_order_model_negative_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
     second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(function_value, gradient_value, hessian_value, d_k)
-    @test second_order_model_value == 104.0
+    @test second_order_model_value == 104.0 - function_value
 end
 
 function test_compute_second_order_model_zero_direction()
@@ -196,7 +196,7 @@ function test_compute_second_order_model_zero_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
     second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(function_value, gradient_value, hessian_value, d_k)
-    @test second_order_model_value == 1.0
+    @test second_order_model_value == 1.0 - function_value
 end
 
 function test_compute_second_order_model_positive_direction()
@@ -208,10 +208,10 @@ function test_compute_second_order_model_positive_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
     second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(function_value, gradient_value, hessian_value, d_k)
-    @test second_order_model_value == 100.0
+    @test second_order_model_value == 100.0 - function_value
 end
 
-function test_compute_ρ_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     problem = test_create_dummy_problem()
     nlp = problem.nlp
     x_k = [1.0, 1.0]
@@ -225,10 +225,12 @@ function test_compute_ρ_δ_0_H_positive_semidefinite_starting_on_global_minimiz
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
-    ρ = consistently_adaptive_trust_region_method.compute_ρ(fval_current, fval_next, gval_current, gval_next, H, x_k, d_k, θ)
+    @show θ
+    # compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ, 0.0)
 end
 
-function test_compute_ρ_phi_zero()
+function test_compute_ρ_hat_phi_zero()
     tol = 1e-3
     problem = test_create_dummy_problem()
     nlp = problem.nlp
@@ -243,11 +245,11 @@ function test_compute_ρ_phi_zero()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
-    ρ = consistently_adaptive_trust_region_method.compute_ρ(fval_current, fval_next, gval_current, gval_next, H, x_k, d_k, θ)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ, 0.0)[1]
     @test norm(ρ - 0.980423689675886, 2) <= tol
 end
 
-function test_compute_ρ_phi_δ_positive_phi_δ_prime_negative()
+function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     tol = 1e-3
     problem = test_create_dummy_problem2()
     nlp = problem.nlp
@@ -262,8 +264,8 @@ function test_compute_ρ_phi_δ_positive_phi_δ_prime_negative()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
-    ρ = consistently_adaptive_trust_region_method.compute_ρ(fval_current, fval_next, gval_current, gval_next, H, x_k, d_k, θ)
-    @test norm(ρ - 0.802338318969011, 2) <= tol
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ, 0.0)[1]
+    @test norm(ρ - 1.126954013438328, 2) <= tol
 end
 
 function unit_tests()
@@ -283,21 +285,15 @@ function unit_tests()
     test_bisection_with_starting_on_root_δ_not_zero()
     test_bisection_with_starting_from_negative_one_and_positive_one()
 
-    #Unit test for restore full matrix function
-    # test_restore_full_matrix_two_by_two()
-    # test_restore_full_matrix_three_by_three()
-    # test_restore_full_matrix_four_by_four()
-    # test_restore_full_matrix_diagonal_matrix()
-
     #Unit test compute second order model function
     test_compute_second_order_model_negative_direction()
     test_compute_second_order_model_zero_direction()
     test_compute_second_order_model_positive_direction()
 
     #Unit test compute ρ function
-    test_compute_ρ_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
-    test_compute_ρ_phi_zero()
-    test_compute_ρ_phi_δ_positive_phi_δ_prime_negative()
+    test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+    test_compute_ρ_hat_phi_zero()
+    test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
 end
 
 function solve_NLP1_starting_at_global_optimum()
@@ -316,7 +312,7 @@ function solveSimpleConvexNLPModel()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
-    @test norm(x - [0.41666666666666663, 0.5833333333333334], 2) <= 0
+    @test norm(x - [0.0, 1.0], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0, 2) <= tol
     @test status == "SUCCESS"
 end
@@ -339,7 +335,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     x = [0.1, 0.1]
     δ = 0.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
-    @test norm(x - [0.45499999999999996, 0.545], 2) <= tol
+    @test norm(x - [0.4, 0.6], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
     @test status == "SUCCESS"
 end
@@ -350,7 +346,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     x = [20.01, -10.01]
     δ = 0.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
-    @test norm(x - [15.873020752067404, -14.873020752067404], 2) <= tol
+    @test norm(x - [19.01, -18.01], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
     @test status == "SUCCESS"
 end
