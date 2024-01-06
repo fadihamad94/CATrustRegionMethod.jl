@@ -572,7 +572,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		temp_d_0_norm = norm(temp_d_0, 2)
 		less_than_radius = temp_d_0_norm <= r
 		println("temp_d_0_norm is $temp_d_0_norm and ||d(0)|| <= r is $less_than_radius.")
-		# if less_than_radius
+		# if temp_d_0_norm > 0 && less_than_radius
 		# 	return  true, 0.0, temp_d_0
 		# end
 

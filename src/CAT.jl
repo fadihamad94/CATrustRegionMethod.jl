@@ -1052,11 +1052,11 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						r_k = norm(d_k, 2)
 					end
 				else
-					if ρ_k == 0 && r_k <= ϵ_machine
-						r_k = 20 * norm(d_k, 2)
-					else
-						r_k = norm(d_k, 2) / 1.2
-					end
+					# if ρ_k == 0 && r_k <= ϵ_machine
+					# 	r_k = 20 * norm(d_k, 2)
+					# else
+					r_k = norm(d_k, 2) / 1.2
+					# end
 				end
 			else
 				r_k = r_k / 2
