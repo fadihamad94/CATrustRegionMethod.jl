@@ -453,6 +453,27 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test abs(obj(nlp, x_k + d_k) - (-100)) <= tol
 end
 
+function test_optimize_second_order_model_bisection_logic_bug_fix()
+    tol = 1e-3
+    r = 0.08343452704764227
+    g = [3.4679032978601754e-9, 7.39587593251434e-9, 2.7183407851072428e-8, -0.003000483357027406, 0.008419134290306829]
+    H = [66.0 65.0743102550725 65.67263629092243 -1.2900082661017744e7 3.6178787247129455e7; 65.0743102550725 64.1661603269859 64.75315415279051 -1.265594646809823e7 3.549303722643331e7; 65.67263629092243 64.75315415279051 65.34746955501134 -1.2813679600892197e7 3.59360895721625e7; -1.2900082661017744e7 -1.265594646809823e7 -1.2813679600892197e7 3.3981511777610044e12 -9.544912385973707e12; 3.6178787247129455e7 3.549303722643331e7 3.59360895721625e7 -9.544912385973707e12 2.6810622545473246e13]
+    ϵ = 1e-8
+    δ = 6.205227748467783e-12
+
+    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    @test abs(δ - 2.5e-8) <= tol
+    @test abs(δ_prime - 1.6e-5) <= tol
+
+    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    @test abs(δ_m - 5.173e-7) <= tol
+
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
+    @test status
+    @test abs(δ_k - 5.173e-7) <= tol
+    @test δ_k <= 1e-6 && norm(d_k, 2) <= r
+end
+
 function optimize_models()
     test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     test_optimize_second_order_model_phi_zero()
@@ -465,6 +486,7 @@ function optimize_models()
     test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
     test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
     test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
+    test_optimize_second_order_model_bisection_logic_bug_fix()
 end
 
 @testset "TRS_Solver_Tests" begin
