@@ -140,12 +140,21 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	#@show "------------------------------Calling TRS-----------------"
 	#@show userdata.status
 	ϵ = stop_normal
-	if userdata.status != 0
+	tol = 1e-1
+	condition_success = norm(d, 2) - r <= tol || abs(norm(d, 2) - r) <= stop_normal * r + tol || abs(norm(d, 2) - r) <= stop_normal + tol
+
+	if userdata.status != 0 || !condition_success
 		#throw(error("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."))
 		println("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status).")
+		if userdata.status == 0
+			norm_d = norm(d, 2)
+			@warn "Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r."
+			println("Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r.")
+		end
 		# if δ < 1e-6
 		# 	ϵ = 0.1
 		# end
+		δ = max(δ, abs(eigmin(Matrix(H))))
 		success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r)
 		return success, δ, d_k, total_number_factorizations + userdata.factorizations, hard_case
 	end
@@ -176,17 +185,16 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	# end
         #println("history  is $history")
 	#return userdata.lambda, d, userdata.factorizations
-	condition_1 = (multiplier <= 1e-5 && norm(d, 2) <= r)
+	# condition_1 = multiplier <= 1e-5 && norm(d, 2) <= r + tol
 	# condition_2 = ((1 - stop_normal) * r <= norm(d, 2) <= (1 + stop_normal) * r)
-	condition_2 = abs(norm(d, 2) - r) <= stop_normal * r
-	condition_3 = norm(g, 2) == 0 &&  minimum(H_dense) >= 0
+	# condition_2 = abs(norm(d, 2) - r) <= stop_normal * r + tol
+	# condition_3 = norm(g, 2) == 0 &&  minimum(H_dense) >= 0
 	# condition_4 = abs(x_norm - r) <= stop_normal * r
-	condition_4 = abs(norm(d, 2) - r) <= stop_normal * r
-	condition = condition_1 || condition_2 || condition_3 || condition_4
-	temp_norm_d = norm(d, 2)
-	if !condition
-		println("================FAILED GALAHAD=======$hard_case=====$ϕ======$multiplier==========$temp_norm_d=================$r.")
-	end
+	# condition = condition_1 || condition_2 || condition_3
+	# temp_norm_d = norm(d, 2)
+	# if !condition
+		# println("================FAILED GALAHAD=======$hard_case=====$ϕ======$multiplier==========$temp_norm_d=================$r.")
+	# end
 	#=if !(norm(d, 2) == x_norm)
 		println("=============$x_norm===========$temp_norm_d")
 		println("==============x_norm============temp_norm_d")
@@ -412,6 +420,7 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
 		println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. ϵ is $ϵ.")
         throw(error("Bisection logic failed to find a root for the phi function"))
     end
+	println("****************************ENDING BISECTION with δ_m = $δ_m**************")
     return δ_m, min(k, max_iterations) + 1
 end
 
@@ -584,9 +593,12 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 	    end
 
 		temp_d_norm = norm(temp_d, 2)
-		less_than_radius_ = temp_d_norm <= r
+		less_than_radius_ = temp_d_norm < r
 		println("temp_d_norm is $temp_d_norm and ||d(-λ_1)|| < r is $less_than_radius_.")
 
+		if !less_than_radius_
+			@warn "This is not a hard case sub-problem."
+		end
 		# if less_than_radius
 		# 	println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_d_norm, and $r.")
 		# 	return true, δ, temp_d

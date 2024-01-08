@@ -832,7 +832,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     γ_2 = problem.γ_2
     nlp = problem.nlp
     θ = problem.θ
-	# θ = 1e-1
 	θ = 0.1
     # iteration_stats = DataFrame(k = [], deltaval = [], directionval = [], fval = [], gradval = [], hessianval = [])
 	iteration_stats = DataFrame(k = [], deltaval = [], directionval = [], fval = [], gradval = [])
@@ -922,6 +921,11 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				if predicted_fct_decrease <= 0
 					println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 					@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
+					hessian_current_matrix = Matrix(hessian_current)
+					println("Radius, Gradient, and Hessian are $r_k, $gval_current, and $hessian_current_matrix.")
+					norm_d_k = norm(d_k, 2)
+					upper_bound = -0.5 * δ_k * norm_d_k ^ 2
+                    println("Upper bound on model with (d_k = $d_k and ||d_k|| = $norm_d_k) is : $upper_bound.")
 					println("Solving trust-region subproblem using our approach.")
 					ϵ_machine = eps(Float64) #Machine accuracys
 					stop_normal = ϵ_machine ^ 0.75
@@ -939,6 +943,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						if predicted_fct_decrease <= -1e-4 && hard_case
 							println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 							@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
+							norm_d_k = norm(d_k, 2)
+							upper_bound = -0.5 * δ_k * norm_d_k ^ 2
+                                       	 		println("Upper bound on model with (d_k = $d_k and ||d_k|| = $norm_d_k) is : $upper_bound.")
+
 						end
 					else
 						ρ_k = 0.0
