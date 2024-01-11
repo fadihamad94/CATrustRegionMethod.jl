@@ -82,7 +82,8 @@ function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	stop_g_relative = stop_g_absolute / norm(g, 2)
 	#@show stop_g_relative
 	#stop_s = 1e-12
-	stop_s = 2.2e-16
+	ϵ_machine = eps(Float64)
+	stop_s = ϵ_machine
 	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p, 0, 0, 0, 0)
 	#@show "Calling ARC method"
 	@time begin

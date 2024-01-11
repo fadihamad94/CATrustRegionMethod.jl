@@ -150,13 +150,27 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 			norm_d = norm(d, 2)
 			@warn "Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r."
 			println("Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r.")
+		else
+			@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
 		end
 		# if δ < 1e-6
 		# 	ϵ = 0.1
 		# end
 		δ = max(δ, abs(eigmin(Matrix(H))))
-		success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r)
-		return success, δ, d_k, total_number_factorizations + userdata.factorizations, hard_case
+		try
+			success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r)
+			return success, δ, d_k, total_number_factorizations + userdata.factorizations, hard_case
+		catch
+			if e == ErrorException("Bisection logic failed to find a root for the phi function")
+				if eigmin(Matrix(H)) >= 0
+					@error e
+				end
+				success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, 0.2, r)
+				return success, δ, d_k, total_number_factorizations + userdata.factorizations, hard_case
+			end
+			@error e
+			throw(e)
+		end
 	end
     # lambda= userdata.lambda
 	# lambda_0= userdata.lambda_0
@@ -233,6 +247,18 @@ function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64)
 end
 
 #Based on Theorem 4.3 in Numerical Optimization by Wright
+
+function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, total_number_factorizations::Int64)
+	δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r)
+	total_number_factorizations += temp_total_number_factorizations
+	δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r)
+	total_number_factorizations += temp_total_number_factorizations
+	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+	total_number_factorizations  += 1
+	d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
+	return true, δ_m, d_k, total_number_factorizations, false
+end
+
 function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64)
     #When δ is 0 and the Hessian is positive semidefinite, we can directly compute the direction
     total_number_factorizations = 0
@@ -240,33 +266,33 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
 	total_number_factorizations += 1
         cholesky(Matrix(H))
         d_k = H \ (-g)
-        if norm(d_k, 2) <= r
+        if norm(d_k, 2) <= (1 + ϵ) * r
 		# if abs(norm(d_k, 2) - r) <= ϵ * r
             return true, 0.0, d_k, total_number_factorizations, false
         end
     catch e
 		#Do nothing
     end
-	δ_prime = 0.0
-	δ_m = 0.0
     try
-		δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r)
-		total_number_factorizations += temp_total_number_factorizations
-        δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r)
-		total_number_factorizations += temp_total_number_factorizations
-        sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-		total_number_factorizations  += 1
-        d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
-        return true, δ_m, d_k, total_number_factorizations, false
+		return computeSearchDirection(g, H, δ, ϵ, r, total_number_factorizations)
     catch e
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
+			if eigmin(Matrix(H)) >= 0
+				try
+					return computeSearchDirection(g, H, δ, 0.2, r, total_number_factorizations)
+				catch e_
+					@error e_
+				end
+			end
 	    	success, δ, d_k = solveHardCaseLogic(g, H, r)
             return success, δ, d_k, total_number_factorizations, true
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
+			@error e
             success, δ, d_k = solveHardCaseLogic(g, H, r)
 	    	return success, δ, d_k, total_number_factorizations, true
         else
+			@error e
             throw(e)
         end
     end
@@ -555,6 +581,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		if less_than_radius
 			return  true, 0.0, temp_d_0
 		end
+
 		println("minimumEigenValue is $minimumEigenValue")
 		println("r is $r")
 		println("g is $g")
@@ -597,7 +624,8 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		println("temp_d_norm is $temp_d_norm and ||d(-λ_1)|| < r is $less_than_radius_.")
 
 		if !less_than_radius_
-			@warn "This is not a hard case sub-problem."
+			println("This is not a hard case sub-problem.")
+			@error "This is not a hard case sub-problem."
 		end
 		# if less_than_radius
 		# 	println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_d_norm, and $r.")

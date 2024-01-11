@@ -19,6 +19,11 @@ mutable struct WrongFunctionPredictedReduction
 	predicted_reduction::Float64
 end
 
+mutable struct UnboundedObjective
+	message::String
+	fval::Float64
+end
+
 mutable struct Problem_Data
     nlp::AbstractNLPModel
     β_1::Float64
@@ -1048,27 +1053,42 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			norm_d_k = norm(d_k, 2)
 			println("$k. r_k is $r_k and ||d_k|| is $norm_d_k.")
 
-			if success_subproblem_solve
-				if isnan(ρ_k) || ρ_k < 0.1 || (fval_current < fval_next)
-					r_k = norm(d_k, 2) / 2
-				elseif κ_k >= θ || norm_gval_next <= 0.9 * norm_gval_current
-					if ρ_k >= 0.95
-						r_k = 20 * norm(d_k, 2)
-					elseif ρ_k >= 0.8
-						r_k = 2 * norm(d_k, 2)
-					else
-						r_k = norm(d_k, 2)
-					end
-				else
-					# if ρ_k == 0 && r_k <= ϵ_machine
-					# 	r_k = 20 * norm(d_k, 2)
-					# else
-					r_k = norm(d_k, 2) / 1.2
-					# end
-				end
-			else
-				r_k = r_k / 2
-			end
+			#This is the final version of the Alg. STRM 21
+			# if success_subproblem_solve
+			# 	if isnan(ρ_k) || ρ_k < 0.1 || (fval_current < fval_next)
+			# 		r_k = norm(d_k, 2) / 2
+			# 	# elseif κ_k >= θ || norm_gval_next <= 0.9 * norm_gval_current
+			# 	elseif κ_k >= θ
+			# 		if ρ_k >= 0.95
+			# 			r_k = 20 * norm(d_k, 2)
+			# 		elseif ρ_k >= 0.8
+			# 			r_k = 2 * norm(d_k, 2)
+			# 		else
+			# 			r_k = norm(d_k, 2)
+			# 		end
+			# 	else
+			# 		# if ρ_k == 0 && r_k <= ϵ_machine
+			# 		# 	r_k = 20 * norm(d_k, 2)
+			# 		# else
+			# 		r_k = norm(d_k, 2) / 1.2
+			# 		# end
+			# 	end
+			# else
+			# 	r_k = r_k / 2
+			# end
+
+			# if success_subproblem_solve
+			# 	if isnan(ρ_hat_k) || ρ_hat_k < 0.1 || (fval_current < fval_next)
+			# 		r_k = norm(d_k, 2) / 2
+			# 	elseif ρ_hat_k < 0.8
+			# 		r_k = 1.2 * norm(d_k, 2)
+			# 	else
+			# 		r_k = 4 * norm(d_k, 2)
+			# 	end
+			# else
+			# 	r_k = r_k / 2
+			# end
+
 
 			# if isnan(ρ_hat_k) || ρ_hat_k < β_1
 			# 	r_k = norm(d_k, 2) / 2
@@ -1103,12 +1123,22 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			# else
 			# 	r_k = 2 * norm(d_k, 2)
 			# end
-
-			# if isnan(ρ_hat_k) || ρ_hat_k < β_1
-			# 	r_k = norm(d_k, 2) / 8
-			# elseif ρ_k < β_2
-			# 	r_k = 8 * norm(d_k, 2)
-			# end
+			β_1 = 0.1
+			β_2 = 0.8
+			β_3 = 0.95
+			if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β_1
+				if norm(d_k, 2) == 0
+					r_k = r_k / 2
+				else
+					r_k = norm(d_k, 2) / 4
+				end
+			elseif ρ_k < β_2
+				r_k = 4 * norm(d_k, 2)
+			elseif ρ_k < β_3
+				r_k = 20 * norm(d_k, 2)
+			else
+				r_k = 20 * norm(d_k, 2)
+			end
 
 			if r_k < 1e-40
 				fraction = -dot(transpose(gval_current), d_k) / (norm(d_k, 2))
@@ -1117,6 +1147,11 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				# r_k = 10 * norm(gval_current, Inf) / norm(hessian_current, Inf)
 				throw(SmallTrustRegionradius("Trust region radius $r_k is too small.", r_k))
 			end
+
+			if fval_current <= -1e30 || fval_next <= -1e30
+				throw(UnboundedObjective("Function values ($fval_current, $fval_next) are too small.", fval_current))
+			end
+
 			min_gval_norm = min(min_gval_norm, norm(gval_current, 2))
 	        # push!(iteration_stats, (k, δ_k, d_k, fval_current, norm(gval_current, 2), Matrix(hessian_current)))
 			push!(iteration_stats, (k, δ_k, d_k, fval_current, norm(gval_current, 2)))
@@ -1159,8 +1194,12 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			@warn e.message
 			status = "FAILURE_WRONG_PREDICTED_REDUCTION"
 			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+		elseif isa(e, UnboundedObjective)
+			@warn e.message
+			status = "FAILURE_UNBOUNDED_OBJECTIVE"
+			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		else
-			@warn e
+			@error e
 		end
 		# println("*********************************Best θ: ", best_θ)
 		# println("*********************************Worst θ: ", worst_θ_1)
