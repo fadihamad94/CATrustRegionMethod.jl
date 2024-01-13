@@ -933,8 +933,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
                     println("Upper bound on model with (d_k = $d_k and ||d_k|| = $norm_d_k) is : $upper_bound.")
 					println("Solving trust-region subproblem using our approach.")
 					ϵ_machine = eps(Float64) #Machine accuracys
-					stop_normal = ϵ_machine ^ 0.75
-					ϵ = stop_normal
+					# stop_normal = ϵ_machine ^ 0.75
+					# ϵ = stop_normal
+					ϵ = 1e-1
 					success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(gval_current, hessian_current, δ_k, ϵ, r_k)
 					total_number_factorizations += temp_total_number_factorizations
 					if success_subproblem_solve

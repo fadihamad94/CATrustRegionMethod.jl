@@ -110,8 +110,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	# use_initial_multiplier = false
 	initial_multiplier = δ
 	# use_stop_args = true
-	# use_stop_args = true
-	use_stop_args = false
+	use_stop_args = true
+	# use_stop_args = false
 	# stop_normal = 0.05
 	stop_normal = 0.2
 	# stop_normal = 0.1
@@ -121,6 +121,9 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
     stop_hard = ϵ_machine ^ 0.75
 	# stop_hard = ϵ_machine ^ 0.5
 	# stop_hard = 0.0
+
+	stop_normal = 1e-5
+    stop_hard = 1e-5
 
 	# Convert the Julia string to a C-compatible representation (Cstring)
 	string_problem_name = string(@__DIR__ ,"/../DEBUG_TRS/$problem_name.csv")
@@ -165,7 +168,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 				if eigmin(Matrix(H)) >= 0
 					@error e
 				end
-				success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, 0.2, r)
+				success, δ, d_k, total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, 0.1, r)
 				return success, δ, d_k, total_number_factorizations + userdata.factorizations, hard_case
 			end
 			@error e
