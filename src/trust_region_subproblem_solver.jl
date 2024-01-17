@@ -113,7 +113,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	use_stop_args = true
 	# use_stop_args = false
 	# stop_normal = 0.05
-	stop_normal = 0.2
+	stop_normal = 0.1
 	# stop_normal = 0.1
 	# stop_normal = 0.05
 	ϵ_machine = eps(Float64) #Machine accuracy
@@ -283,16 +283,18 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
 			if eigmin(Matrix(H)) >= 0
 				try
-					return computeSearchDirection(g, H, δ, 0.2, r, total_number_factorizations)
+					return computeSearchDirection(g, H, δ, 0.1, r, total_number_factorizations)
 				catch e_
 					@error e_
 				end
 			end
-	    	success, δ, d_k = solveHardCaseLogic(g, H, r)
+	    	success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, r)
+			total_number_factorizations += total_number_factorizations
             return success, δ, d_k, total_number_factorizations, true
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
-            success, δ, d_k = solveHardCaseLogic(g, H, r)
+            success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, r)
+			total_number_factorizations += temp_total_number_factorizations
 	    	return success, δ, d_k, total_number_factorizations, true
         else
 			@error e
@@ -582,7 +584,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		less_than_radius = temp_d_0_norm <= r
 		println("temp_d_0_norm is $temp_d_0_norm and ||d(0)|| <= r is $less_than_radius.")
 		if less_than_radius
-			return  true, 0.0, temp_d_0
+			return  true, 0.0, temp_d_0, 0
 		end
 
 		println("minimumEigenValue is $minimumEigenValue")
@@ -590,7 +592,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		println("g is $g")
 		H_matrix = Matrix(H)
 		println("H is $H_matrix")
-		return false, minimumEigenValue, zeros(length(g))
+		return false, minimumEigenValue, zeros(length(g)), 0
 	end
     δ = -minimumEigenValue
 	try
@@ -629,6 +631,12 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		if !less_than_radius_
 			println("This is not a hard case sub-problem.")
 			@error "This is not a hard case sub-problem."
+			try
+				temp_success, δ_m, d_k, total_number_factorizations, temp_hard_case  = computeSearchDirection(g, H, δ, 0.1, r, 0)
+				return true, δ_m, d_k, total_number_factorizations
+			catch e
+				@error e
+			end
 		end
 		# if less_than_radius
 		# 	println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_d_norm, and $r.")
@@ -651,14 +659,14 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		if norm_d_k_squared < norm_d_k_squared_without_τ_squared
 			if less_than_radius
 				println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_d_norm, and $r.")
-				return true, δ, temp_d
+				return true, δ, temp_d, 0
 			end
 			println("minimumEigenValue is $minimumEigenValue")
 			println("r is $r")
 			println("g is $g")
 			H_matrix = Matrix(H)
 			println("H is $H_matrix")
-			return false, δ, zeros(length(g))
+			return false, δ, zeros(length(g)), 0
 		end
 
 	    τ = sqrt(norm_d_k_squared - norm_d_k_squared_without_τ_squared)
@@ -671,7 +679,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 	    end
 		temp_norm_d_k = norm(d_k, 2)
 		println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_norm_d_k, and $r.")
-	    return true, δ, d_k
+	    return true, δ, d_k, 0
 	catch e
 		@show e
 		println("minimumEigenValue is $minimumEigenValue")
@@ -679,7 +687,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, r::Float64)
 		println("g is $g")
 		H_matrix = Matrix(H)
 		println("H is $H_matrix")
-		return false, δ, zeros(length(g))
+		return false, δ, zeros(length(g)), 0
 	end
 
 end

@@ -73,6 +73,8 @@ function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current:
 	# 	guarantee_factor = θ * 0.5 * min_gval_norm * norm(d_k, 2)
 	# end
 	actual_fct_decrease = fval_current - fval_next
+	ϵ_machine = eps(Float64)
+	# predicted_fct_decrease = - second_order_model_value_current_iterate + ϵ_machine
 	predicted_fct_decrease = - second_order_model_value_current_iterate
     # ρ_hat = (fval_current - fval_next) / (fval_current - second_order_model_value_current_iterate + guarantee_factor)
 	ρ_hat = actual_fct_decrease / (predicted_fct_decrease + guarantee_factor)
@@ -109,6 +111,8 @@ function compute_kappa(fval_current::Float64, fval_next::Float64, gval_current::
 	# 	guarantee_factor = θ * 0.5 * min_gval_norm * norm(d_k, 2)
 	# end
 	actual_fct_decrease = fval_current - fval_next
+	ϵ_machine = eps(Float64)
+	# predicted_fct_decrease = - second_order_model_value_current_iterate + ϵ_machine
 	predicted_fct_decrease = - second_order_model_value_current_iterate
     # ρ_hat = (fval_current - fval_next) / (fval_current - second_order_model_value_current_iterate + guarantee_factor)
 	κ = actual_fct_decrease / guarantee_factor
@@ -132,6 +136,8 @@ function compute_ρ_standard_trust_region_method(fval_current::Float64, fval_nex
     second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
     # ρ = (fval_current - fval_next) / (fval_current - second_order_model_value_current_iterate)
 	actual_fct_decrease = fval_current - fval_next
+	ϵ_machine = eps(Float64)
+	# predicted_fct_decrease = - second_order_model_value_current_iterate + ϵ_machine
 	predicted_fct_decrease = - second_order_model_value_current_iterate
 	ρ = actual_fct_decrease / predicted_fct_decrease
 	if ρ == -Inf || isnan(ρ)
