@@ -5,7 +5,7 @@ using NLPModels, LinearAlgebra, DataFrames, SparseArrays
 include("./trust_region_subproblem_solver.jl")
 
 export Problem_Data
-export phi, findinterval, bisection, restoreFullMatrix, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT
+export phi, findinterval, bisection, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT
 
 mutable struct SmallTrustRegionradius
 	message::String
@@ -118,7 +118,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         fval_current = obj(nlp, x_k)
         total_function_evaluation += 1
         total_gradient_evaluation += 1
-		hessian_current = restoreFullMatrix(hess(nlp, x_k))
+		hessian_current = hess(nlp, x_k)
 		total_hessian_evaluation += 1
 		if r_k <= 0.0
 			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULEE * norm(gval_current, Inf) / norm(hessian_current, Inf)
@@ -139,7 +139,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				println("Iteration $k with radius $r_k.")
 			end
             if compute_hessian
-                hessian_current = restoreFullMatrix(hess(nlp, x_k))
+                hessian_current = hess(nlp, x_k)
                 total_hessian_evaluation += 1
             end
             success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
@@ -339,7 +339,7 @@ function CAT_Original(problem::Problem_Data, x::Vector{Float64}, δ::Float64, su
 		min_gval_norm = norm(gval_current, 2)
         while k <= MAX_ITERATION
             if compute_hessian
-                hessian_current = restoreFullMatrix(hess(nlp, x_k))
+                hessian_current = hess(nlp, x_k)
                 total_hessian_evaluation += 1
             end
             δ_k, d_k, temp_total_number_factorizations = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, subproblem_solver_method)

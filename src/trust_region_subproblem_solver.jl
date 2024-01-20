@@ -1,4 +1,4 @@
-export phi, findinterval, bisection, restoreFullMatrix
+export phi, findinterval, bisection
 using LinearAlgebra
 #=
 The big picture idea here is to optimize the trust region subproblem using a factorization method based
@@ -514,16 +514,4 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, prin
 		return false, δ, zeros(length(g)), 0
 	end
 
-end
-
-function restoreFullMatrix(A)
-	#Old NLPModelsJuMP package used to return only a lower traingular matrix
-    # nmbRows = size(A)[1]
-    # numbColumns = size(A)[2]
-    # for i in 1:nmbRows
-    #     for j in i:numbColumns
-    #         A[i, j] = A[j, i]
-    #     end
-    # end
-    return A
 end

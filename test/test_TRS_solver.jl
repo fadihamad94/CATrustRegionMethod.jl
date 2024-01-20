@@ -279,7 +279,7 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     ϵ = 0.8
     r = 0.2
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     success, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test success
     @test d_k == [-0.0, -0.0]
@@ -296,7 +296,7 @@ function test_optimize_second_order_model_phi_zero()
     ϵ = 0.2
     r = 0.2
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k - [0.09089549448495053, 0.1912507010656195], 2) <= tol
     @test norm(δ_k - 32.0, 2) <= tol
@@ -313,7 +313,7 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     ϵ = 0.2
     r = 0.2
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k - [-0.0033190803461683517, 0.18495510723928077], 2) <= tol
     @test norm(δ_k - 492.1875, 2) <= tol
@@ -330,7 +330,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     ϵ = 0.2
     r = 0.5
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test ϵ * r <= norm(d_k) <= r
@@ -348,7 +348,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     ϵ = 0.2
     r = 2.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k) <= r
     @test norm((x_k + d_k) - [1.0], 2) <= tol
@@ -365,7 +365,7 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     ϵ = 0.2
     r = 0.5
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test abs(norm((H + δ_k * I) \ g, 2) - r) <= ϵ
     @test (1 - ϵ) * r <= norm(d_k) <= (1 + ϵ) * r
@@ -385,7 +385,7 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     ϵ = 0.2
     r = 1.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k) <= r
     @test δ_k == 2.0
@@ -404,7 +404,7 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     ϵ = 0.2
     r = 1.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k) <= r
     @test δ_k == 2.0
@@ -422,7 +422,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     ϵ = 0.2
     r = 1.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k) <= r
     @test δ_k == 4.0
@@ -440,7 +440,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     ϵ = 0.2
     r = 1.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k, 2) - r <= tol
     @test δ_k == 2.0
@@ -458,7 +458,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     ϵ = 0.2
     r = 5.0
     g = grad(nlp, x_k)
-    H = consistently_adaptive_trust_region_method.restoreFullMatrix(hess(nlp, x_k))
+    H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r)
     @test norm(d_k) <= r
     @test δ_k == 8.0
