@@ -311,6 +311,7 @@ function solveSimpleConvexNLPModel()
     problem = test_create_simple_convex_nlp_model()
     x = [0.0, 0.0]
     δ = 0.0
+    problem.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.0, 1.0], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0, 2) <= tol
@@ -334,6 +335,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     problem = test_create_simple_convex_nlp_model()
     x = [0.1, 0.1]
     δ = 0.0
+    problem.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.4, 0.6], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
@@ -345,6 +347,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     problem = test_create_simple_convex_nlp_model()
     x = [20.01, -10.01]
     δ = 0.0
+    problem.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [19.01, -18.01], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
