@@ -40,11 +40,12 @@ mutable struct Problem_Data
 	γ_2::Float64
     MAX_TIME::Float64
 	print_level::Int64
+	compute_ρ_hat_approach::String
     # initialize parameters
     function Problem_Data(nlp::AbstractNLPModel, β_1::Float64=0.1, β_2::Float64=0.8,
                            θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, r_1::Float64=1.0,
                            MAX_ITERATION::Int64=10000, gradient_termination_tolerance::Float64=1e-5, γ_2::Float64=0.1,
-                           MAX_TIME::Float64=30 * 60.0, print_level::Int64=0)
+                           MAX_TIME::Float64=30 * 60.0, print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
 		@assert(β_2 > 0 && β_2 < 1)
 		@assert(β_2 >= β_1)
@@ -58,7 +59,7 @@ mutable struct Problem_Data
         @assert(MAX_TIME > 0)
 		@assert(1 > γ_2 > 0)
         # @assert(γ_2 > (1 / ω) && γ_2 <= 1)
-        return new(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, MAX_ITERATION, gradient_termination_tolerance, γ_2, MAX_TIME, print_level)
+        return new(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, MAX_ITERATION, gradient_termination_tolerance, γ_2, MAX_TIME, print_level, compute_ρ_hat_approach)
     end
 end
 
@@ -66,9 +67,13 @@ function computeSecondOrderModel(f::Float64, g::Vector{Float64}, H, d_k::Vector{
     return transpose(g) * d_k + 0.5 * transpose(d_k) * H * d_k
 end
 
-function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64, print_level::Int64=0)
-    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
+function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64, print_level::Int64=0, approach::String="DEFAULT")
+    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current,  gval_current, H, d_k)
 	guarantee_factor = θ * 0.5 * min(norm(gval_current, 2), norm(gval_next, 2)) * norm(d_k, 2)
+	if approach != "DEFAULT"
+		guarantee_factor = θ * 0.5 * norm(gval_next, 2) * norm(d_k, 2)
+	end
+
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
 	ρ_hat = actual_fct_decrease / (predicted_fct_decrease + guarantee_factor)
@@ -106,6 +111,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     nlp = problem.nlp
     θ = problem.θ
 	print_level = problem.print_level
+	compute_ρ_hat_approach = problem.compute_ρ_hat_approach
 	iteration_stats = DataFrame(k = [], deltaval = [], directionval = [], fval = [], gradval = [])
     total_function_evaluation = 0
     total_gradient_evaluation = 0
@@ -209,7 +215,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				gval_next = grad(nlp, x_k)
 				total_gradient_evaluation += 1
 
-				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level)
+				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level, compute_ρ_hat_approach)
 
                 fval_current = fval_next
                 gval_current = gval_next
