@@ -365,7 +365,7 @@ function executeCUTEST_Models_benchmark(
 			@info "$dates_format Skipping Problem $problem."
 			continue
 		else
-        	runModelFromProblem(prefix, problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+        	runModelFromProblem(prefix, problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, δ, print_level, trust_region_method_subproblem_solver)
 		end
     end
 	df = DataFrame(CSV.File(total_results_output_file_path))
