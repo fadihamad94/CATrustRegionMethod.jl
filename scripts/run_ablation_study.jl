@@ -124,7 +124,7 @@ function createProblemData(
   γ_2::Float64,
   r_1::Float64)
 		problem_data_vec = []
-		solver = "CAT"
+		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 		compute_ρ_hat_approach = "NOT DEFAULT"
 		problem_data = (β_1, β_1, θ, ω_1, ω_1, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach)
 		for crt in criteria
@@ -138,7 +138,7 @@ function createProblemData(
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
 			elseif crt == "GALAHAD_TRS"
-				solver = "CAT_GALAHAD_FACTORIZATION"
+				solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS
 				index_to_override = 11
 				new_problem_data = (problem_data[1:index_to_override-1]..., solver, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
@@ -163,12 +163,14 @@ function createProblemData(
 end
 
 function outputIterationsStatusToCSVFile(
+	start_time::String,
+	end_time::String,
 	cutest_problem::String,
 	status::String,
 	computation_stats::Dict,
 	total_results_output_file_path::String,
-	total_iterations_count,
-	count_factorization
+	total_iterations_count::Integer,
+	count_factorization::Integer
 	)
     total_function_evaluation = Int(computation_stats["total_function_evaluation"])
     total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
@@ -178,8 +180,7 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 
     open(total_results_output_file_path,"a") do iteration_status_csv_file
-			current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-			write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+			write(iteration_status_csv_file, "$start_time,$end_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
@@ -193,6 +194,7 @@ function runModelFromProblem(
 	)
     global nlp = nothing
 		β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach = problem_data
+		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
     try
 			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
       println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
@@ -200,7 +202,9 @@ function runModelFromProblem(
       nlp = CUTEstModel(cutest_problem)
 			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level, compute_ρ_hat_approach)
 			x_1 = problem.nlp.meta.x0
+			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	    x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
+			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			function_value = NaN
 			gradient_value = NaN
 			if size(last(iteration_stats, 1))[1] > 0
@@ -216,15 +220,16 @@ function runModelFromProblem(
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 
 			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
-			outputIterationsStatusToCSVFile(cutest_problem, status, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
+			outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
 	catch e
 		@show e
 		status = "INCOMPLETE"
 		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		end_time = dates_format
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-		outputIterationsStatusToCSVFile(cutest_problem, status, computation_stats, total_results_output_file_path, max_it + 1, max_it + 1)
+		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats, total_results_output_file_path, max_it + 1, max_it + 1)
   finally
   	if nlp != nothing
     	finalize(nlp)
@@ -238,7 +243,6 @@ function computeGeomeans(df::DataFrame, max_it::Int64)
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
-	non_success_statuses = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED"]
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
@@ -247,11 +251,11 @@ function computeGeomeans(df::DataFrame, max_it::Int64)
 			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
 			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
 		else
-			push!(total_iterations_count_vec, max_it)
-			push!(total_factorization_count_vec, max(df[i, :].count_factorization, max_it))
-			push!(total_function_evaluation_vec, max_it)
-			push!(total_gradient_evaluation_vec, max_it)
-			push!(total_hessian_evaluation_vec, max_it)
+			push!(total_iterations_count_vec, max_it + 1)
+			push!(total_factorization_count_vec, max(df[i, :].count_factorization, max_it + 1))
+			push!(total_function_evaluation_vec, max_it + 1)
+			push!(total_gradient_evaluation_vec, max_it + 1)
+			push!(total_hessian_evaluation_vec, max_it + 1)
 		end
 	end
 
@@ -310,7 +314,7 @@ function runProblems(
 			if !isfile(total_results_output_file_path)
 				mkpath(total_results_output_directory);
 				open(total_results_output_file_path,"a") do iteration_status_csv_file
-					write(iteration_status_csv_file, "time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+					write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
 		    end
 			end
 

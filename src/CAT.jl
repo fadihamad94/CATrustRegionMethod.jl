@@ -284,27 +284,24 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         	k += 1
         end
     catch e
-		computation_stats = Dict("total_function_evaluation" => (MAX_ITERATION + 1), "total_gradient_evaluation" => (MAX_ITERATION + 1), "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => (MAX_ITERATION + 1))
+		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		status = "FAILURE"
 		if isa(e, SmallTrustRegionradius)
 			@warn e.message
 			status = "FAILURE_SMALL_RADIUS"
-			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		elseif isa(e, WrongFunctionPredictedReduction)
 			@warn e.message
 			status = "FAILURE_WRONG_PREDICTED_REDUCTION"
-			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		elseif isa(e, UnboundedObjective)
 			@warn e.message
 			status = "FAILURE_UNBOUNDED_OBJECTIVE"
-			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		else
 			@error e
 		end
-        return x_k, status, iteration_stats, computation_stats, (MAX_ITERATION + 1)
+        return x_k, status, iteration_stats, computation_stats, k
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-    return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, (MAX_ITERATION + 1)
+    return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, k
 end
 
 # This is the CAT original algorithm that we inlucde in the NeurIPS paper

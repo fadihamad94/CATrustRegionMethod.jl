@@ -4,13 +4,6 @@ include("../src/CAT.jl")
 include("../src/tru.jl")
 include("../src/arc.jl")
 
-#const problems_paper_list =  ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
-#const problems_paper_list =  ["DIXMAANI", "LIARWHD", "SCHMVETT", "LUKSAN13LS", "VAREIGVL", "JUDGE", "CYCLOOCFLS", "DIXMAANJ", "FBRAIN3LS", "SPIN2LS", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "BROWNDEN", "HILBERTA", "DMN37142LS", "PALMER5D", "BOXBODLS", "HIMMELBB", "ENGVAL2", "MUONSINELS", "ENSOLS", "PRICE4", "EIGENALS", "YATP1LS", "CERI651ELS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "SISSER", "TRIGON1", "MGH17SLS", "PENALTY1", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "GROWTHLS", "SINEVAL", "GAUSS2LS", "STRATEC", "NELSONLS", "HYDCAR6LS", "DQRTIC", "MISRA1ALS", "WAYSEA1", "BOX", "DMN37143LS", "TOINTGSS", "GAUSS3LS", "SPARSINE", "VESUVIALS", "INTEQNELS", "HAIRY", "YFITU", "CHNRSNBM", "HIMMELBCLS", "CYCLIC3LS", "MARATOSB", "LSC2LS", "PALMER1C", "BA-L49LS", "SSCOSINE", "POWELLBSLS", "NONCVXU2", "HIMMELBG", "BROYDN7D", "COSINE", "DIXMAANO", "DENSCHNF", "COOLHANSLS", "PRICE3", "VESUVIOULS", "KOWOSB", "LUKSAN12LS", "SPINLS", "HIMMELBH", "ZANGWIL2", "BROYDN3DLS", "PALMER2C", "HEART8LS", "CURLY20", "VANDANMSLS", "HATFLDD", "NONMSQRT", "MISRA1DLS", "BRKMCC", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "DENSCHNA", "YATP2CLS", "DMN15332LS", "METHANL8LS", "SCURLY20", "MISRA1BLS", "DENSCHNC", "NONDQUAR", "S308", "SNAIL", "SCURLY30", "LUKSAN21LS", "MANCINO", "EXPFIT", "BOX3", "ECKERLE4LS", "HAHN1LS", "MGH17LS", "LUKSAN22LS", "DMN15102LS", "PALMER1D", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "JENSMP", "CERI651DLS", "BROYDNBDLS", "GBRAINLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "PENALTY2", "BA-L1SPLS", "BA-L73LS", "ALLINITU", "VESUVIOLS", "DIAMON2DLS", "THURBERLS", "CERI651ALS", "VIBRBEAM", "GAUSS1LS", "PENALTY3", "DJTL", "LSC1LS", "MODBEALE", "PALMER6C", "DIXMAANN", "CERI651CLS", "LUKSAN17LS", "PALMER5C", "EIGENCLS", "INDEFM", "OSBORNEA", "BIGGS6", "PALMER7C", "BEALE", "SROSENBR", "MNISTS5LS", "MGH10SLS", "ARGLINA", "INDEF", "SENSORS", "ARWHEAD", "RAT43LS", "CLUSTERLS", "HELIX", "DIXON3DQ", "MEXHAT", "DENSCHNB", "MNISTS0LS", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "MEYER3", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "DENSCHND", "BROWNBS", "SSI", "NCB20", "FLETCBV3", "KSSLS", "CHAINWOO", "HATFLDE", "LUKSAN11LS", "KIRBY2LS", "LUKSAN16LS", "DIXMAANP", "COATING", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "BENNETT5LS", "MSQRTALS", "CURLY10", "DANWOODLS", "ARGTRIGLS", "BOXPOWER", "DANIWOODLS", "RAT42LS", "DQDRTIC", "DEVGLA1", "HATFLDFL", "OSCIGRAD", "STREG", "FLETCHBV", "AKIVA", "QING", "LANCZOS2LS", "ARGLINB", "DIXMAANF", "BA-L16LS", "PARKCH", "MOREBV", "ROSENBR", "NONDIA", "HYDC20LS", "HATFLDFLS", "ERRINROS", "LUKSAN14LS", "HIELOW", "MSQRTBLS", "BROWNAL", "HUMPS", "BARD", "HATFLDGLS", "SCURLY10", "MGH10LS", "TQUARTIC", "EXTROSNB", "DEVGLA2", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "LUKSAN15LS", "DIXMAANG", "EGGCRATE", "HILBERTB", "BA-L1LS", "DIXMAANK", "QUARTC", "RECIPELS", "EDENSCH", "CHNROSNB", "YATP1CLS", "TOINTPSP", "LANCZOS1LS", "PALMER3C", "SSBRYBND", "ELATVIDU", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "TOINTQOR", "ROSZMAN1LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "WATSON", "GAUSSIAN", "SINQUAD", "EG2", "DIXMAANL", "GENROSE", "PALMER4C", "TESTQUAD", "EIGENBLS", "MISRA1CLS", "DENSCHNE", "OSBORNEB", "CLIFF", "STRTCHDV", "TRIGON2", "HEART6LS", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS", "LOGHAIRY", "CERI651BLS", "CUBE"]
-
-const problems_paper_list = CUTEst.select(max_con=0, only_free_var=true)
-#const problems_paper_list = ["AKIVA", "ALLINITU",  "ARGLINA",   "ARGTRIGLS",  "BA-L1LS",  "BARD",  "BEALE",  "BENNETT5LS",  "BIGGS6",  "BOX3",  "BOXBODLS",  "BRKMCC",  "BROWNAL",  "BROWNBS",  "BROWNDEN"]
-const problems_paper_list = ["AKIVA", "ALLINITU",  "ARGLINA",   "ARGTRIGLS",  "BA-L1LS",  "BARD"]
-
 const optimization_method_CAT = "CAT"
 const optimization_method_CAT_theta_0 = "CAT_THETA_ZERO"
 const optimization_metnod_newton_trust_region = "NewtonTrustRegion"
@@ -23,7 +16,12 @@ const optimization_method_tru_galahd_iterative = "TRU_GALAHAD_ITERATIVE"
 
 const skip_list = ["ARGLINB", "DIAMON2DLS", "DIAMON3DLS", "DMN15102LS", "DMN15103LS", "DMN15332LS", "DMN15333LS", "DMN37142LS", "DMN37143LS", "FLETCHCR", "MNISTS5LS"]
 #const skip_list = []
-const train_test_split = 0.8
+
+const default_train_problems = ["AKIVA", "ALLINITU", "ARGLINA", "ARGTRIGLS", "BA-L1LS", "BARD", "BEALE", "BENNETT5LS", "BIGGS6", "BOX3", "BOXBODLS", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CERI651ALS", "CERI651BLS", "CERI651CLS", "CERI651DLS", "CERI651ELS", "CHNROSNB", "CHNRSNBM", "CLIFF", "CLUSTERLS", "COATING", "COOLHANSLS", "CUBE", "DANIWOODLS", "DANWOODLS", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DEVGLA1", "DEVGLA2", "DJTL", "EG2", "EGGCRATE", "ELATVIDU", "ENGVAL2", "ENSOLS", "ERRINROS", "EXPFIT", "EXTROSNB", "FBRAIN3LS", "GAUSS2LS", "GAUSS3LS", "GAUSSIAN", "GBRAINLS", "GENROSE", "GROWTHLS", "HATFLDD", "HATFLDFL", "HATFLDFLS", "HATFLDGLS", "HEART6LS", "HEART8LS", "HELIX", "HIELOW", "HILBERTA", "HIMMELBB", "HIMMELBCLS", "HIMMELBG", "HIMMELBH", "HUMPS", "HYDC20LS", "HYDCAR6LS", "JENSMP", "JUDGE", "KIRBY2LS", "KOWOSB", "KSSLS", "LANCZOS1LS", "LANCZOS2LS", "LOGHAIRY", "LSC1LS", "LSC2LS", "LUKSAN11LS", "LUKSAN12LS", "LUKSAN13LS", "LUKSAN14LS", "LUKSAN15LS", "LUKSAN16LS", "LUKSAN22LS", "MANCINO", "MARATOSB", "METHANL8LS", "MEXHAT", "MEYER3", "MGH10LS", "MGH10SLS", "MGH17LS", "MGH17SLS", "MISRA1BLS", "MISRA1CLS", "MISRA1DLS", "MNISTS0LS", "MUONSINELS", "NELSONLS", "OSBORNEA", "OSBORNEB", "PALMER1D", "PALMER3C", "PALMER5C", "PALMER5D", "PALMER7C", "PARKCH", "PENALTY1", "PENALTY2", "POWELLBSLS", "PRICE3", "PRICE4", "QING", "RAT42LS", "RAT43LS", "RECIPELS", "ROSENBR", "ROSZMAN1LS", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "SPIN2LS", "SSI", "STRATEC", "STREG", "STRTCHDV", "TOINTQOR", "TRIGON1", "VANDANMSLS", "VESUVIOLS", "VESUVIOULS", "VIBRBEAM", "WATSON", "WAYSEA1", "YFITU", "ZANGWIL2"]
+
+const default_test_problems = ["DIXMAANI", "LIARWHD", "SCHMVETT", "VAREIGVL", "CYCLOOCFLS", "DIXMAANJ", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "DMN37142LS", "EIGENALS", "YATP1LS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "S308NE", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "DQRTIC", "MISRA1ALS", "BOX", "DMN37143LS", "TOINTGSS", "SPARSINE", "VESUVIALS", "INTEQNELS", "COATINGNE", "HAIRY", "PALMER1C", "BA-L49LS", "SSCOSINE", "NONCVXU2", "BROYDN7D", "COSINE", "DIXMAANO", "SPINLS", "BROYDN3DLS", "PALMER2C", "CURLY20", "NONMSQRT", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "YATP2CLS", "DMN15332LS", "SCURLY20", "NONDQUAR", "SCURLY30", "LUKSAN21LS", "ECKERLE4LS", "HAHN1LS", "DMN15102LS", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "BROYDNBDLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "DEVGLA2NE", "BA-L1SPLS", "BA-L73LS", "DIAMON2DLS", "THURBERLS", "GAUSS1LS", "PENALTY3", "MODBEALE", "PALMER6C", "DIXMAANN", "LUKSAN17LS", "EIGENCLS", "INDEFM", "SROSENBR", "MNISTS5LS", "INDEF", "ARWHEAD", "DIXON3DQ", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "NCB20", "FLETCBV3", "CHAINWOO", "HATFLDE", "DIXMAANP", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "MSQRTALS", "CURLY10", "BOXPOWER", "DQDRTIC", "OSCIGRAD", "FLETCHBV", "ARGLINB", "DIXMAANF", "BA-L16LS", "MOREBV", "NONDIA", "MSQRTBLS", "SCURLY10", "TQUARTIC", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "DIXMAANG", "HILBERTB", "DIXMAANK", "QUARTC", "EDENSCH", "YATP1CLS", "TOINTPSP", "SSBRYBND", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "SINQUAD", "DIXMAANL", "PALMER4C", "TESTQUAD", "EIGENBLS", "TRIGON2", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS"]
+
+const NON_SUCCESS_STATUSES = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED", "FAILURE_SMALL_RADIUS", "FAILURE_WRONG_PREDICTED_REDUCTION", "FAILURE_UNBOUNDED_OBJECTIVE"]
 
 function f(x::Vector)
 	obj(nlp, x)
@@ -51,77 +49,17 @@ function get_problem_list(min_nvar, max_nvar)
 	return CUTEst.select(min_var = min_nvar, max_var = max_nvar, max_con = 0, only_free_var = true)
 end
 
-function get_problem_list_size(cutest_problems::Vector{String})
-	problems_list_size = Vector{Int64}()
-	problems_list_name = cutest_problems
-	for problem in cutest_problems
-        	nlp = nothing
-                try
-                	nlp = CUTEstModel(problem)
-                	push!(problems_list_size, nlp.meta.nvar)
-                catch e
-			deleteat!(problems_list_name, findall(name->name==problem,problems_list_name))
-		finally
-                	finalize(nlp)
-                end
+function get_problems_test_train_split(cutest_problems::Vector{String})
+	train_problems = Vector{String}()
+	test_problems = Vector{String}()
+	for cutest_problem in cutest_problems
+		if cutest_problem ∈ default_train_problems
+			push!(train_problems, cutest_problem)
+		else
+			push!(test_problems, cutest_problem)
+		end
 	end
-	return problems_list_name, problems_list_size
-end
-
-function get_problems_test_train_split(cutest_problems::Vector{String}, train_test_split::Float64)
-    @assert 0 < train_test_split < 1
-    number_of_problems = length(cutest_problems)
-    Random.seed!(0)
-    cutest_problem_indixes = collect(1:number_of_problems)
-    cutest_problem_indixes = shuffle(cutest_problem_indixes)
-    train_indixes = cutest_problem_indixes[1:floor(Int, train_test_split * length(cutest_problem_indixes))]
-    test_indixes = cutest_problem_indixes[floor(Int, train_test_split * length(cutest_problem_indixes)) + 1:length(cutest_problem_indixes)]
-    cutest_problems_train = cutest_problems[train_indixes]
-    cutest_problems_test = cutest_problems[test_indixes]
-    cutest_problems_train_sorted_alphabatically = sort(cutest_problems_train)
-    cutest_problems_test_sorted_alphabatically = sort(cutest_problems_test)
-    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size = get_problem_list_size(cutest_problems_train_sorted_alphabatically)
-    cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problem_list_size(cutest_problems_test_sorted_alphabatically)
-    return cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size
-end
-
-function get_problem_train_batch_default(train_batch_count::Int64, train_batch_index::Int64, cutest_problems_name_list::Vector{String}, cutest_problems_size_list::Vector{Int64})
-    @assert train_batch_count > 0
-    @assert 1 <= train_batch_index <= train_batch_count
-    number_of_problems = length(cutest_problems)
-    Random.seed!(0)
-    cutest_problem_indixes = collect(1:number_of_problems)
-    cutest_problem_indixes = shuffle(cutest_problem_indixes)
-    train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
-    start_index = (train_batch_index - 1) * train_batch_size + 1
-    end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
-    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
-    return train_cutest_problems
-end
-
-function get_problems_list_batch(train_batch_count::Int64, train_batch_index::Int64, cutest_problems_name_list::Vector{String}, cutest_problems_size_list::Vector{Int64})
-    @assert train_batch_count > 0
-    @assert 1 <= train_batch_index <= train_batch_count
-    total_problem_size_sum = sum(cutest_problems_size_list)
-    start_index = -1
-    end_index = -1
-    expected_total_size_of_problems_per_batch = floor(Int, total_problem_size_sum / train_batch_count)
-    expected_cumulative_total_size_of_problems = expected_total_size_of_problems_per_batch * (train_batch_index - 1)
-    cumulative_total_size_of_problems = 0
-    for i in 1:length(cutest_problems_size_list)
-        if cumulative_total_size_of_problems >= (expected_cumulative_total_size_of_problems + expected_total_size_of_problems_per_batch)
-	    end_index = i - 1
-	    break
-	elseif start_index < 0 && cumulative_total_size_of_problems >= expected_cumulative_total_size_of_problems
-	    start_index = i
-        else
-	    #do nothing here we still didn't reach the batch of the problems to start including the problems for this batch
-	end
-	cumulative_total_size_of_problems += cutest_problems_size_list[i]
-    end
-    end_index = end_index == -1 ? length(cutest_problems_size_list) : end_index
-    start_index = start_index == -1 ? end_index - 1 : start_index
-    return cutest_problems_name_list[start_index:end_index]
+	return train_problems, test_problems
 end
 
 function run_cutest_with_CAT(
@@ -131,91 +69,35 @@ function run_cutest_with_CAT(
     max_time::Float64,
     tol_opt::Float64,
     θ::Float64,
-    β::Float64,
-	ω::Float64,
+    β_1::Float64,
+	β_2::Float64,
+	ω_1::Float64,
+	ω_2::Float64,
     γ_2::Float64,
     r_1::Float64,
 	δ::Float64,
     min_nvar::Int64,
     max_nvar::Int64,
-    train_batch_count::Int64,
-    train_batch_index::Int64,
+    print_level::Int64,
     optimization_method::String
     )
- #=
-    cutest_problems = ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
-    trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
-    if θ == 0.0
-        optimization_method = optimization_method_CAT_theta_0
-    end
-    executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-=#
 
-    cutest_problems = problems_paper_list
+    cutest_problems = []
     if !default_problems
-        cutest_problems = get_problem_list(min_nvar, max_nvar)
+		cutest_problems = get_problem_list(min_nvar, max_nvar)
     else
-	cutest_problems = CUTEst.select(contype="unc")
+		cutest_problems = CUTEst.select(contype="unc")
     end
-	# cutest_problems = ["ALLINITU", "BARD", "BIGGS6", "CERI651ALS", "CERI651BLS"]
+
 	trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
 	if θ == 0.0
 		optimization_method = optimization_method_CAT_theta_0
 	end
-    #=number_of_problems = length(cutest_problems)
-    Random.seed!(0)
-    cutest_problem_indixes = collect(1:number_of_problems)
-    cutest_problem_indixes = shuffle(cutest_problem_indixes)
-    train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
-    start_index = (train_batch_index - 1) * train_batch_size + 1
-    end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
-    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
-    =#
 
-    #This is for running all problems.
-    # executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-
-
-    #train_cutest_problems = cutest_problems
-    train_test_split = 0.8
-    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
-    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-	# executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-    #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
-    #executeCUTEST_Models_benchmark(test_cutest_problems, string(folder_name, "_test"), optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-
+	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+    executeCUTEST_Models_benchmark(train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
+	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end
-
-#OLD_CODE
-#=
-function run_cutest_with_CAT(
-    folder_name::String,
-    default_problems::Bool,
-    max_it::Int64,
-    max_time::Float64,
-    tol_opt::Float64,
-    θ::Float64,
-    β::Float64,
-	ω::Float64,
-    γ_2::Float64,
-    r_1::Float64,
-	δ::Float64,
-    min_nvar::Int64,
-    max_nvar::Int64,
-	optimization_method::String
-    )
-    cutest_problems = problems_paper_list
-    if !default_problems
-        cutest_problems = get_problem_list(min_nvar, max_nvar)
-    end
-	trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
-	if θ == 0.0
-		optimization_method = optimization_method_CAT_theta_0
-	end
-	executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
-end
-=#
 
 function run_cutest_with_newton_trust_region(
     folder_name::String,
@@ -225,21 +107,22 @@ function run_cutest_with_newton_trust_region(
     tol_opt::Float64,
     r_1::Float64,
     min_nvar::Int64,
-    max_nvar::Int64
+    max_nvar::Int64,
+	print_level::Int64
     )
-    cutest_problems = problems_paper_list
+	cutest_problems = []
     if !default_problems
-        cutest_problems = get_problem_list(min_nvar, max_nvar)
+		cutest_problems = get_problem_list(min_nvar, max_nvar)
+    else
+		cutest_problems = CUTEst.select(contype="unc")
     end
+
     optimization_method = optimization_metnod_newton_trust_region
-	θ = β = ω = γ_2 = 0.0
-    train_test_split = 0.8
-    train_batch_count = 1
-    train_batch_index = 1
-    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
-    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
-    #executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
+	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+
+	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+    executeCUTEST_Models_benchmark(train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 end
 
 function run_cutest_with_arc(
@@ -251,35 +134,21 @@ function run_cutest_with_arc(
     σ_1::Float64,
     min_nvar::Int64,
     max_nvar::Int64,
-	train_batch_count::Int64,
-	train_batch_index::Int64
+	print_level::Int64
     )
-	cutest_problems = problems_paper_list
+	cutest_problems = []
     if !default_problems
-        cutest_problems = get_problem_list(min_nvar, max_nvar)
+		cutest_problems = get_problem_list(min_nvar, max_nvar)
+    else
+		cutest_problems = CUTEst.select(contype="unc")
     end
 
-    #cutest_problems = ["ALLINITU", "ARGLINA", "BARD", "BEALE", "BIGGS6", "BOX3", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CHNROSNB", "CLIFF", "CUBE", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DJTL", "ENGVAL2", "ERRINROS", "EXPFIT", "GENROSEB", "GROWTHLS", "GULF", "HAIRY", "HATFLDD", "HATFLDE", "HEART6LS", "HEART8LS", "HELIX", "HIMMELBB", "HUMPS", "HYDC20LS", "JENSMP", "KOWOSB", "LOGHAIRY", "MANCINO", "MEXHAT", "MEYER3", "OSBORNEA", "OSBORNEB", "PALMER5C", "PALMER6C", "PALMER7C", "PALMER8C", "PARKCH", "PENALTY2", "PENALTY3", "PFIT1LS", "PFIT2LS", "PFIT3LS", "PFIT4LS", "ROSENBR", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "STREG", "TOINTGOR", "TOINTPSP", "VARDIM", "VIBRBEAM", "WATSON", "YFITU"]
-
     optimization_method = optimization_method_arc_galahad
-	θ = β = ω = γ_2 = 0.0
-	train_test_split = 0.8
-    	cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
-    	train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
-    	executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
-	#=
-	Random.seed!(0)
-	number_of_problems = length(cutest_problems)
-	cutest_problem_indixes = collect(1:number_of_problems)
-    cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
-	start_index = (train_batch_index - 1) * train_batch_size + 1
-	end_index = train_batch_index * train_batch_size
-    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
-	executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
-	#test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
-	# executeCUTEST_Models_benchmark(test_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, σ_1)
-	=#
+	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+
+	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
 end
 
 function run_cutest_with_tru(
@@ -291,32 +160,21 @@ function run_cutest_with_tru(
     r_1::Float64,
     min_nvar::Int64,
     max_nvar::Int64,
-	train_batch_count::Int64,
-	train_batch_index::Int64,
+	print_level::Int64,
 	optimization_method::String
     )
-	cutest_problems = problems_paper_list
+	cutest_problems = []
     if !default_problems
-        cutest_problems = get_problem_list(min_nvar, max_nvar)
+		cutest_problems = get_problem_list(min_nvar, max_nvar)
+    else
+		cutest_problems = CUTEst.select(contype="unc")
     end
-    θ = β = ω = γ_2 = 0.0
-    train_test_split = 0.8
-    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
-    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
-#=
-    Random.seed!(0)
-    number_of_problems = length(cutest_problems)
-    cutest_problem_indixes = collect(1:number_of_problems)
-    cutest_problem_indixes = shuffle(cutest_problem_indixes)
-	train_batch_size = floor(Int, train_test_split * length(cutest_problem_indixes) / train_batch_count)
-	start_index = (train_batch_index - 1) * train_batch_size + 1
-	end_index = train_batch_index * train_batch_size
-    train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
-    #test_cutest_problems = cutest_problems[cutest_problem_indixes[Int(round(train_test_split * number_of_problems)) + 1 : number_of_problems]]
-    #executeCUTEST_Models_benchmark(test_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
-=#
+
+    θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+
+    train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 end
 
 function runModelFromProblem(
@@ -327,23 +185,29 @@ function runModelFromProblem(
     max_time::Float64,
     tol_opt::Float64,
     θ::Float64,
-    β::Float64,
-	ω::Float64,
+    β_1::Float64,
+	β_2::Float64,
+	ω_1::Float64,
+	ω_2::Float64,
     γ_2::Float64,
     r_1::Float64,
 	δ::Float64,
+	print_level::Int64,
 	trust_region_method_subproblem_solver::String=consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 	)
     global nlp = nothing
+	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
     try
-	dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
         println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
-	@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
+		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 		if optimization_method == optimization_method_CAT || optimization_method == optimization_method_CAT_theta_0 || optimization_method == optimization_method_CAT_galahad_factorization || optimization_method == optimization_method_CAT_galahad_iterative
-			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, 0.8, 0.1, 4.0, 20.0, 0.0, max_it, tol_opt, 0.1, max_time, 1)
+			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level)
 	        x_1 = problem.nlp.meta.x0
+			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	        x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
+			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			function_value = NaN
 			gradient_value = NaN
 			if size(last(iteration_stats, 1))[1] > 0
@@ -354,15 +218,18 @@ function runModelFromProblem(
 			for key in keys(computation_stats)
 				computation_stats_modified[key] = computation_stats[key]
 			end
-			println("------------------------MODEL SOLVED WITH STATUS: ", status)
+			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", "$optimization_method")
 			outputResultsToCSVFile(directory_name, cutest_problem, iteration_stats)
 			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
-			# outputHowOftenNearConvexityConditionHolds(directory_name, cutest_problem, status, optimization_method, iteration_stats)
+			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
 		elseif optimization_method == optimization_metnod_newton_trust_region
 			d = Optim.TwiceDifferentiable(f, g!, h!, nlp.meta.x0)
+			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			results = optimize(d, nlp.meta.x0, Optim.NewtonTrustRegion(initial_delta=r_1), Optim.Options(show_trace=false, iterations = max_it, time_limit = max_time, g_abstol = tol_opt))
+			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			x = Optim.minimizer(results)
 			total_iterations_count = Optim.iterations(results)
 			total_function_evaluation = Optim.f_calls(results)
@@ -375,91 +242,75 @@ function runModelFromProblem(
 			if status == "ITERATION_LIMIT"
 				total_iterations_count = max_it + 1
 			end
-			println("------------------------MODEL SOLVED WITH STATUS: ", status)
+			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", "$optimization_method")
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method)
+			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method)
 		elseif optimization_method == optimization_method_arc_galahad
 			initial_weight = r_1
-			print_level = 0
 			max_inner_iterations_or_factorizations = 10000
+			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			userdata, solution = arc(length(nlp.meta.x0), nlp.meta.x0, grad(nlp, nlp.meta.x0), print_level, max_it, initial_weight, max_inner_iterations_or_factorizations, max_time)
+			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			status = userdata.status == 0 ? "OPTIMAL" : userdata.status == -18 ? "ITERATION_LIMIT" : userdata.status == -19 ? "MAX_TIME" : "FAILURE"
-			iter = userdata.iter
+			iter = max(userdata.iter, 1) #Safety check as ARC returns 0 iter count if already on the optimal solution
 			total_iterations_count = iter
-			total_function_evaluation = userdata.total_function_evaluation
-			total_gradient_evaluation = userdata.total_gradient_evaluation
-			total_hessian_evaluation = userdata.total_hessian_evaluation
-			total_inner_iterations_or_factorizations = userdata.total_inner_iterations_or_factorizations
+			total_function_evaluation = max(userdata.total_function_evaluation, 1)
+			total_gradient_evaluation = max(userdata.total_gradient_evaluation, 1)
+			total_hessian_evaluation = max(userdata.total_hessian_evaluation, 1)
+			total_inner_iterations_or_factorizations = max(userdata.total_inner_iterations_or_factorizations, 1)
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
-			@show status
-			@show userdata.status
-			@show total_iterations_count
-			@show total_function_evaluation
-			@show total_gradient_evaluation
-			@show total_hessian_evaluation
-			@show total_inner_iterations_or_factorizations
-			@show gradient_value <= tol_opt
-			if userdata.status != 0 || gradient_value > tol_opt
-				iter = max_it + 1
-				total_iterations_count = iter
-				total_function_evaluation = max_it + 1
-				total_gradient_evaluation = max_it + 1
-				total_hessian_evaluation = max_it + 1
+			if status == "OPTIMAL" && gradient_value > tol_opt
+				status = "FAILURE"
 			end
 			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
-			println("------------------------MODEL SOLVED WITH STATUS: ", status)
+			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", "$optimization_method")
 			time_clock_factorize = userdata.time_clock_factorize
 			time_clock_preprocess = userdata.time_clock_preprocess
 			time_clock_solve = userdata.time_clock_solve
 			time_clock_analyse = userdata.time_clock_analyse
-			outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
+			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		elseif optimization_method == optimization_method_tru_galahd_factorization || optimization_method == optimization_method_tru_galahd_iterative
 			subproblem_direct = optimization_method == optimization_method_tru_galahd_factorization ? true : false
 			initial_x = nlp.meta.x0
-			print_level = 0
 			max_inner_iterations_or_factorizations = 10000
+			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			userdata, solution = tru(length(initial_x), initial_x, grad(nlp, initial_x), print_level, max_it, r_1, subproblem_direct, max_inner_iterations_or_factorizations, max_time)
+			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			status = userdata.status == 0 ? "OPTIMAL" : userdata.status == -18 ? "ITERATION_LIMIT" : userdata.status == -19 ? "MAX_TIME" : "FAILURE"
-			iter = userdata.iter
+			iter = max(userdata.iter, 1) #Safety check as TRM returns 0 iter count if already on the optimal solution
 			total_iterations_count = iter
-			total_function_evaluation = userdata.total_function_evaluation
-			total_gradient_evaluation = userdata.total_gradient_evaluation
-			total_hessian_evaluation = userdata.total_hessian_evaluation
-			total_inner_iterations_or_factorizations = userdata.total_inner_iterations_or_factorizations
+			total_function_evaluation = max(userdata.total_function_evaluation, 1)
+			total_gradient_evaluation = max(userdata.total_gradient_evaluation, 1)
+			total_hessian_evaluation = max(userdata.total_hessian_evaluation, 1)
+			total_inner_iterations_or_factorizations = max(userdata.total_inner_iterations_or_factorizations, 1)
 			function_value = obj(nlp, solution)
 			gradient_value = norm(grad(nlp, solution), 2)
-			#=
-			@show status
-			@show total_iterations_count
-			@show total_function_evaluation
-			@show total_gradient_evaluation
-			@show total_hessian_evaluation
-			@show gradient_value > tol_opt
-			@show gradient_value
-			@show tol_opt
-			=#
-			if userdata.status != 0 || gradient_value > tol_opt
-				iter = max_it + 1
-				total_iterations_count = iter
-				total_function_evaluation = max_it + 1
-				total_gradient_evaluation = max_it + 1
-				total_hessian_evaluation = max_it + 1
+			if status == "OPTIMAL" && gradient_value > tol_opt
+				status = "FAILURE"
 			end
 			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "function_value" => function_value, "gradient_value" => gradient_value)
-			println("------------------------MODEL SOLVED WITH STATUS: ", status)
+			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", "$optimization_method")
-			outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
+			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		end
 	catch e
 		@show e
 		status = "INCOMPLETE"
 		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
-		println("------------------------MODEL SOLVED WITH STATUS: ", status)
+		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 		directory_name = string(folder_name, "/", "$optimization_method")
-		outputIterationsStatusToCSVFile(directory_name, cutest_problem, status, computation_stats, max_it + 1, optimization_method, max_it + 1)
+		end_time = dates_format
+		outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, max_it + 1, optimization_method, max_it + 1)
         finally
             if nlp != nothing
                 finalize(nlp)
@@ -475,29 +326,33 @@ function executeCUTEST_Models_benchmark(
     max_time::Float64=30*60,
     tol_opt::Float64=1e-5,
     θ::Float64=0.1,
-    β::Float64=0.1,
-	ω::Float64=8.0,
+	β_1::Float64=0.1,
+	β_2::Float64=0.8,
+	ω_1::Float64=4.0,
+	ω_2::Float64=20.0,
     γ_2::Float64=0.8,
     r_1::Float64=1.0,
+	print_level::Int64=0,
 	δ::Float64=0.0,
 	trust_region_method_subproblem_solver::String=consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 	)
 	println("CUTEst Problems are: $cutest_problems")
+	geomean_results_file_path = string(folder_name, "/", "geomean_total_results.csv")
+
+	if !isfile(geomean_results_file_path)
+		open(geomean_results_file_path, "w") do file
+			write(file, "criteria,total_failure,geomean_total_iterations_count,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
+		end
+	end
+
 	total_results_output_directory =  string(folder_name, "/$optimization_method")
 	total_results_output_file_name = "table_cutest_$optimization_method.csv"
 	total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
 	if !isfile(total_results_output_file_path)
 		mkpath(total_results_output_directory);
-			open(total_results_output_file_path,"a") do iteration_status_csv_file
-			write(iteration_status_csv_file, "time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
-    		end
-	end
-	total_time_output_file_name = "table_cutest_time_$optimization_method.csv"
-	total_time_output_file_path = string(total_results_output_directory, "/", total_time_output_file_name)
-	if !isfile(total_time_output_file_path)
-			open(total_time_output_file_path,"a") do iteration_time_csv_file
-			write(iteration_time_csv_file, "current_date_and_time,cutest_problem,time_clock_factorize,time_clock_preprocess,time_clock_solve,time_clock_analyse\n");
-    		end
+		open(total_results_output_file_path,"a") do iteration_status_csv_file
+			write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+    	end
 	end
 
 	for problem in cutest_problems
@@ -516,25 +371,31 @@ function executeCUTEST_Models_benchmark(
 
 	@show "Computing Normal Geometric Means"
 	shift = 0
-	computeNormalGeomeans(df, shift, tol_opt, max_time / 3600, max_it)
+	geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeNormalGeomeans(df, shift, tol_opt, max_time / 3600, max_it)
 
-	shift = 10
-	@show "Computing Shifted Geometric Means with Shift = 10"
-	computeShiftedGeomeans(df, shift, tol_opt, max_time / 3600, max_it)
+	counts = countmap(df.status)
+	total_failure = length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
+	open(geomean_results_file_path, "a") do file
+		write(file, "$optimization_method,$total_failure,$geomean_total_iterations_count,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n");
+	end
 
-	@show "Computing Shifted & Corrected Geomeans with ϕ = θ^{3/2} shift = 10"
-	ϕ(θ) = θ ^ (3/ 2)
-	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, max_time / 3600, max_it)
+	# shift = 10
+	# @show "Computing Shifted Geometric Means with Shift = 10"
+	# computeShiftedGeomeans(df, shift, tol_opt, max_time / 3600, max_it)
+	#
+	# @show "Computing Shifted & Corrected Geomeans with ϕ = θ^{3/2} shift = 10"
+	# ϕ(θ) = θ ^ (3/ 2)
+	# computeShiftedAndCorrectedGeomeans(ϕ, df, shift, tol_opt, max_time / 3600, max_it)
 end
 
 function computeNormalGeomeans(df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
-	ϕ(θ) = max_it/time_limit
-	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
+	ϕ(θ) = (max_it + 1)/time_limit
+	return computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
 end
 
 function computeShiftedGeomeans(df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
-	ϕ(θ) = max_it/time_limit
-	computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
+	ϕ(θ) = (max_it + 1)/time_limit
+	return computeShiftedAndCorrectedGeomeans(ϕ, df, shift, ϵ, time_limit, max_it)
 end
 
 function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::Int64, ϵ::Float64, time_limit::Float64, max_it::Int64)
@@ -543,7 +404,6 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
-	non_success_statuses = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED", "FAILURE_SMALL_RADIUS"]
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
@@ -551,19 +411,19 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
 			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
 			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
-		elseif df[i, :].status ∈ non_success_statuses
-			push!(total_iterations_count_vec, max_it)
-			push!(total_factorization_count_vec, max_it)
-			push!(total_function_evaluation_vec, max_it)
-			push!(total_gradient_evaluation_vec, max_it)
-			push!(total_hessian_evaluation_vec, max_it)
-		else
+		elseif df[i, :].status == "MAX_TIME"
 			temp_ = ϕ(df[i, :].gradient_value / ϵ) * time_limit
 			push!(total_iterations_count_vec, temp_)
-			push!(total_factorization_count_vec, temp_)
+			push!(total_factorization_count_vec, temp_ == max_it + 1 ? max(temp_, df[i, :].count_factorization) : temp_)
 			push!(total_function_evaluation_vec, temp_)
 			push!(total_gradient_evaluation_vec, temp_)
 			push!(total_hessian_evaluation_vec, temp_)
+		else
+			push!(total_iterations_count_vec, max_it + 1)
+			push!(total_factorization_count_vec, max(df[i, :].count_factorization, max_it + 1))
+			push!(total_function_evaluation_vec, max_it + 1)
+			push!(total_gradient_evaluation_vec, max_it + 1)
+			push!(total_hessian_evaluation_vec, max_it + 1)
 		end
 	end
 
@@ -575,7 +435,7 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
 	df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
 
-	computeShiftedGeomeans(df_results_new, shift)
+	return computeShiftedGeomeans(df_results_new, shift)
 end
 
 function computeShiftedGeomeans(df::DataFrame, shift::Int64)
@@ -596,6 +456,8 @@ function computeShiftedGeomeans(df::DataFrame, shift::Int64)
 	@show geomean_total_function_evaluation
 	@show geomean_total_gradient_evaluation
 	@show geomean_total_hessian_evaluation
+
+	return (geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization)
 end
 
 function outputResultsToCSVFile(directory_name::String, cutest_problem::String, results::DataFrame)
@@ -604,13 +466,15 @@ function outputResultsToCSVFile(directory_name::String, cutest_problem::String, 
 end
 
 function outputIterationsStatusToCSVFile(
+	start_time::String,
+	end_time::String,
 	directory_name::String,
 	cutest_problem::String,
 	status::String,
 	computation_stats::Dict,
-	total_iterations_count::Int32,
+	total_iterations_count::Integer,
 	optimization_method::String,
-	count_factorization::Int64=0
+	count_factorization::Integer=0
 	)
     total_function_evaluation = Int(computation_stats["total_function_evaluation"])
     total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
@@ -620,84 +484,8 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
     open(file_name,"a") do iteration_status_csv_file
-		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		write(iteration_status_csv_file, "$start_time,$end_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
-end
-
-function outputIterationsStatusToCSVFile(
-	directory_name::String,
-	cutest_problem::String,
-	status::String,
-	computation_stats::Dict,
-	total_iterations_count::Int64,
-	optimization_method::String,
-	count_factorization::Int64=0
-	)
-    total_function_evaluation = Int(computation_stats["total_function_evaluation"])
-    total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
-    total_hessian_evaluation  = Int(computation_stats["total_hessian_evaluation"])
-
-    function_value = computation_stats["function_value"]
-    gradient_value = computation_stats["gradient_value"]
-	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
-    open(file_name,"a") do iteration_status_csv_file
-		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
-    end
-end
-
-function outputIterationsStatusToCSVFile(
-	directory_name::String,
-	cutest_problem::String,
-	status::String,
-	computation_stats::Dict,
-	total_iterations_count::Int64,
-	optimization_method::String,
-	count_factorization::Int32=0
-	)
-    total_function_evaluation = Int(computation_stats["total_function_evaluation"])
-    total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
-    total_hessian_evaluation  = Int(computation_stats["total_hessian_evaluation"])
-
-    function_value = computation_stats["function_value"]
-    gradient_value = computation_stats["gradient_value"]
-	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
-    open(file_name,"a") do iteration_status_csv_file
-		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
-    end
-end
-
-function outputIterationsStatusToCSVFile(
-	directory_name::String,
-	cutest_problem::String,
-	status::String,
-	computation_stats::Dict,
-	total_iterations_count::Int32,
-	optimization_method::String,
-	count_factorization::Int32=0
-	)
-    total_function_evaluation = Int(computation_stats["total_function_evaluation"])
-    total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
-    total_hessian_evaluation  = Int(computation_stats["total_hessian_evaluation"])
-
-    function_value = computation_stats["function_value"]
-    gradient_value = computation_stats["gradient_value"]
-	file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")
-    open(file_name,"a") do iteration_status_csv_file
-		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-		write(iteration_status_csv_file, "$current_date_and_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
-    end
-end
-
-function outputIterationsTimeToCSVFile(directory_name, cutest_problem, optimization_method, time_clock_factorize, time_clock_preprocess, time_clock_solve, time_clock_analyse)
-	file_name = string(directory_name, "/", "table_cutest_time_$optimization_method.csv")
-	open(file_name,"a") do iteration_time_csv_file
-		current_date_and_time = Dates.format(now(), "mm/dd/YYYY HH:MM:SS")
-		write(iteration_time_csv_file, "$current_date_and_time,$cutest_problem,$time_clock_factorize,$time_clock_preprocess,$time_clock_solve,$time_clock_analyse\n")
-    	end
-
 end
 
 # function outputHowOftenNearConvexityConditionHolds(directory_name::String,

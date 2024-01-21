@@ -52,25 +52,35 @@ function parse_command_line()
     arg_type = Float64
     default = 0.1
 
-    "--β"
-    help = "β parameter for CAT"
+    "--β_1"
+    help = "β_1 parameter for CAT"
     arg_type = Float64
     default = 0.1
 
-    "--ω"
-    help = "ω parameter for CAT"
+    "--β_2"
+    help = "β parameter for CAT"
     arg_type = Float64
-    default = 8.0
+    default = 0.8
+
+    "--ω_1"
+    help = "ω_1 parameter for CAT"
+    arg_type = Float64
+    default = 4.0
+
+    "--ω_2"
+    help = "ω_2 parameter for CAT"
+    arg_type = Float64
+    default = 20.0
 
     "--γ_2"
     help = "γ_2 parameter for CAT"
     arg_type = Float64
-    default = 0.8
+    default = 0.1
 
     "--r_1"
     help = "Initial trust region radius"
     arg_type = Float64
-    default = 1.0
+    default = 0.0
 
     "--min_nvar"
     help = "The minimum number of variables for CUTEst model"
@@ -87,15 +97,10 @@ function parse_command_line()
     arg_type = Float64
     default = 0.0
 
-    "--train_batch_count"
-    help = "Number of batches to split the CUTEst problems. This is done to execute multiple batches at the same time."
+    "--print_level"
+		help = "Print level. If < 0, nothing to print, 0 for info and > 0 for debugging."
     arg_type = Int64
-    default = 1
-
-    "--train_batch_index"
-    help = "The index of the batch of the CUTEst problems. This is done to execute multiple batches at the same time."
-    arg_type = Int64
-    default = 1
+    default = 0
   end
 
   return ArgParse.parse_args(arg_parse)
@@ -118,22 +123,23 @@ function main()
   tol_opt = parsed_args["tol_opt"]
   r_1 = parsed_args["r_1"]
 
-  train_batch_count = parsed_args["train_batch_count"]
-  train_batch_index = parsed_args["train_batch_index"]
+  print_level = parsed_args["print_level"]
 
   if parsed_args["solver"] == "CAT" || parsed_args["solver"] == "CAT_GALAHAD_FACTORIZATION" || parsed_args["solver"] == "CAT_GALAHAD_ITERATIVE"
     θ = parsed_args["θ"]
-    β = parsed_args["β"]
-    ω = parsed_args["ω"]
+    β_1 = parsed_args["β_1"]
+		β_2 = parsed_args["β_2"]
+    ω_1 = parsed_args["ω_1"]
+		ω_2 = parsed_args["ω_2"]
     γ_2 = parsed_args["γ_2"]
     δ = parsed_args["δ"]
-    run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, min_nvar, max_nvar, train_batch_count, train_batch_index, parsed_args["solver"])
+    run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, δ, min_nvar, max_nvar, print_level, parsed_args["solver"])
   elseif parsed_args["solver"] == "NewtonTrustRegion"
-    run_cutest_with_newton_trust_region(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar)
+    run_cutest_with_newton_trust_region(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, print_level)
   elseif parsed_args["solver"] == "ARC"
-    run_cutest_with_arc(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, train_batch_count, train_batch_index)
+    run_cutest_with_arc(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, print_level)
   elseif parsed_args["solver"] == "TRU_GALAHAD_FACTORIZATION" || parsed_args["solver"] == "TRU_GALAHAD_ITERATIVE"
-    run_cutest_with_tru(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, train_batch_count, train_batch_index, parsed_args["solver"])
+    run_cutest_with_tru(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, print_level, parsed_args["solver"])
   else
     error("`solver` arg must be `CAT`, `CAT_GALAHAD_FACTORIZATION`, `CAT_GALAHAD_ITERATIVE`, `NewtonTrustRegion`, `ARC`, `TRU_GALAHAD_FACTORIZATION`, or `TRU_GALAHAD_ITERATIVE`.")
   end
