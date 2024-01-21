@@ -95,8 +95,8 @@ function run_cutest_with_CAT(
 	end
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark(train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
-	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end
 
 function run_cutest_with_newton_trust_region(
@@ -121,8 +121,8 @@ function run_cutest_with_newton_trust_region(
 	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark(train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
-	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 end
 
 function run_cutest_with_arc(
@@ -147,8 +147,8 @@ function run_cutest_with_arc(
 	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
-    executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
 end
 
 function run_cutest_with_tru(
@@ -173,11 +173,12 @@ function run_cutest_with_tru(
     θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
 
     train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
-	executeCUTEST_Models_benchmark(test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 end
 
 function runModelFromProblem(
+	prefix::String, #Specify if we are running train or test problems
 	cutest_problem::String,
 	folder_name::String,
 	optimization_method::String,
@@ -221,7 +222,7 @@ function runModelFromProblem(
 			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-			directory_name = string(folder_name, "/", "$optimization_method")
+			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
 			outputResultsToCSVFile(directory_name, cutest_problem, iteration_stats)
 			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
 			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
@@ -245,7 +246,7 @@ function runModelFromProblem(
 			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-			directory_name = string(folder_name, "/", "$optimization_method")
+			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
 			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method)
 		elseif optimization_method == optimization_method_arc_galahad
 			initial_weight = r_1
@@ -269,7 +270,7 @@ function runModelFromProblem(
 			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-			directory_name = string(folder_name, "/", "$optimization_method")
+			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
 			time_clock_factorize = userdata.time_clock_factorize
 			time_clock_preprocess = userdata.time_clock_preprocess
 			time_clock_solve = userdata.time_clock_solve
@@ -298,7 +299,7 @@ function runModelFromProblem(
 			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-			directory_name = string(folder_name, "/", "$optimization_method")
+			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
 			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		end
 	catch e
@@ -308,7 +309,7 @@ function runModelFromProblem(
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-		directory_name = string(folder_name, "/", "$optimization_method")
+		directory_name = string(folder_name, "/", prefix, "_$optimization_method")
 		end_time = dates_format
 		outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, max_it + 1, optimization_method, max_it + 1)
         finally
@@ -319,6 +320,7 @@ function runModelFromProblem(
 end
 
 function executeCUTEST_Models_benchmark(
+	prefix::String, #Specify if we are running train or test problems
 	cutest_problems::Vector{String},
 	folder_name::String,
 	optimization_method::String,
@@ -337,15 +339,15 @@ function executeCUTEST_Models_benchmark(
 	trust_region_method_subproblem_solver::String=consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 	)
 	println("CUTEst Problems are: $cutest_problems")
-	geomean_results_file_path = string(folder_name, "/", "geomean_total_results.csv")
+	geomean_results_file_path = string(folder_name, "/", prefix, "_geomean_total_results.csv")
 
 	if !isfile(geomean_results_file_path)
 		open(geomean_results_file_path, "w") do file
-			write(file, "criteria,total_failure,geomean_total_iterations_count,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
+			write(file, "optimization_method,total_failure,geomean_total_iterations_count,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
 		end
 	end
 
-	total_results_output_directory =  string(folder_name, "/$optimization_method")
+	total_results_output_directory =  string(folder_name, "/", prefix, "_$optimization_method")
 	total_results_output_file_name = "table_cutest_$optimization_method.csv"
 	total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
 	if !isfile(total_results_output_file_path)
@@ -363,7 +365,7 @@ function executeCUTEST_Models_benchmark(
 			@info "$dates_format Skipping Problem $problem."
 			continue
 		else
-        	runModelFromProblem(problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+        	runModelFromProblem(prefix, problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
 		end
     end
 	df = DataFrame(CSV.File(total_results_output_file_path))
