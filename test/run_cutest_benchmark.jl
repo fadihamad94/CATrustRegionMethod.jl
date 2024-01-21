@@ -1,3 +1,4 @@
+
 using JuMP, NLPModels, NLPModelsJuMP, LinearAlgebra, Optim, CUTEst, CSV, Test, DataFrames, SparseArrays, StatsBase, Random, Dates
 include("../src/CAT.jl")
 include("../src/tru.jl")
@@ -21,7 +22,7 @@ const optimization_method_tru_galahd_factorization = "TRU_GALAHAD_FACTORIZATION"
 const optimization_method_tru_galahd_iterative = "TRU_GALAHAD_ITERATIVE"
 
 const skip_list = ["ARGLINB", "DIAMON2DLS", "DIAMON3DLS", "DMN15102LS", "DMN15103LS", "DMN15332LS", "DMN15333LS", "DMN37142LS", "DMN37143LS", "FLETCHCR", "MNISTS5LS"]
-
+#const skip_list = []
 const train_test_split = 0.8
 
 function f(x::Vector)
@@ -153,6 +154,8 @@ function run_cutest_with_CAT(
     cutest_problems = problems_paper_list
     if !default_problems
         cutest_problems = get_problem_list(min_nvar, max_nvar)
+    else
+	cutest_problems = CUTEst.select(contype="unc")
     end
 	# cutest_problems = ["ALLINITU", "BARD", "BIGGS6", "CERI651ALS", "CERI651BLS"]
 	trust_region_method_subproblem_solver = optimization_method == optimization_method_CAT ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT : (optimization_method == optimization_method_CAT_galahad_factorization ? consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS : consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_GLTR)
@@ -168,6 +171,11 @@ function run_cutest_with_CAT(
     end_index = train_batch_index == train_batch_count ? floor(Int, train_test_split * number_of_problems) : end_index
     train_cutest_problems = cutest_problems[cutest_problem_indixes[1:floor(Int, train_test_split * number_of_problems) + 1]][start_index:end_index]
     =#
+
+    #This is for running all problems.
+    # executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
+
+
     #train_cutest_problems = cutest_problems
     train_test_split = 0.8
     cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
@@ -225,7 +233,13 @@ function run_cutest_with_newton_trust_region(
     end
     optimization_method = optimization_metnod_newton_trust_region
 	θ = β = ω = γ_2 = 0.0
-	executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
+    train_test_split = 0.8
+    train_batch_count = 1
+    train_batch_index = 1
+    cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size, cutest_problems_test_sorted_alphabatically, cutest_problem_test_list_size = get_problems_test_train_split(cutest_problems, train_test_split)
+    train_cutest_problems = get_problems_list_batch(train_batch_count, train_batch_index, cutest_problems_train_sorted_alphabatically, cutest_problem_train_list_size)
+    executeCUTEST_Models_benchmark(train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
+    #executeCUTEST_Models_benchmark(cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1)
 end
 
 function run_cutest_with_arc(
@@ -322,10 +336,12 @@ function runModelFromProblem(
 	)
     global nlp = nothing
     try
-        println("-----------EXECUTING PROBLEM----------", cutest_problem)
+	dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+        println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
+	@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 		if optimization_method == optimization_method_CAT || optimization_method == optimization_method_CAT_theta_0 || optimization_method == optimization_method_CAT_galahad_factorization || optimization_method == optimization_method_CAT_galahad_iterative
-			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, θ, ω, r_1, max_it, tol_opt, max_time, γ_2)
+			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, 0.8, 0.1, 4.0, 20.0, 0.0, max_it, tol_opt, 0.1, max_time, 1)
 	        x_1 = problem.nlp.meta.x0
 	        x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
 			function_value = NaN
@@ -488,6 +504,8 @@ function executeCUTEST_Models_benchmark(
 		problem_output_file_path = string(total_results_output_directory, "/", problem, ".csv")
 		if isfile(problem_output_file_path) || problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name || problem ∈ skip_list
 			@show problem
+			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			@info "$dates_format Skipping Problem $problem."
 			continue
 		else
         	runModelFromProblem(problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, trust_region_method_subproblem_solver)
@@ -525,7 +543,7 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
-	non_success_statuses = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED"]
+	non_success_statuses = ["FAILURE", "ITERATION_LIMIT", "INCOMPLETE", "LINRARY_STOP", "KILLED", "FAILURE_SMALL_RADIUS"]
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
@@ -566,7 +584,13 @@ function computeShiftedGeomeans(df::DataFrame, shift::Int64)
 	geomean_total_function_evaluation = geomean(df.total_function_evaluation .+ shift) - shift
 	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation .+ shift) - shift
 	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation .+ shift) - shift
-
+	if shift == 0
+		@info geomean_total_iterations_count
+		@info geomean_count_factorization
+		@info geomean_total_function_evaluation
+		@info geomean_total_gradient_evaluation
+		@info geomean_total_hessian_evaluation
+	end
 	@show geomean_total_iterations_count
 	@show geomean_count_factorization
 	@show geomean_total_function_evaluation
