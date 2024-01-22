@@ -150,8 +150,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
             success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
 
+			second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, hessian_current, d_k)
+
 	    	total_number_factorizations += temp_total_number_factorizations
-			if success_subproblem_solve
+			if success_subproblem_solve && second_order_model_value_current_iterate < 0
             	fval_next = obj(nlp, x_k + d_k)
 				total_function_evaluation += 1
 			else
@@ -165,8 +167,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 					end
 					@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
-					hessian_current_matrix = Matrix(hessian_current)
 					if print_level >= 1
+						hessian_current_matrix = Matrix(hessian_current)
 						println("Radius, Gradient, and Hessian are $r_k, $gval_current, and $hessian_current_matrix.")
 					end
 					if print_level >= 0
@@ -174,7 +176,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 					success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(gval_current, hessian_current, δ_k, γ_2, r_k, print_level)
 					total_number_factorizations += temp_total_number_factorizations
-					if success_subproblem_solve
+
+					second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, hessian_current, d_k)
+
+					if success_subproblem_solve && second_order_model_value_current_iterate < 0
 		            	fval_next = obj(nlp, x_k + d_k)
 						total_function_evaluation += 1
 					else
@@ -182,22 +187,28 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 					if success_subproblem_solve
 						ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
-						if predicted_fct_decrease <= 0.0 && hard_case
+						if predicted_fct_decrease <= 0.0
 							if print_level >= 1
 								println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 							end
 							@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
+							ρ_k = -1.0
+							actual_fct_decrease = 0.0
+							predicted_fct_decrease = 0.0
+							d_k = zeros(length(x_k))
 						end
 					else
-						ρ_k = 0.0
+						ρ_k = -1.0
 						actual_fct_decrease = 0.0
 						predicted_fct_decrease = 0.0
+						d_k = zeros(length(x_k))
 					end
 				end
 			else
-				ρ_k = 0.0
+				ρ_k = -1.0
 				actual_fct_decrease = 0.0
 				predicted_fct_decrease = 0.0
+				d_k = zeros(length(x_k))
 			end
 			if print_level >= 0
 				println("Iteration $k with fval_next is $fval_next and fval_current is $fval_current.")
@@ -227,7 +238,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
                 compute_hessian = false
             end
 			if print_level >= 1
-				println("$k. +++++ρ_k is $ρ_k and ρ_hat_k is $ρ_hat_k.")
+				println("$k. ρ_hat_k is $ρ_hat_k.")
 				println("$k. hard_case is $hard_case")
 				norm_d_k = norm(d_k, 2)
 				println("$k. r_k is $r_k and ||d_k|| is $norm_d_k.")
@@ -246,7 +257,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			end
 
 			if r_k <= MINIMUM_TRUST_REGION_RADIUS
-				fraction = -dot(transpose(gval_current), d_k) / (norm(d_k, 2))
 				if print_level >= 1
 					println("$k. Trust region radius $r_k is too small.")
 				end
