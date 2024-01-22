@@ -18,13 +18,7 @@ struct userdata_type_arc {
     int total_hessian_evaluation;
     int total_inner_iterations_or_factorizations;
     double * solution;
-    double time_clock_factorize;
-    double time_clock_preprocess;
-    double time_clock_solve;
-    double time_clock_analyse;
-
 };
-
 
 // Function prototypes
 int fun( int n, const double x[], double *f, const void * );
@@ -133,13 +127,9 @@ struct userdata_type_arc arc(double x[], double g[], struct userdata_type_arc us
 	if(subproblem_direct){
 		userdata.total_inner_iterations_or_factorizations = inform.rqs_inform.factorizations;
 	}else{
-		userdata.total_inner_iterations_or_factorizations = inform.glrt_inform.iter + inform.glrt_inform.iter_pass2;
+		userdata.total_inner_iterations_or_factorizations = inform.glrt_inform.iter;
 	}
 	userdata.solution = x;
-	userdata.time_clock_factorize = inform.rqs_inform.time.clock_factorize;
-	userdata.time_clock_preprocess = inform.rqs_inform.time.clock_assemble;
-	userdata.time_clock_solve = inform.rqs_inform.time.clock_solve;
-        userdata.time_clock_analyse = inform.rqs_inform.time.clock_analyse;
 	// Delete internal workspace
 	//printf("Termination ARC\n");
 	arc_terminate( &data, &control, &inform );
