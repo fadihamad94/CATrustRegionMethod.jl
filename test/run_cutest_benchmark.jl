@@ -147,7 +147,7 @@ function run_cutest_with_arc(
 	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
     executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
 end
 
@@ -173,7 +173,7 @@ function run_cutest_with_tru(
     θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
 
     train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_cutest_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
 end
 
