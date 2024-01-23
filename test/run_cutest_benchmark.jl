@@ -271,10 +271,6 @@ function runModelFromProblem(
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
-			time_clock_factorize = userdata.time_clock_factorize
-			time_clock_preprocess = userdata.time_clock_preprocess
-			time_clock_solve = userdata.time_clock_solve
-			time_clock_analyse = userdata.time_clock_analyse
 			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats, total_iterations_count, optimization_method, total_inner_iterations_or_factorizations)
 		elseif optimization_method == optimization_method_tru_galahd_factorization || optimization_method == optimization_method_tru_galahd_iterative
 			subproblem_direct = optimization_method == optimization_method_tru_galahd_factorization ? true : false
