@@ -2,17 +2,19 @@ using CSV, Plots, DataFrames
 
 const CAT_FACTORIZATION = "CAT_FACTORIZATION"
 const CAT_THETA_ZERO_FACTORIZATION = "CAT_THETA_ZERO_FACTORIZATION"
-const ARC_G_RULE = "ARC_G_RULE"
+const ARC_FACTORIZATION = "ARC_FACTORIZATION"
 const NEWTON_TRUST_REGION = "NEWTON_TRUST_REGION"
 const NewtonTrustRegion = "NewtonTrustRegion"
 
 const CAT_FACTORIZATION_COLOR = :black
 const CAT_THETA_ZERO_FACTORIZATION_COLOR = :red
-const ARC_G_RULE_COLOR = :orange
+const ARC_FACTORIZATION_COLOR = :orange
 const NewtonTrustRegion_COLOR = :purple
 
-const TOTAL_ITERATIONS = [Int(10 * i) for i in 1:(10000/10)]
-const TOTAL_GRADIENTS  = [Int(10 * i) for i in 1:(10000/10)]
+ITR_LIMIT = 10000
+
+const TOTAL_ITERATIONS = [Int(10 * i) for i in 1:(ITR_LIMIT/10)]
+const TOTAL_GRADIENTS  = [Int(10 * i) for i in 1:(ITR_LIMIT/10)]
 
 function readFile(fileName::String)
     df = DataFrame(CSV.File(fileName))
@@ -27,20 +29,20 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Int64}, criteria::String)
     total_number_problems = size(df)[1]
 
     if criteria == "Iterations"
-        results_fraction = DataFrame(Iterations=Int[], CAT_FACTORIZATION=Float64[], CAT_THETA_ZERO_FACTORIZATION=Float64[], ARC_G_RULE=Float64[], NewtonTrustRegion=Float64[])
-        results_total = DataFrame(Iterations=Int[], CAT_FACTORIZATION=Int[], CAT_THETA_ZERO_FACTORIZATION=Int[], ARC_G_RULE=Int[], NewtonTrustRegion=Int[])
+        results_fraction = DataFrame(Iterations=Int[], CAT_FACTORIZATION=Float64[], CAT_THETA_ZERO_FACTORIZATION=Float64[], ARC_FACTORIZATION=Float64[], NewtonTrustRegion=Float64[])
+        results_total = DataFrame(Iterations=Int[], CAT_FACTORIZATION=Int[], CAT_THETA_ZERO_FACTORIZATION=Int[], ARC_FACTORIZATION=Int[], NewtonTrustRegion=Int[])
     else
-        results_fraction = DataFrame(Gradients=Int[], CAT_FACTORIZATION=Float64[], CAT_THETA_ZERO_FACTORIZATION=Float64[], ARC_G_RULE=Float64[], NewtonTrustRegion=Float64[])
-        results_total = DataFrame(Gradients=Int[], CAT_FACTORIZATION=Int[], CAT_THETA_ZERO_FACTORIZATION=Int[], ARC_G_RULE=Int[], NewtonTrustRegion=Int[])
+        results_fraction = DataFrame(Gradients=Int[], CAT_FACTORIZATION=Float64[], CAT_THETA_ZERO_FACTORIZATION=Float64[], ARC_FACTORIZATION=Float64[], NewtonTrustRegion=Float64[])
+        results_total = DataFrame(Gradients=Int[], CAT_FACTORIZATION=Int[], CAT_THETA_ZERO_FACTORIZATION=Int[], ARC_FACTORIZATION=Int[], NewtonTrustRegion=Int[])
     end
 
     for total in TOTAL
         total_problems_CAT_FACTORIZATION = length(filterRows(total, df[:, CAT_FACTORIZATION]))
         total_problems_CAT_THETA_ZERO_FACTORIZATION = length(filterRows(total, df[:, CAT_THETA_ZERO_FACTORIZATION]))
-        total_problems_ARC_G_RULE = length(filterRows(total, df[:, ARC_G_RULE]))
+        total_problems_ARC_FACTORIZATION = length(filterRows(total, df[:, ARC_FACTORIZATION]))
         total_problems_NewtonTrustRegion = length(filterRows(total, df[:, NEWTON_TRUST_REGION]))
-        push!(results_fraction, (total, total_problems_CAT_FACTORIZATION / total_number_problems, total_problems_CAT_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_G_RULE / total_number_problems, total_problems_NewtonTrustRegion / total_number_problems))
-        push!(results_total, (total, total_problems_CAT_FACTORIZATION, total_problems_CAT_THETA_ZERO_FACTORIZATION, total_problems_ARC_G_RULE, total_problems_NewtonTrustRegion))
+        push!(results_fraction, (total, total_problems_CAT_FACTORIZATION / total_number_problems, total_problems_CAT_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_NewtonTrustRegion / total_number_problems))
+        push!(results_total, (total, total_problems_CAT_FACTORIZATION, total_problems_CAT_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_NewtonTrustRegion))
     end
 
     return results_fraction
@@ -56,7 +58,7 @@ function plotFigureComparisonCAT(df::DataFrame, criteria::String, dirrectoryName
         ylabel="Fraction of problems solved",
         xlabel=string("Total number of ", criteria_keyrword),
         legend=:bottomright,
-        xlims=(10, 10000),
+        xlims=(10, ITR_LIMIT),
         xaxis=:log10
     )
     fullPath = string(dirrectoryName, "/", plot_name)
@@ -79,11 +81,11 @@ function plotFiguresComparisonFinal(df::DataFrame, criteria::String, dirrectoryN
     plot(df[!, criteria],
         data,
         label=["Our method" "ARC with g-rule" "Newton trust region"],
-        color = [CAT_FACTORIZATION_COLOR ARC_G_RULE_COLOR NewtonTrustRegion_COLOR],
+        color = [CAT_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR NewtonTrustRegion_COLOR],
         ylabel="Fraction of problems solved",
         xlabel=string("Total number of ", criteria_keyrword),
         legend=:bottomright,
-        xlims=(10, 10000),
+        xlims=(10, ITR_LIMIT),
         xaxis=:log10
     )
     fullPath = string(dirrectoryName, "/", plot_name)
@@ -95,7 +97,7 @@ function generateFiguresIterationsComparisonFinal(dirrectoryName::String)
     fullPath = string(dirrectoryName, "/", fileName)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_ITERATIONS, "Iterations")
-    results = results[:, filter(x -> (x in ["Iterations", CAT_FACTORIZATION,ARC_G_RULE,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Iterations", CAT_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_iterations_count_final.png"
     plotFiguresComparisonFinal(results, "Iterations", dirrectoryName, plot_name)
 end
@@ -105,7 +107,7 @@ function generateFiguresGradientsComparisonFinal(dirrectoryName::String)
     fullPath = string(dirrectoryName, "/", fileName)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_GRADIENTS, "Gradients")
-    results = results[:, filter(x -> (x in ["Gradients", CAT_FACTORIZATION,ARC_G_RULE,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Gradients", CAT_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_gradients_count_final.png"
     plotFiguresComparisonFinal(results, "Gradients", dirrectoryName, plot_name)
 end

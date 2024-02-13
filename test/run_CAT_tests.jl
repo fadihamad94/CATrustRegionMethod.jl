@@ -48,7 +48,7 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == δ_prime == 2.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
@@ -63,7 +63,7 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == δ_prime == 4.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
@@ -78,7 +78,7 @@ function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
     δ = 9.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == δ_prime == 9.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
@@ -93,7 +93,7 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     δ = 250.0
     ϵ = 0.8
     r = 0.3
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test (δ, δ_prime) == (250.0, 8000.0)
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == -1
@@ -108,8 +108,8 @@ function test_bisection_with_starting_on_root_δ_zero()
     δ = 64.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
     # @test δ_m == δ == δ_prime == 0
     @test δ_m == δ == δ_prime
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
@@ -126,8 +126,8 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
     @test δ_m == δ == δ_prime == 4.0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 0
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == 0
@@ -143,8 +143,8 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     δ = 250.0
     ϵ = 0.8
     r = 0.3
-    δ, δ_prime = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    δ_m = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)[1]
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
     @test δ_m == 734.375
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == -1
