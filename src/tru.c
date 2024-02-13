@@ -25,7 +25,7 @@ int fun( int n, const double x[], double *f, const void * );
 int grad( int n, const double x[], double g[], const void * );
 int hess( int n, int ne, const double x[], double hval[], const void * );
 
-struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, double stop_g_absolute, double stop_g_relative, double stop_s,  bool subproblem_direct, int max_inner_iterations_or_factorizations, double clock_time_limit, int non_monotone){
+struct userdata_type_tru tru(int H_ne, char H_type[], double x[], double g[], int H_row[], int H_col[], int H_ptr[], struct userdata_type_tru userdata, int print_level, int maxit, double initial_radius, double stop_g_absolute, double stop_g_relative, double stop_s,  bool subproblem_direct, int max_inner_iterations_or_factorizations, double clock_time_limit, int non_monotone){
 	// Derived types
 	void *data;
 	struct tru_control_type control;
@@ -44,7 +44,9 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 	control.initial_radius = initial_radius;
 	control.subproblem_direct = subproblem_direct;
 	control.clock_time_limit = clock_time_limit;
-	control.non_monotone = non_monotone;
+	if(non_monotone > 0){
+		control.non_monotone = non_monotone;
+	}
 	//printf("%f: ", control.stop_g_absolute);
         //printf("%e: ", control.stop_g_relative);
         //printf("%e: ", control.stop_s);
@@ -65,10 +67,8 @@ struct userdata_type_tru tru(double x[], double g[], struct userdata_type_tru us
 		control.stop_s = stop_s;
 	}
 
-	tru_import( &control, &data, &status, userdata.n, "dense",
-		userdata.n*(userdata.n+1)/2, NULL, NULL, NULL );
-	tru_solve_with_mat( &data, &userdata, &status,
-		userdata.n, x, g, userdata.n*(userdata.n+1)/2, fun, grad, hess, NULL );
+	tru_import( &control, &data, &status, userdata.n, H_type, H_ne, H_row, H_col, H_ptr);
+	tru_solve_with_mat( &data, &userdata, &status, userdata.n, x, g, H_ne, fun, grad, hess, NULL );
 	tru_information( &data, &inform, &status);
 
 	userdata.status = inform.status;
