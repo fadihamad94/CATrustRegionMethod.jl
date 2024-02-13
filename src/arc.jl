@@ -77,7 +77,7 @@ function arc(n::Int64, x::Vector{Float64}, g::Vector{Float64}, print_level::Int6
 	stop_g_relative = stop_g_absolute / norm(g, 2)
 	ϵ_machine = eps(Float64)
 	stop_s = ϵ_machine
-	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p, 0, 0, 0, 0)
+	userdata = userdata_type_arc(n, eval_f_c, eval_g_c, eval_h_c, 0, 0, 0, 0, 0, 0, p)
 	@time begin
   	 userdata = ccall((:arc, LIBRARY_PATH_ARC), userdata_type_arc, (Ref{Cdouble}, Ref{Cdouble}, userdata_type_arc, Cint, Cint, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cdouble, Cuchar, Cint, Cdouble), x, g, userdata, print_level, maxit, initial_weight, stop_g_absolute, stop_g_relative, stop_s, eta_too_successful, eta_1, eta_2, subproblem_direct, max_inner_iterations_or_factorizations, clock_time_limit)
 	end
