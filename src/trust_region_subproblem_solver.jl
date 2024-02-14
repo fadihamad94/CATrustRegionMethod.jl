@@ -191,11 +191,6 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 		else
 			if print_level >= 0
 				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
-				@info "δ is $δ"
-				@info "r is $r"
-				@info "g is $g"
-				matrix_H = Matrix(H)
-				@info "H is $matrix_H"
 			end
 		end
 		# This code was used when getting the preliminary results. Maybe we need it later
