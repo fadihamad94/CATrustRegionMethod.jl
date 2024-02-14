@@ -137,6 +137,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 		H_ne, H_val, H_row, H_col, H_ptr = getHessianSparseLowerTriangularPart(H)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
+		@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
 		if print_level >= 2
 			println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
 		end
@@ -190,6 +191,11 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 		else
 			if print_level >= 0
 				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
+				@info "δ is $δ"
+				@info "r is $r"
+				@info "g is $g"
+				matrix_H = Matrix(H)
+				@info "H is $matrix_H"
 			end
 		end
 		# This code was used when getting the preliminary results. Maybe we need it later
@@ -553,8 +559,6 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
     Φ_δ_m = phi(g, H, δ_m, ϵ, r)
 	max_iterations = 50  #2 ^ 50 ~ 1e15
 	#ϕ_δ >= 0 and ϕ_δ_prime <= 0
-	temp_1 = δ_prime >= 1e-15 * δ
-	temp_2 = δ_prime >= δ
 	while (Φ_δ_m != 0) && k <= max_iterations && (δ >= 1e-15 * δ_prime)
 	# while (Φ_δ_m != 0) && k <= max_iterations
 		start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -673,6 +677,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 end
 
 function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
+   start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
    y = ones(n)
@@ -689,6 +694,12 @@ function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
    end
    temp_ = dot(y, H * y)
    @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
+   end_time_temp = time()
+   total_time_temp = end_time_temp - start_time_temp
+   @info "inverse_power_iteration operation took $total_time_temp."
+   if print_level >= 2
+	   println("inverse_power_iteration operation took $total_time_temp.")
+   end
    return false, temp_, y, max_iter
 end
 
