@@ -686,7 +686,7 @@ function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
 		   eigenvalue = dot(y, H * y)
 		   #TODO This code just for debugging. Need to be removed
-		   mimimum_eigenvalue = eigvals(Matrix(H))
+		   mimimum_eigenvalue = eigmin(Matrix(H))
 		   @info "Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
 		   return true, eigenvalue, y, k
        end
@@ -694,7 +694,9 @@ function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
        x = y
    end
    temp_ = dot(y, H * y)
-   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
+   #TODO This code just for debugging. Need to be removed
+   mimimum_eigenvalue = eigmin(Matrix(H))
+   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. mimimum_eigenvalue is $mimimum_eigenvalue.")
    end_time_temp = time()
    total_time_temp = end_time_temp - start_time_temp
    @info "inverse_power_iteration operation took $total_time_temp."

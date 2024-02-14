@@ -210,6 +210,11 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						println("Solving trust-region subproblem using our approach.")
 					end
 
+					# TODO CHECK if this logic should saty or we just mark solving the subproblem as failure and we reduce the trust-region
+					# This code mainly repetition of the previous code that solves the trsut-region subproblem,
+					# compute ρ and the next fval if we solve the trust-region subproblem
+					# and the predicted function decrease from the model is positive.
+					#TODO Maybe write a function so that this code is reusable?
 					start_time_temp = time()
 					success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(gval_current, hessian_current, δ_k, γ_2, r_k, min_gval_norm, print_level)
 					total_number_factorizations += temp_total_number_factorizations
@@ -349,7 +354,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				end
 				if print_level >= 1
 					try
-						cholesky(Matrix(hessian_current))
+						cholesky(hessian_current)
 						println("==============Local Minimizer=============")
 					catch e
 						println("==============Saddle Point=============")
