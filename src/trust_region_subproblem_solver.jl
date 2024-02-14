@@ -1,4 +1,4 @@
-export phi, findinterval, bisection
+export phi, findinterval, bisection, findMinimumEigenValue
 using LinearAlgebra
 using Dates
 using Roots
@@ -195,11 +195,11 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
 			end
 		end
-		start_time_temp = time()
-		δ = max(δ, abs(eigmin(Matrix(H))))
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		println("eigmin operation took $total_time_temp.")
+		# start_time_temp = time()
+		# δ = max(δ, abs(eigmin(Matrix(H))))
+		# end_time_temp = time()
+		# total_time_temp = end_time_temp - start_time_temp
+		# println("eigmin operation took $total_time_temp.")
 		try
 			start_time_temp = time()
 			success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, stop_normal, r, min_grad, print_level)
@@ -357,7 +357,7 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
     total_number_factorizations = 0
     try
 		total_number_factorizations += 1
-        cholesky(Matrix(H))
+        cholesky(H)
         d_k = H \ (-g)
         if norm(d_k, 2) <= (1 + ϵ) * r
         	return true, 0.0, d_k, total_number_factorizations, false
@@ -381,39 +381,40 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
     catch e
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
-			if eigmin(Matrix(H)) >= 0 && ϵ != 0.1
-				try
-					success_find_interval, success_bisection, δ_m, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, 0.1, r, total_number_factorizations, print_level)
-					total_number_factorizations += temp_total_number_factorizations
-					success = success_find_interval && success_bisection
-					if success
-						return true, δ_m, d_k, total_number_factorizations, hard_case
-					end
-				catch e_
-					total_number_factorizations += 1000
-					@error e_
-				end
-			end
+			# if eigmin(Matrix(H)) >= 0 && ϵ != 0.1
+			# if ϵ != 0.1
+			# 	try
+			# 		success_find_interval, success_bisection, δ_m, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, 0.1, r, total_number_factorizations, print_level)
+			# 		total_number_factorizations += temp_total_number_factorizations
+			# 		success = success_find_interval && success_bisection
+			# 		if success
+			# 			return true, δ_m, d_k, total_number_factorizations, hard_case
+			# 		end
+			# 	catch e_
+			# 		total_number_factorizations += 1000
+			# 		@error e_
+			# 	end
+			# end
 
 			start_time_temp = time()
-	    	success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
-			# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
+	    	# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
+			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("$success. solveHardCaseLogic operation took $total_time_temp.")
-			@info "$success. solveHardCaseLogic operation took $total_time_temp."
+			println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
+			@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
             return success, δ, d_k, total_number_factorizations, true
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
 			start_time_temp = time()
-            success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
-			# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
+            # success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
+			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("$success. solveHardCaseLogic operation took $total_time_temp.")
-			@info "$success. solveHardCaseLogic operation took $total_time_temp."
+			println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
+			@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
 	    	return success, δ, d_k, total_number_factorizations, true
         else
 			@error e
@@ -642,7 +643,7 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
 			println("Φ_δ_m is $Φ_δ_m.")
 			println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. ϵ is $ϵ.")
 		end
-		return false, min(δ_m, δ_prime), min(k, max_iterations) + 1
+		return false, max(δ_m, δ_prime), min(k, max_iterations) + 1
         # throw(error("Bisection logic failed to find a root for the phi function"))
     end
 	if print_level >= 0
@@ -655,64 +656,112 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	C = 10
 	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 	total_number_factorizations = 1
-	d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
-	norm_d_k = norm(d_k, 2)
-	@info "norm_d_k is $norm_d_k and starting delta is $δ_m."
 	δ = δ_m
-	while ((δ_m - δ) * norm_d_k > min_grad / C)
-		δ = δ / 2
-	end
-	@info "norm_d_k is $norm_d_k, r is $r, and delta is $δ."
 	try
-		# δ = eigmin(Matrix(H)) + 1e-3
-		σ = δ
-		F = lu(Matrix(H - σ * I))
-		Fmap = LinearMap{ComplexF64}((y, x) -> ldiv!(y, F, x), size(H)[1], ismutating = true)
-		eigenvalue, eigenvector, hist = invpowm(Fmap, shift = σ, tol = 1e-4, maxiter = max(size(H)[1], 200), log = true)
-		itr = hist.iters
-		eigenvalue = abs(real(eigenvalue))
-		# eigenvalue, eigenvector, itr = inverse_power_iteration(H, δ, max_iter = 100000, tol=1e-1)
-		temp_d_k = (cholesky(Matrix(H + eigenvalue * sparse_identity)) \ (-g))
+		temp_d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
+		norm_temp_d_k = norm(temp_d_k, 2)
+		@info "norm_d_k is $norm_temp_d_k and starting delta is $δ_m."
+		if abs(norm(temp_d_k)  - r) <= ϵ
+			return true, δ_m, temp_d_k, total_number_factorizations
+		end
+
+		@info "norm_d_k is $norm_temp_d_k and starting delta is $δ_m."
+		while ((δ_m - δ) * norm_temp_d_k > min_grad / C)
+			δ = δ / 2
+		end
+		@info "norm_d_k is $norm_temp_d_k, r is $r, and delta is $δ."
+	catch e
+		@error e
+	end
+
+	try
+		success, eigenvalue, eigenvector, itr = findMinimumEigenValue(H, δ, max_iter=500, ϵ=1e-5)
+		eigenvalue = abs(eigenvalue)
+		@info "starting delta is $δ"
+		@info string("eigenvalue is ", eigenvalue)
+		temp_d_k = cholesky(H + (eigenvalue + 1e-5) * sparse_identity) \ (-g)
 		total_number_factorizations += itr
 		if abs(norm(temp_d_k) - r) <= ϵ
 			return true, eigenvalue, temp_d_k, total_number_factorizations
 		end
 		return false, eigenvalue, zeros(length(g)), total_number_factorizations
 	catch e
-		@info Matrix(H)
-		@info g
-		@info δ
-		@info r
 		total_number_factorizations += 100
 		@error e
 		return false, δ, zeros(length(g)), total_number_factorizations
 	end
 end
 
-function inverse_power_iteration(H, sigma; max_iter=100000, tol=1e-1)
+function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
+	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma)
+	@show success, eigenvalue, eigenvector, itr
+	# eigenvalue = abs(eigenvalue)
+	attempt = 5
+	while attempt >= 0
+		if success
+			try
+				sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+				cholesky(H + (abs(eigenvalue) + 1e-3) * sparse_identity)
+				itr += 1
+				return success, eigenvalue, eigenvector, itr
+			catch e
+				@error e
+				if eigenvalue > 0
+					eigenvalue = eigenvalue / 2
+				else
+					eigenvalue = 2 * eigenvalue
+				end
+				success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue)
+				itr += temp_itr
+			end
+		else
+			if eigenvalue > 0
+				eigenvalue = eigenvalue / 2
+			else
+				eigenvalue = 2 * eigenvalue
+			end
+			success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue)
+			itr += temp_itr
+		end
+		attempt -= 1
+	end
+	if success
+		try
+			sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+			total_number_factorizations  += 1
+			cholesky(H + eigenvalue * sparse_identity)
+			itr += 1
+			return success, eigenvalue, eigenvector, itr
+		catch
+			return false, eigenvalue, eigenvector, itr
+		end
+	end
+	return false, eigenvalue, eigenvector, itr
+end
+
+function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
    n = size(H, 1)
-
    # Initial guess for eigenvector (random)
-   v = ones(n)
    x = ones(n)
+   y = ones(n)
    for k in 1:max_iter
-       # Solve linear system (A - sigma * I) * x = v
-       x = (H - sigma * I) \ v
-
-       # Normalize x
-       x /= norm(x)
+       # Solve linear system (A - sigma * I) * y = x
+       y = (H - sigma * I) \ x
+       # Normalize y
+       y /= norm(y)
 
        # Check for convergence
-       if norm(x - v) < tol
-           return 1 / (dot(x, H * x) / dot(x, x) + sigma), x, k
+       if norm(x - y) == 2.0 || norm(x - y) <= ϵ
+		   @info string("norm(x - y) is ", norm(x - y))
+		   return true, dot(y, H * y), y, k
        end
 
        # Update eigenvector
-       v = x
+       x = y
    end
-   temp_ = 1 / (dot(x, H * x) / dot(x, x) + sigma)
-   minimumEigenValue = eigmin(Matrix(H))
-   error("Inverse power iteration did not converge. minimumEigenValue is $minimumEigenValue but computed_minimumEigenValue is $temp_.")
+   temp_ = dot(y, H * y)
+   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
+   return false, temp_
 end
 
 #Based on 'THE HARD CASE' section from Numerical Optimization by Wright

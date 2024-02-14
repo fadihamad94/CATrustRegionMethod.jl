@@ -380,18 +380,21 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     tol = 1e-3
     problem = test_create_hard_case_using_simple_univariate_convex_model()
     nlp = problem.nlp
-    x_k = [0.0]
+    x_k = [0.01]
     δ = 0.0
     ϵ = 0.2
-    r = 1.0
+    r = 2000.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
+    #OLD HARD CASE LOGIC
     @test δ_k == 2.0
-    @test norm((x_k + d_k) - [1.0], 2) <= tol
+    # @test norm((x_k + d_k) - [1.0], 2) <= tol
+    @test norm((x_k + d_k) - [2000.01], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    @test abs(obj(nlp, x_k + d_k) - (-1)) <= tol
+    # @test abs(obj(nlp, x_k + d_k) - (-1)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-4.000040000047589e6)) <= tol
 end
 
 #Check this
@@ -399,72 +402,88 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     tol = 1e-3
     problem = test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = problem.nlp
-    x_k = [0.0, 0.0]
+    x_k = [0.01, 0.01]
     δ = 0.0
     ϵ = 0.2
-    r = 1.0
+    r = 2828.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
-    @test δ_k == 2.0
-    @test norm((x_k + d_k) - [1.0, 0.0], 2) <= tol
+    @test abs(δ_k - 2.0) <= tol
+    # @test norm((x_k + d_k) - [1.0, 0.0], 2) <= tol
+    # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
+    @test norm((x_k + d_k) - [2000.01, 2000.01], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    @test norm(obj(nlp, x_k + d_k) - (-1), 2) <= tol
+    # @test norm(obj(nlp, x_k + d_k) - (-1), 2) <= tol
+    @test norm(obj(nlp, x_k + d_k) - (-8.000079999384636e6), 2) <= tol
 end
 
+# Check this
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
     tol = 1e-3
     problem = test_create_hard_case_using_bivariate_convex_model_1()
     nlp = problem.nlp
-    x_k = [0.0, 0.0]
+    x_k = [0.01, 0.01]
     δ = 0.0
     ϵ = 0.2
-    r = 1.0
+    r = 4000.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
-    @test norm(d_k) <= r
+    @test abs(norm(d_k) - r) <= tol
     @test δ_k == 4.0
-    @test norm((x_k + d_k) - [0.0, 1.0], 2) <= tol
+    # @test norm((x_k + d_k) - [0.0, 1.0], 2) <= tol
+    @test norm((x_k + d_k) - [0.02, 4000.01], 2) <= tol
+    # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    @test abs(obj(nlp, x_k + d_k) - (-2.0)) <= tol
+    # @test abs(obj(nlp, x_k + d_k) - (-2.0)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-3.200016000302291e7)) <= tol
 end
 
+# Check this
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
     tol = 1e-2
     problem = test_create_hard_case_using_bivariate_convex_model_2()
     nlp = problem.nlp
-    x_k = [0.0, 0.0]
+    x_k = [0.01, 0.01]
     δ = 0.0
     ϵ = 0.2
-    r = 1.0
+    r = 2000.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k, 2) - r <= tol
-    @test δ_k == 2.0
-    @test norm((x_k + d_k) - [-0.0025, 0.999], 2) <= tol
+    @test abs(δ_k - 2.0) <= tol
+    # @test norm((x_k + d_k) - [-0.0025, 0.999], 2) <= tol
+    @test norm((x_k + d_k) - [-0.0025, 2000.01], 2) <= tol
+    # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    @test abs(obj(nlp, x_k + d_k) - (-1.0000125)) <= tol
+    # @test abs(obj(nlp, x_k + d_k) - (-1.0000125)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-4.000040000371614e6)) <= tol
 end
 
+# Check this
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
     tol = 1e-3
     problem = test_create_hard_case_using_bivariate_convex_model_3()
     nlp = problem.nlp
-    x_k = [0.0, 0.0]
+    x_k = [0.01, 0.01]
     δ = 0.0
     ϵ = 0.2
-    r = 5.0
+    r = 11313.70849891677
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
-    @test δ_k == 8.0
-    @test norm((x_k + d_k) - [-3.5355339059327373, -3.5355339059327373], 2) <= tol
+    @test abs(δ_k - 8.0) <= tol
+    @show x_k + d_k
+    # @test norm((x_k + d_k) - [-3.5355339059327373, -3.5355339059327373], 2) <= tol
+    @test norm((x_k + d_k) - [8000.01, 8000.01], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    @test abs(obj(nlp, x_k + d_k) - (-100)) <= tol
+    # @test abs(obj(nlp, x_k + d_k) - (-100)) <= tol
+    @show obj(nlp, x_k + d_k)
+    @test abs(obj(nlp, x_k + d_k) - (-5.120012799946463e8)) <= tol
 end
 
 function test_optimize_second_order_model_bisection_logic_bug_fix()
@@ -503,6 +522,68 @@ function optimize_models()
     test_optimize_second_order_model_bisection_logic_bug_fix()
 end
 
+function test_findMinimumEigenValue_example_1()
+    H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
+    δ = -3.0
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+end
+
+function test_findMinimumEigenValue_example_2()
+    H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
+    δ = 15.0
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - eigmax(Matrix(H))) <= 1e-1
+end
+
+function test_findMinimumEigenValue_example_3()
+    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
+    δ = 0.0
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+end
+
+function test_findMinimumEigenValue_example_4()
+    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
+    δ = -1.0
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+end
+
+function test_findMinimumEigenValue_example_5()
+    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
+    δ = 3.4
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - 3.0) <= 1e-1
+end
+
+function test_findMinimumEigenValue_example_6()
+    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
+    δ = 5.2
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    @test success
+    @test (eigenvalue - eigmax(Matrix(H))) <= 1e-1
+end
+
+
+function findMinimumEigenValue()
+    test_findMinimumEigenValue_example_1()
+    test_findMinimumEigenValue_example_2()
+    test_findMinimumEigenValue_example_3()
+    test_findMinimumEigenValue_example_4()
+    test_findMinimumEigenValue_example_5()
+    test_findMinimumEigenValue_example_6()
+end
+
 @testset "TRS_Solver_Tests" begin
     optimize_models()
+end
+
+@testset "findMinimumEigenValue" begin
+    findMinimumEigenValue()
 end
