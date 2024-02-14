@@ -548,8 +548,8 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
 	end
     #Bisection logic
     k = 1
-    δ_m = (δ + δ_prime) / 2
-	# δ_m = sqrt(δ * δ_prime)
+    # δ_m = (δ + δ_prime) / 2
+	δ_m = sqrt(δ * δ_prime)
     Φ_δ_m = phi(g, H, δ_m, ϵ, r)
 	max_iterations = 50  #2 ^ 50 ~ 1e15
 	#ϕ_δ >= 0 and ϕ_δ_prime <= 0
@@ -566,8 +566,8 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
         else
             δ_prime = δ_m
         end
-        δ_m = (δ + δ_prime) / 2
-		# δ_m = sqrt(δ * δ_prime)
+        # δ_m = (δ + δ_prime) / 2
+		δ_m = sqrt(δ * δ_prime)
         Φ_δ_m = phi(g, H, δ_m, ϵ, r)
 		if Φ_δ_m != 0 && abs(δ - δ_prime) <= 1e-11
 			δ_prime = 2 * δ_prime
@@ -689,7 +689,7 @@ function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
    end
    temp_ = dot(y, H * y)
    @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
-   return false, temp_
+   return false, temp_, y, max_iter
 end
 
 #Based on 'THE HARD CASE' section from Numerical Optimization by Wright

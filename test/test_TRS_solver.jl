@@ -315,8 +315,12 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
-    @test norm(d_k - [-0.0033190803461683517, 0.18495510723928077], 2) <= tol
-    @test norm(δ_k - 492.1875, 2) <= tol
+    #These results when using δ_m = (δ + δ') / 2
+    # @test norm(d_k - [-0.0033190803461683517, 0.18495510723928077], 2) <= tol
+    # @test norm(δ_k - 492.1875, 2) <= tol
+    #These results when using δ_m = sqrt(δ + δ')
+    @test norm(d_k - [-0.003486, 0.19523], 2) <= tol
+    @test norm(δ_k - 478.8016, 2) <= tol
     @test abs(norm(d_k) - r) <= ϵ
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -502,10 +506,12 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
     @test abs(δ_m - 5.173e-7) <= tol
 
+    r = 0.0018
+    ϵ = 1e-5
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test status
     @test abs(δ_k - 5.173e-7) <= tol
-    @test δ_k <= 1e-6 && norm(d_k, 2) <= r
+    @test abs(δ_k - 1e-5) <= ϵ && abs(norm(d_k, 2) - r) <= ϵ
 end
 
 function optimize_models()

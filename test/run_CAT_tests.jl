@@ -145,7 +145,10 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     r = 0.3
     success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r)
-    @test δ_m == 734.375
+    #These results when using δ_m = (δ + δ') / 2
+    # @test δ_m == 734.375
+    #These results when using δ_m = sqrt(δ + δ')
+    @test abs(δ_m - 594.603) <= 1e-3
     @test consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r) == 1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r) == -1
     @test consistently_adaptive_trust_region_method.phi(g, H, δ_m, ϵ, r) == 0
