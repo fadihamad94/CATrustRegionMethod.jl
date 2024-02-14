@@ -675,6 +675,7 @@ function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
+   y = ones(n)
    y_original_fact = cholesky(H + delta * I)
    for k in 1:max_iter
        # Solve (H - sigma * I) * y = x
