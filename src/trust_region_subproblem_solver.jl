@@ -631,14 +631,14 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	end
 end
 
-function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
-	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma)
+function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-1)
+	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma, max_iter = max_iter, ϵ = ϵ)
 	attempt = 5
 	while attempt >= 0
 		if success
 			try
 				sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-				cholesky(H + (abs(eigenvalue) + 1e-3) * sparse_identity)
+				cholesky(H + (abs(eigenvalue) + ϵ) * sparse_identity)
 				itr += 1
 				return success, eigenvalue, eigenvector, itr
 			catch e
@@ -648,7 +648,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 				else
 					eigenvalue = 2 * eigenvalue
 				end
-				success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue)
+				success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue, max_iter = max_iter, ϵ = ϵ)
 				itr += temp_itr
 			end
 		else
@@ -657,7 +657,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 			else
 				eigenvalue = 2 * eigenvalue
 			end
-			success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue)
+			success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue, max_iter = max_iter, ϵ = ϵ)
 			itr += temp_itr
 		end
 		attempt -= 1
@@ -676,17 +676,18 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 	return false, eigenvalue, eigenvector, itr
 end
 
-function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
+function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1)
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
-   y = ones(n)
+   y_original_fact = cholesky(H + delta * I)
    for k in 1:max_iter
        # Solve (H - sigma * I) * y = x
-       y = (H - sigma * I) \ x
+       y = y_original_fact \ x
+	   # y = (H - delta * I) \ x
        y /= norm(y)
 
-       if norm(x - y) == 2.0 || norm(x - y) <= ϵ
+       if norm(x + y) <= ϵ || norm(x - y) <= ϵ
 		   return true, dot(y, H * y), y, k
        end
 

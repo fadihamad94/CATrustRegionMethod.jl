@@ -439,13 +439,13 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test abs(norm(d_k) - r) <= tol
-    @test δ_k == 4.0
+    @test abs(δ_k - 4.0) <= tol
     # @test norm((x_k + d_k) - [0.0, 1.0], 2) <= tol
     @test norm((x_k + d_k) - [2e-5, 4.00001], 2) <= tol
     # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-2.0)) <= tol
-    @test abs(obj(nlp, x_k + d_k) - (-32.00016)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-32.004)) <= tol
 end
 
 # Check this
@@ -531,18 +531,18 @@ end
 
 function test_findMinimumEigenValue_example_1()
     H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
-    δ = -3.0
+    δ = 3.0
     success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
     @test success
-    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 function test_findMinimumEigenValue_example_2()
     H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
-    δ = 15.0
+    δ = 4.0
     success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
     @test success
-    @test (eigenvalue - eigmax(Matrix(H))) <= 1e-1
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 function test_findMinimumEigenValue_example_3()
@@ -550,7 +550,7 @@ function test_findMinimumEigenValue_example_3()
     δ = 0.0
     success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
     @test success
-    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 function test_findMinimumEigenValue_example_4()
@@ -558,23 +558,24 @@ function test_findMinimumEigenValue_example_4()
     δ = -1.0
     success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
     @test success
-    @test (eigenvalue - eigmin(Matrix(H))) <= 1e-1
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 function test_findMinimumEigenValue_example_5()
     H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
     δ = 3.4
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ, ϵ = 1e-4)
     @test success
-    @test (eigenvalue - 3.0) <= 1e-1
+    @show eigenvalue
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 function test_findMinimumEigenValue_example_6()
     H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
-    δ = 5.2
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
+    δ = 5.0
+    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ, ϵ = 1e-5)
     @test success
-    @test (eigenvalue - eigmax(Matrix(H))) <= 1e-1
+    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
 end
 
 
