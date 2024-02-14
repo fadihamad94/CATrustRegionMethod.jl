@@ -684,7 +684,11 @@ function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
        y /= norm(y)
 
        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
-		   return true, dot(y, H * y), y, k
+		   eigenvalue = dot(y, H * y)
+		   #TODO This code just for debugging. Need to be removed
+		   mimimum_eigenvalue = eigvals(Matrix(H))
+		   @info "Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
+		   return true, eigenvalue, y, k
        end
 
        x = y
