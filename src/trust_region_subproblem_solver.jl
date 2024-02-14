@@ -676,7 +676,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-1)
 	return false, eigenvalue, eigenvector, itr
 end
 
-function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1)
+function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
