@@ -144,7 +144,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         start_time = time()
 		min_gval_norm = norm(gval_current, 2)
         while k <= MAX_ITERATION
-			if print_level >= 0
+			if print_level >= 1
 				start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 				println("$start_time. Iteration $k with radius $r_k and total_number_factorizations $total_number_factorizations.")
 			end
@@ -153,7 +153,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
                 hessian_current = hess(nlp, x_k)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
-				println("hessian_current operation took $total_time_temp.")
+				if print_level >= 2
+					println("hessian_current operation took $total_time_temp.")
+				end
                 total_hessian_evaluation += 1
             end
 
@@ -162,20 +164,26 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("solveTrustRegionSubproblem operation took $total_time_temp.")
+			if print_level >= 2
+				println("solveTrustRegionSubproblem operation took $total_time_temp.")
+			end
 
 			start_time_temp = time()
 			second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, hessian_current, d_k)
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("computeSecondOrderModel operation took $total_time_temp.")
+			if print_level >= 2
+				println("computeSecondOrderModel operation took $total_time_temp.")
+			end
 
 			if success_subproblem_solve && second_order_model_value_current_iterate < 0
 				start_time_temp = time()
             	fval_next = obj(nlp, x_k + d_k)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
-				println("fval_next operation took $total_time_temp.")
+				if print_level >= 2
+					println("fval_next operation took $total_time_temp.")
+				end
 				total_function_evaluation += 1
 			else
 				fval_next = fval_current
@@ -186,7 +194,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
-				println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
+				if print_level >= 2
+					println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
+				end
 				if predicted_fct_decrease <= 0
 					if print_level >= 1
 						println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
@@ -205,20 +215,26 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					total_number_factorizations += temp_total_number_factorizations
 					end_time_temp = time()
 					total_time_temp = end_time_temp - start_time_temp
-					println("optimizeSecondOrderModel operation took $total_time_temp.")
+					if print_level >= 2
+						println("optimizeSecondOrderModel operation took $total_time_temp.")
+					end
 
 					start_time_temp = time()
 					second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, hessian_current, d_k)
 					end_time_temp = time()
 					total_time_temp = end_time_temp - start_time_temp
-					println("computeSecondOrderModel operation took $total_time_temp.")
+					if print_level >= 2
+						println("computeSecondOrderModel operation took $total_time_temp.")
+					end
 
 					if success_subproblem_solve && second_order_model_value_current_iterate < 0
 						start_time_temp = time()
 		            	fval_next = obj(nlp, x_k + d_k)
 						end_time_temp = time()
 						total_time_temp = end_time_temp - start_time_temp
-						println("fval_next operation took $total_time_temp.")
+						if print_level >= 2
+							println("fval_next operation took $total_time_temp.")
+						end
 						total_function_evaluation += 1
 					else
 						fval_next = fval_current
@@ -228,7 +244,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
 						end_time_temp = time()
 						total_time_temp = end_time_temp - start_time_temp
-						println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
+						if print_level >= 2
+							println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
+						end
 						if predicted_fct_decrease <= 0.0
 							if print_level >= 1
 								println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
@@ -252,7 +270,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				predicted_fct_decrease = 0.0
 				d_k = zeros(length(x_k))
 			end
-			if print_level >= 0
+			if print_level >= 1
 				println("Iteration $k with fval_next is $fval_next and fval_current is $fval_current.")
 				println("Iteration $k with actual_fct_decrease is $actual_fct_decrease and predicted_fct_decrease is $predicted_fct_decrease.")
 			end
@@ -261,7 +279,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			norm_gval_current = norm(gval_current, 2)
 			norm_gval_next = norm_gval_current
 			if ρ_k >= 0.0 && (fval_next <= fval_current)
-				if print_level >= 0
+				if print_level >= 1
 					println("$k. =======STEP IS ACCEPTED========== $ρ_k =========fval_next is $fval_next and fval_current is $fval_current.")
 				end
 				x_k = x_k + d_k
@@ -270,13 +288,17 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				total_gradient_evaluation += 1
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
-				println("gval_next operation took $total_time_temp.")
+				if print_level >= 2
+					println("gval_next operation took $total_time_temp.")
+				end
 
 				start_time_temp = time()
 				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level, compute_ρ_hat_approach)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
-				println("compute_ρ_hat operation took $total_time_temp.")
+				if print_level >= 2
+					println("compute_ρ_hat operation took $total_time_temp.")
+				end
 
                 fval_current = fval_next
                 gval_current = gval_next

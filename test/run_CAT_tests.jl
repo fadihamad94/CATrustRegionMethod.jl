@@ -201,7 +201,6 @@ function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_min
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    @show θ
     # compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64)
     ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ, 0.0)
 end

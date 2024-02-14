@@ -477,12 +477,10 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
     @test abs(δ_k - 8.0) <= tol
-    @show x_k + d_k
     # @test norm((x_k + d_k) - [-3.5355339059327373, -3.5355339059327373], 2) <= tol
     @test norm((x_k + d_k) - [8000.01, 8000.01], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-100)) <= tol
-    @show obj(nlp, x_k + d_k)
     @test abs(obj(nlp, x_k + d_k) - (-5.120012799946463e8)) <= tol
 end
 

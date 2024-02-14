@@ -137,7 +137,9 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 		H_ne, H_val, H_row, H_col, H_ptr = getHessianSparseLowerTriangularPart(H)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
-		println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
+		if print_level >= 2
+			println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
+		end
 	end
 	d = zeros(length(g))
 	full_Path = string(@__DIR__ ,"/test")
@@ -146,11 +148,6 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	use_stop_args = true
 	stop_normal = 1e-5
     stop_hard = 1e-5
-	#@info g
-	#@info H_val
-	#@info H_row
-	#@info H_col
-	#@info H_ptr
 	if H_type == "sparse_by_rows" && length(H_ptr) != length(g) + 1
 		@warn "Weired case detected."
 		H_type = "coordinate"
@@ -167,21 +164,21 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	end
 
 	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-	# @info "$start_time. Started calling GALAHAD TRS LIBRARY"
 	start_time_temp = time()
 	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cint, Cstring, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Ref{Cint}, Ref{Cint}, Ref{Cint}, Cdouble, Cint, Cint, Cuchar, Cdouble, Cuchar, Cdouble, Cdouble, Cstring), length(g), H_ne, H_type, f, d, g, H_val, H_row, H_col, H_ptr, r, print_level, max_factorizations, use_initial_multiplier, initial_multiplier, use_stop_args, stop_normal, stop_hard, string_problem_name)
 	end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-	# @info "$end_time. Finished calling GALAHAD TRS LIBRARY"
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	println("calling GALAHAD operation took $total_time_temp.")
 	@info "calling GALAHAD operation took $total_time_temp."
+	if print_level >= 2
+		println("calling GALAHAD operation took $total_time_temp.")
+	end
 
 	tol = 1e-1
 	condition_success = norm(d, 2) - r <= tol || abs(norm(d, 2) - r) <= stop_normal * r + tol || abs(norm(d, 2) - r) <= stop_normal + tol
 	total_number_factorizations = userdata.factorizations
 	if userdata.status != 0 || !condition_success
-		if print_level >= 0
+		if print_level >= 1
 			println("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status).")
 		end
 		if userdata.status == 0
@@ -195,6 +192,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
 			end
 		end
+		# This code was used when getting the preliminary results. Maybe we need it later
 		# start_time_temp = time()
 		# δ = max(δ, abs(eigmin(Matrix(H))))
 		# end_time_temp = time()
@@ -206,48 +204,12 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("optimizeSecondOrderModel operation took $total_time_temp.")
 			@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
+			if print_level >= 2
+				println("optimizeSecondOrderModel operation took $total_time_temp.")
+			end
 			return success, δ, d_k, total_number_factorizations, hard_case
-			# if success
-			# 	return success, δ, d_k, total_number_factorizations, hard_case
-			# else
-			# 	throw(error("Bisection logic failed to find a root for the phi function"))
-			# end
 		catch e
-			# if e == ErrorException("Bisection logic failed to find a root for the phi function")
-			# 	# if eigmin(Matrix(H)) >= 0
-			# 	# 	@error e
-			# 	# 	start_time_temp = time()
-			# 	# 	success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
-			# 	# 	# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ, min_grad, print_level)
-			# 	# 	total_number_factorizations += temp_total_number_factorizations
-			# 	# 	end_time_temp = time()
-			# 	# 	println("$success. solveHardCaseLogic operation took $total_time_temp.")
-			# 	# 	@info "$success. solveHardCaseLogic operation took $total_time_temp."
-			# 	# 	return success, δ, d_k, total_number_factorizations, hard_case
-			# 	# else
-			# 	# 	start_time_temp = time()
-			# 	# 	success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, 0.1, r, min_grad, print_level)
-			# 	# 	total_number_factorizations += temp_total_number_factorizations
-			# 	# 	end_time_temp = time()
-			# 	# 	total_time_temp = end_time_temp - start_time_temp
-			# 	# 	println("optimizeSecondOrderModel operation took $total_time_temp.")
-			# 	# 	@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
-			# 	# 	return success, δ, d_k, total_number_factorizations, hard_case
-			# 	# end
-			# 	println("SHOULD NOT ENTER HERE $ϵ")
-			# 	@error "SHOULD NOT ENTER HERE $ϵ"
-			# 	start_time_temp = time()
-			# 	# success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r, min_grad, print_level)
-			# 	success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, 0.1, r, min_grad, print_level)
-			# 	total_number_factorizations += temp_total_number_factorizations
-			# 	end_time_temp = time()
-			# 	total_time_temp = end_time_temp - start_time_temp
-			# 	println("optimizeSecondOrderModel operation took $total_time_temp.")
-			# 	@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
-			# 	return success, δ, d_k, total_number_factorizations, hard_case
-			# end
 			@error e
 			throw(e)
 		end
@@ -285,57 +247,30 @@ end
 
 function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, total_number_factorizations::Int64, print_level::Int64=0)
 	start_time_temp = time()
-	println("STARting FIND INTERVAL")
+	if print_level >= 1
+		println("STARting FIND INTERVAL")
+	end
 	success, δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r, print_level)
 	total_number_factorizations += temp_total_number_factorizations
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	println("findinterval operation finished with (δ, δ_prime) = ($δ, $δ_prime) and took $total_time_temp.")
+	if print_level >= 2
+		println("findinterval operation finished with (δ, δ_prime) = ($δ, $δ_prime) and took $total_time_temp.")
+	end
 
 	if !success
 		return false, false, δ, zeros(length(g)), total_number_factorizations, false
 	end
-
-	#=start_time_temp = time()
-	global global_temp_total_number_factorizations
-	global_temp_total_number_factorizations = 0
-	δ_m = δ
-	try
-		global g_
-		global H_
-		global ϵ_
-		global r_
-		g_ = g
-		H_ = H
-		ϵ_ = ϵ
-		r_ = r
-		δ_m = find_zero(phi, (δ, δ_prime), Bisection(), maxiters=1000)
-		total_number_factorizations += global_temp_total_number_factorizations
-		phi_val = phi(g, H, δ_m, ϵ, r)
-		@info "Bisection using Roots library finished with δ_m = $δ_m, phi = $phi_val, and temp_total_number_factorizations = $global_temp_total_number_factorizations."
-		if phi_val == 0
-			success = true
-		else
-			success = false
-		end
-	catch e
-		total_number_factorizations += global_temp_total_number_factorizations
-		# end_time_temp = time()
-		# total_time_temp = end_time_temp - start_time_temp
-		# println("bisection operation took $total_time_temp.")
-		# return true, false, δ_m, zeros(length(g)), total_number_factorizations, false
-		@error e
-		success, δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r, print_level)
-		total_number_factorizations += temp_total_number_factorizations
-	end=#
 
 	start_time_temp = time()
 	success, δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r, print_level)
 	total_number_factorizations += temp_total_number_factorizations
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	println("$success. bisection operation took $total_time_temp.")
 	@info "$success. bisection operation took $total_time_temp."
+	if print_level >= 2
+		println("$success. bisection operation took $total_time_temp.")
+	end
 
 	if !success
 		return true, false, δ_m, zeros(length(g)), total_number_factorizations, false
@@ -348,7 +283,9 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64,
 	d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	println("d_k operation took $total_time_temp.")
+	if print_level >= 2
+		println("d_k operation took $total_time_temp.")
+	end
 	return true, true, δ_m, d_k, total_number_factorizations, false
 end
 
@@ -381,6 +318,7 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
     catch e
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
+			# This code was used when getting the preliminary results. Maybe we need it later
 			# if eigmin(Matrix(H)) >= 0 && ϵ != 0.1
 			# if ϵ != 0.1
 			# 	try
@@ -402,8 +340,10 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
 			@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
+			if print_level >= 2
+				println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
+			end
             return success, δ, d_k, total_number_factorizations, true
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
@@ -413,8 +353,10 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
 			@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
+			if print_level >= 2
+				println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
+			end
 	    	return success, δ, d_k, total_number_factorizations, true
         else
 			@error e
@@ -433,19 +375,22 @@ function phi(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, print_
         cholesky(shifted_hessian)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
-		println("cholesky inside phi function took $total_time_temp.")
+		if print_level >= 2
+			println("cholesky inside phi function took $total_time_temp.")
+		end
 
 		start_time_temp = time()
 		computed_norm = norm(shifted_hessian \ g, 2)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
-		println("computed_norm opertion took $total_time_temp.")
+		if print_level >= 2
+			println("computed_norm opertion took $total_time_temp.")
+		end
 
 		if (δ <= 1e-6 && computed_norm <= r)
 			return 0
 		elseif computed_norm < (1 -ϵ) * r
 	        return -1
-		# elseif computed_norm <= (2 - ϵ) * r
 		elseif abs(computed_norm - r) <= ϵ * r
 	        return 0
 	    else
@@ -606,22 +551,16 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
     δ_m = (δ + δ_prime) / 2
 	# δ_m = sqrt(δ * δ_prime)
     Φ_δ_m = phi(g, H, δ_m, ϵ, r)
-	# max_iterations = 100
-	# max_iterations = 30  #2 ^ 30 ~ 1e9
 	max_iterations = 50  #2 ^ 50 ~ 1e15
 	#ϕ_δ >= 0 and ϕ_δ_prime <= 0
 	temp_1 = δ_prime >= 1e-15 * δ
 	temp_2 = δ_prime >= δ
-	if !(temp_1 || temp_2)
-		@error "δ_prime is $δ_prime and δ is $δ."
-		println("δ_prime is $δ_prime and δ is $δ.")
-	end
-	# while (Φ_δ_m != 0) && k <= max_iterations && (δ_prime >= 1e-9 * δ)
-	# while (Φ_δ_m != 0) && k <= max_iterations && (δ_prime >= 1e-15 * δ)
 	while (Φ_δ_m != 0) && k <= max_iterations && (δ >= 1e-15 * δ_prime)
 	# while (Φ_δ_m != 0) && k <= max_iterations
 		start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-		println("$start_time_str. Bisection iteration $k.")
+		if print_level >= 2
+			println("$start_time_str. Bisection iteration $k.")
+		end
         if Φ_δ_m > 0
             δ = δ_m
         else
@@ -634,7 +573,6 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
 			δ_prime = 2 * δ_prime
 			δ = δ / 2
 		end
-		# println("****************************BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************")
         k = k + 1
     end
 
@@ -644,7 +582,6 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
 			println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. ϵ is $ϵ.")
 		end
 		return false, max(δ_m, δ_prime), min(k, max_iterations) + 1
-        # throw(error("Bisection logic failed to find a root for the phi function"))
     end
 	if print_level >= 0
 		println("****************************ENDING BISECTION with δ_m = $δ_m**************")
@@ -660,16 +597,14 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	try
 		temp_d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
 		norm_temp_d_k = norm(temp_d_k, 2)
-		@info "norm_d_k is $norm_temp_d_k and starting delta is $δ_m."
+		@info "norm_d_k is $norm_temp_d_k, r is $r, and delta is $δ."
 		if abs(norm(temp_d_k)  - r) <= ϵ
 			return true, δ_m, temp_d_k, total_number_factorizations
 		end
 
-		@info "norm_d_k is $norm_temp_d_k and starting delta is $δ_m."
 		while ((δ_m - δ) * norm_temp_d_k > min_grad / C)
 			δ = δ / 2
 		end
-		@info "norm_d_k is $norm_temp_d_k, r is $r, and delta is $δ."
 	catch e
 		@error e
 	end
@@ -694,8 +629,6 @@ end
 
 function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma)
-	@show success, eigenvalue, eigenvector, itr
-	# eigenvalue = abs(eigenvalue)
 	attempt = 5
 	while attempt >= 0
 		if success
@@ -741,22 +674,17 @@ end
 
 function inverse_power_iteration(H, sigma; max_iter=100, ϵ=1e-1)
    n = size(H, 1)
-   # Initial guess for eigenvector (random)
    x = ones(n)
    y = ones(n)
    for k in 1:max_iter
-       # Solve linear system (A - sigma * I) * y = x
+       # Solve (H - sigma * I) * y = x
        y = (H - sigma * I) \ x
-       # Normalize y
        y /= norm(y)
 
-       # Check for convergence
        if norm(x - y) == 2.0 || norm(x - y) <= ϵ
-		   @info string("norm(x - y) is ", norm(x - y))
 		   return true, dot(y, H * y), y, k
        end
 
-       # Update eigenvector
        x = y
    end
    temp_ = dot(y, H * y)
