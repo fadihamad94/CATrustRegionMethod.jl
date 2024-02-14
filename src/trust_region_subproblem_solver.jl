@@ -609,7 +609,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	end
 
 	try
-		success, eigenvalue, eigenvector, itr = findMinimumEigenValue(H, δ, max_iter=500, ϵ=1e-5)
+		success, eigenvalue, eigenvector, itr = findMinimumEigenValue(H, δ)
 		eigenvalue = abs(eigenvalue)
 		@info "starting delta is $δ"
 		@info string("eigenvalue is ", eigenvalue)
@@ -626,7 +626,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	end
 end
 
-function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-1)
+function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma, max_iter = max_iter, ϵ = ϵ)
 	attempt = 5
 	while attempt >= 0
@@ -671,7 +671,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-1)
 	return false, eigenvalue, eigenvector, itr
 end
 
-function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-1, print_level=2)
+function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-5, print_level=2)
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
