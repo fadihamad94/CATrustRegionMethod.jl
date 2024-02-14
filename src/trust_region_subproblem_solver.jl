@@ -613,8 +613,10 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 		eigenvalue = abs(eigenvalue)
 		@info "starting delta is $δ"
 		@info string("eigenvalue is ", eigenvalue)
-		temp_d_k = cholesky(H + (eigenvalue + 1e-5) * sparse_identity) \ (-g)
+		temp_d_k = cholesky(H + (eigenvalue + 1e-1) * sparse_identity) \ (-g)
 		total_number_factorizations += itr
+		norm_temp_d_k = norm(temp_d_k)
+		@info "candidate search direction norm is $norm_temp_d_k. r is $r. ϵ is $ϵ"
 		if abs(norm(temp_d_k) - r) <= ϵ
 			return true, eigenvalue, temp_d_k, total_number_factorizations
 		end
@@ -626,14 +628,14 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m
 	end
 end
 
-function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
+function findMinimumEigenValue(H, sigma; max_iter=1000, ϵ=1e-3)
 	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma, max_iter = max_iter, ϵ = ϵ)
 	attempt = 5
 	while attempt >= 0
 		if success
 			try
 				sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-				cholesky(H + (abs(eigenvalue) + ϵ) * sparse_identity)
+				cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
 				itr += 1
 				return success, eigenvalue, eigenvector, itr
 			catch e
@@ -661,7 +663,7 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 		try
 			sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 			total_number_factorizations  += 1
-			cholesky(H + eigenvalue * sparse_identity)
+			cholesky(H + (abs(eigenvalue) + ϵ) * sparse_identity)
 			itr += 1
 			return success, eigenvalue, eigenvector, itr
 		catch
@@ -671,24 +673,35 @@ function findMinimumEigenValue(H, sigma; max_iter=500, ϵ=1e-5)
 	return false, eigenvalue, eigenvector, itr
 end
 
-function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-5, print_level=2)
+function inverse_power_iteration(H, delta; max_iter=1000, ϵ=1e-3, print_level=2)
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
    y = ones(n)
-   y_original_fact = cholesky(H + delta * I)
+   sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+   y_original_fact = cholesky(H + delta * sparse_identity)
+   @info "max_iter = $max_iter."
+   @info "ϵ = $ϵ."
    for k in 1:max_iter
        # Solve (H - sigma * I) * y = x
        y = y_original_fact \ x
 	   # y = (H - delta * I) \ x
        y /= norm(y)
-
+       temp_1 = norm(x + y)
+       temp_2 = norm(x - y)
+       @info "norm(x + y) = $temp_1 and norm(x - y) = $temp_2."
        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
 		   eigenvalue = dot(y, H * y)
 		   #TODO This code just for debugging. Need to be removed
 		   mimimum_eigenvalue = eigmin(Matrix(H))
-		   @info "Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
-		   return true, eigenvalue, y, k
+		   try
+			cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
+			@info "Success. Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
+       		        return true, eigenvalue, y, k
+		   catch
+			@info "Failure. Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
+			#DO NOTHING
+		   end
        end
 
        x = y
@@ -696,7 +709,9 @@ function inverse_power_iteration(H, delta; max_iter=500, ϵ=1e-5, print_level=2)
    temp_ = dot(y, H * y)
    #TODO This code just for debugging. Need to be removed
    mimimum_eigenvalue = eigmin(Matrix(H))
-   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. mimimum_eigenvalue is $mimimum_eigenvalue.")
+   temp_1 = norm(x + y)
+   temp_2 = norm(x - y)
+   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. mimimum_eigenvalue is $mimimum_eigenvalue. norm(x + y) = $temp_1 and norm(x - y) = $temp_2.")
    end_time_temp = time()
    total_time_temp = end_time_temp - start_time_temp
    @info "inverse_power_iteration operation took $total_time_temp."
