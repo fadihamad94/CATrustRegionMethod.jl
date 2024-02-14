@@ -380,21 +380,24 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     tol = 1e-3
     problem = test_create_hard_case_using_simple_univariate_convex_model()
     nlp = problem.nlp
-    x_k = [0.01]
+    # x_k = [0.01]
+    x_k = [1e-5]
     δ = 0.0
     ϵ = 0.2
-    r = 2000.0
+    r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
+    temp_ = norm(g)
+    @show "norm(g) is $temp_"
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
     #OLD HARD CASE LOGIC
     @test δ_k == 2.0
     # @test norm((x_k + d_k) - [1.0], 2) <= tol
-    @test norm((x_k + d_k) - [2000.01], 2) <= tol
+    @test norm((x_k + d_k) - [2.000001], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-1)) <= tol
-    @test abs(obj(nlp, x_k + d_k) - (-4.000040000047589e6)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-4.000040000047589)) <= tol
 end
 
 #Check this
@@ -402,10 +405,10 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     tol = 1e-3
     problem = test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = problem.nlp
-    x_k = [0.01, 0.01]
+    x_k = [1e-5, 1e-5]
     δ = 0.0
     ϵ = 0.2
-    r = 2828.5
+    r = 2.8285
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
@@ -413,10 +416,10 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     @test abs(δ_k - 2.0) <= tol
     # @test norm((x_k + d_k) - [1.0, 0.0], 2) <= tol
     # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
-    @test norm((x_k + d_k) - [2000.01, 2000.01], 2) <= tol
+    @test norm((x_k + d_k) - [2.00001, 2.00001], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test norm(obj(nlp, x_k + d_k) - (-1), 2) <= tol
-    @test norm(obj(nlp, x_k + d_k) - (-8.000079999384636e6), 2) <= tol
+    @test norm(obj(nlp, x_k + d_k) - (-8.000079), 2) <= tol
 end
 
 # Check this
@@ -424,21 +427,21 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     tol = 1e-3
     problem = test_create_hard_case_using_bivariate_convex_model_1()
     nlp = problem.nlp
-    x_k = [0.01, 0.01]
+    x_k = [1e-5, 1e-5]
     δ = 0.0
     ϵ = 0.2
-    r = 4000.0
+    r = 4.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test abs(norm(d_k) - r) <= tol
     @test δ_k == 4.0
     # @test norm((x_k + d_k) - [0.0, 1.0], 2) <= tol
-    @test norm((x_k + d_k) - [0.02, 4000.01], 2) <= tol
+    @test norm((x_k + d_k) - [2e-5, 4.00001], 2) <= tol
     # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-2.0)) <= tol
-    @test abs(obj(nlp, x_k + d_k) - (-3.200016000302291e7)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-32.00016)) <= tol
 end
 
 # Check this
@@ -446,21 +449,21 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     tol = 1e-2
     problem = test_create_hard_case_using_bivariate_convex_model_2()
     nlp = problem.nlp
-    x_k = [0.01, 0.01]
+    x_k = [1e-5, 1e-5]
     δ = 0.0
     ϵ = 0.2
-    r = 2000.0
+    r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k, 2) - r <= tol
     @test abs(δ_k - 2.0) <= tol
     # @test norm((x_k + d_k) - [-0.0025, 0.999], 2) <= tol
-    @test norm((x_k + d_k) - [-0.0025, 2000.01], 2) <= tol
+    @test norm((x_k + d_k) - [-0.0025, 2.00001], 2) <= tol
     # @test norm((x_k + d_k) - [0.0, 0.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-1.0000125)) <= tol
-    @test abs(obj(nlp, x_k + d_k) - (-4.000040000371614e6)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-4.00004)) <= tol
 end
 
 # Check this
@@ -468,20 +471,20 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     tol = 1e-3
     problem = test_create_hard_case_using_bivariate_convex_model_3()
     nlp = problem.nlp
-    x_k = [0.01, 0.01]
+    x_k = [1e-5, 1e-5]
     δ = 0.0
     ϵ = 0.2
-    r = 11313.70849891677
+    r = 11.4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
     @test norm(d_k) <= r
     @test abs(δ_k - 8.0) <= tol
     # @test norm((x_k + d_k) - [-3.5355339059327373, -3.5355339059327373], 2) <= tol
-    @test norm((x_k + d_k) - [8000.01, 8000.01], 2) <= tol
+    @test norm((x_k + d_k) - [8.00001, 8.00001], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test abs(obj(nlp, x_k + d_k) - (-100)) <= tol
-    @test abs(obj(nlp, x_k + d_k) - (-5.120012799946463e8)) <= tol
+    @test abs(obj(nlp, x_k + d_k) - (-512.0012)) <= tol
 end
 
 function test_optimize_second_order_model_bisection_logic_bug_fix()
