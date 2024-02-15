@@ -530,6 +530,7 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     r = 1e-8
     δ = 1e-10
     ϵ = 1e-5
+    print_level = 0
     success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g),print_level)
     @test success
     @test hard_case
