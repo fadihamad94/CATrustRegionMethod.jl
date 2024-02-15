@@ -663,7 +663,7 @@ function findMinimumEigenValue(H, sigma; max_iter=1000, ϵ=1e-3)
 		try
 			sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 			total_number_factorizations  += 1
-			cholesky(H + (abs(eigenvalue) + ϵ) * sparse_identity)
+			cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
 			itr += 1
 			return success, eigenvalue, eigenvector, itr
 		catch
