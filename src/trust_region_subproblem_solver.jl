@@ -136,8 +136,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::F
 		H_ne, H_val, H_row, H_col, H_ptr = getHessianSparseLowerTriangularPart(H)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
-		@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
 		if print_level >= 2
+			@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
 			println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
 		end
 	end
@@ -169,8 +169,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::F
 	end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	@info "calling GALAHAD operation took $total_time_temp."
 	if print_level >= 2
+		@info "calling GALAHAD operation took $total_time_temp."
 		println("calling GALAHAD operation took $total_time_temp.")
 	end
 
@@ -204,8 +204,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::F
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
 				println("optimizeSecondOrderModel operation took $total_time_temp.")
 			end
 			return success, δ, d_k, total_number_factorizations, hard_case
@@ -323,8 +323,8 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
 				println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
 			end
             return success, δ, d_k, total_number_factorizations, true
@@ -336,8 +336,8 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
 				println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
 			end
 	    	return success, δ, d_k, total_number_factorizations, true
@@ -578,7 +578,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ
 		temp_eigenvalue = eigenvalue
 		end_time_temp = time()
 	    total_time_temp = end_time_temp - start_time_temp
-		if print_level >= 0
+		if print_level >= 2
 	    	@info "inverse_power_iteration operation took $total_time_temp."
 		end
 		eigenvalue = abs(eigenvalue)
@@ -586,7 +586,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ
 		total_number_factorizations += 1
 		temp_d_k = cholesky(H + (eigenvalue + 1e-1) * sparse_identity) \ (-g)
 		norm_temp_d_k = norm(temp_d_k)
-		if print_level >= 1
+		if print_level >= 2
 			@info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
 		end
 		if (1 - γ_2) * r <= norm(temp_d_k) <= r
@@ -594,7 +594,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ
 		end
 		if norm(temp_d_k) > r
 			if print_level >= 1
-				println("FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2")
+				println("This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2")
 				@warn "This is noit a hard case. candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
 			end
 		end
@@ -630,7 +630,7 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 		   try
 			   temp_factorization += 1
 			   cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
-       		   return true, eigenvalue, y, k + temp_factorization
+       		   return true, eigenvalue, y, temp_factorization
 		   catch
 			   #DO NOTHING
 		   end
@@ -642,7 +642,7 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 		   try
 			   temp_factorization += 1
 			   cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
-			   return true, eigenvalue, y, k + temp_factorization
+			   return true, eigenvalue, y, temp_factorization
 		   catch
 			   #DO NOTHING
 		   end
@@ -664,8 +664,8 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 	   @info "inverse_power_iteration operation took $total_time_temp."
 	   println("inverse_power_iteration operation took $total_time_temp.")
    end
-   max_iter += temp_factorization
-   return false, temp_, y, max_iter
+   temp_factorization
+   return false, temp_, y, temp_factorization
 end
 
 #Based on 'THE HARD CASE' section from Numerical Optimization by Wright

@@ -208,14 +208,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				total_gradient_evaluation += 1
 				temp_norm = norm(temp_grad, 2)
 				if isnan(temp_norm)
-					@warn "grad(nlp, x_k + d_k) is NaN."
+					@warn "$k grad(nlp, x_k + d_k) is NaN."
+					if print_level >= 0
+						println("$k. grad(nlp, x_k + d_k) is NaN.")
+					end
 				else
 					min_gval_norm = min(min_gval_norm, temp_norm)
 				end
-				if isnan(min_gval_norm)
-					@warn "min_gval_norm is NaN."
-				end
-
 				start_time_temp = time()
 				ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
 				end_time_temp = time()
@@ -228,7 +227,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
 					end
 					@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
-					if print_level >= 1
+					if print_level >= 3
 						hessian_current_matrix = Matrix(hessian_current)
 						println("Radius, Gradient, and Hessian are $r_k, $gval_current, and $hessian_current_matrix.")
 					end
@@ -244,15 +243,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						temp_grad = grad(nlp, x_k + d_k)
 						total_gradient_evaluation += 1
 						temp_norm = norm(temp_grad, 2)
-
 						if isnan(temp_norm)
-							@warn "grad(nlp, x_k + d_k) is NaN."
+							if print_level >= 0
+								println("$k. grad(nlp, x_k + d_k) is NaN.")
+							end
+							@warn "$k grad(nlp, x_k + d_k) is NaN."
 						else
 							min_gval_norm = min(min_gval_norm, temp_norm)
-						end
-
-						if isnan(min_gval_norm)
-							@warn "min_gval_norm is NaN."
 						end
 						start_time_temp = time()
 						ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
@@ -293,24 +290,27 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			norm_gval_current = norm(gval_current, 2)
 			norm_gval_next = norm_gval_current
 			if ρ_k >= 0.0 && (fval_next <= fval_current)
-				if print_level >= 0
+				if print_level >= 1
 					println("$k. =======STEP IS ACCEPTED========== $ρ_k =========fval_next is $fval_next and fval_current is $fval_current.")
 				end
 				x_k = x_k + d_k
 				start_time_temp = time()
 				gval_next = temp_grad
 				temp_norm = norm(gval_next, 2)
-
 				if isnan(temp_norm)
-					@warn "grad(nlp, x_k + d_k) is NaN."
+					if print_level >= 0
+						println("$k. grad(nlp, x_k + d_k) is NaN.")
+					end
+					@warn "$k grad(nlp, x_k + d_k) is NaN."
 				else
 					min_gval_norm = min(min_gval_norm, temp_norm)
 				end
-
 				if isnan(min_gval_norm)
-					@warn "min_gval_norm is NaN."
+					if print_level >= 0
+						println("$k. min_gval_norm is NaN")
+					end
+					@warn "$k min_gval_norm is NaN."
 				end
-				total_gradient_evaluation += 1
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
 				if print_level >= 2
@@ -492,13 +492,12 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
 				temp_norm = norm(temp_grad, 2)
 
 				if isnan(temp_norm)
-					@warn "grad(nlp, x_k + d_k) is NaN."
+					@warn "$k grad(nlp, x_k + d_k) is NaN."
+					if print_level >= 0
+						println("$k. grad(nlp, x_k + d_k) is NaN.")
+					end
 				else
 					min_gval_norm = min(min_gval_norm, temp_norm)
-				end
-
-				if isnan(min_gval_norm)
-					@warn "min_gval_norm is NaN."
 				end
 
 				start_time_temp = time()
@@ -540,11 +539,19 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
 				start_time_temp = time()
 				gval_next = temp_grad
 				temp_norm = norm(gval_next, 2)
-				if !isnan(temp_norm)
+				if isnan(temp_norm)
+					if print_level >= 0
+						println("$k. grad(nlp, x_k + d_k) is NaN.")
+					end
+					@warn "$k grad(nlp, x_k + d_k) is NaN."
+				else
 					min_gval_norm = min(min_gval_norm, temp_norm)
 				end
 				if isnan(min_gval_norm)
-					@warn "min_gval_norm is NaN."
+					if print_level >= 0
+						println("$k. min_gval_norm is NaN")
+					end
+					@warn "$k min_gval_norm is NaN."
 				end
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
