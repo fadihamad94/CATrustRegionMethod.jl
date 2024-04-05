@@ -473,7 +473,7 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
 	initial_δ = δ
-	if print_level >= 0
+	if print_level >= 1
 		println("****************************STARTING BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************")
 	end
     #Bisection logic
@@ -553,7 +553,7 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
 		end
 		return false, δ_m, δ, δ_prime, min(k, max_iterations) + 1
     end
-	if print_level >= 0
+	if print_level >= 1
 		println("****************************ENDING BISECTION with δ_m = $δ_m**************")
 	end
     return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1

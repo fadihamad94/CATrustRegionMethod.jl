@@ -8,6 +8,8 @@ Defines parses and args.
 A dictionary with the values of the command-line arguments.
 """
 
+const skip_list = ["DMN15333LS", "DIAMON2DLS", "DMN37142LS", "BA-L49LS", "NONCVXU2", "DMN15102LS", "DMN15332LS", "DMN37143LS", "EIGENCLS", "YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
+
 function if_mkpath(dir::String)
   if !isdir(dir)
      mkpath(dir)
@@ -75,7 +77,7 @@ function parse_command_line()
     "--γ_2"
     help = "γ_2 parameter for CAT"
     arg_type = Float64
-    default = 0.1
+    default = 0.2
 
     "--r_1"
     help = "Initial trust region radius. Negative values indicates using our default radius of value 10 * \frac{|g(x_1)||}{||H(x_1)||}"
@@ -97,15 +99,16 @@ function parse_command_line()
     arg_type = Float64
     default = 0.0
 
-		"--print_level"
-		help = "Print level. If < 0, nothing to print, 0 for info and > 0 for debugging."
+	"--print_level"
+	help = "Print level. If < 0, nothing to print, 0 for info and > 0 for debugging."
     arg_type = Int64
     default = 0
 
     "--criteria"
     help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `GALAHAD_TRS`, `initial_radius`, `radius_update_rule`."
     arg_type = String
-    default = "ρ_hat_rule,GALAHAD_TRS,initial_radius,radius_update_rule"
+    # default = "ρ_hat_rule,GALAHAD_TRS,initial_radius,radius_update_rule"
+	default = "ρ_hat_rule,radius_update_rule,initial_radius"
   end
 
   return ArgParse.parse_args(arg_parse)
@@ -114,15 +117,15 @@ end
 function createProblemData(
 	criteria::Vector{String},
 	max_it::Int64,
-  max_time::Float64,
-  tol_opt::Float64,
-  θ::Float64,
-  β_1::Float64,
+	max_time::Float64,
+	tol_opt::Float64,
+	θ::Float64,
+	β_1::Float64,
 	β_2::Float64,
 	ω_1::Float64,
 	ω_2::Float64,
-  γ_2::Float64,
-  r_1::Float64)
+	γ_2::Float64,
+	r_1::Float64)
 		problem_data_vec = []
 		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 		compute_ρ_hat_approach = "NOT DEFAULT"
@@ -192,35 +195,44 @@ function runModelFromProblem(
 	print_level::Int64,
 	total_results_output_file_path::String
 	)
-    global nlp = nothing
-		β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach = problem_data
-		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-    try
-			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-      println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
-			@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
-      nlp = CUTEstModel(cutest_problem)
-			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level, compute_ρ_hat_approach)
-			x_1 = problem.nlp.meta.x0
-			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-	    x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
-			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-			function_value = NaN
-			gradient_value = NaN
-			if size(last(iteration_stats, 1))[1] > 0
-				function_value = last(iteration_stats, 1)[!, "fval"][1]
-			  gradient_value = last(iteration_stats, 1)[!, "gradval"][1]
-			end
-			computation_stats_modified = Dict("function_value" => function_value, "gradient_value" => gradient_value)
-			for key in keys(computation_stats)
-				computation_stats_modified[key] = computation_stats[key]
-			end
-			dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
-			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 
-			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
-			outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
+	global nlp = nothing
+	β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach = problem_data
+	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+	try
+		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
+		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
+		nlp = CUTEstModel(cutest_problem)
+		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level, compute_ρ_hat_approach)
+		x_1 = problem.nlp.meta.x0
+		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		x = x_1
+		status = Nothing
+		iteration_stats = Nothing
+		total_iterations_count = 0
+		if criteria == "original" || criteria == "CAT"
+			x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT_original_alg(problem, x_1, δ, solver)
+	    else
+			x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
+		end
+		end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		function_value = NaN
+		gradient_value = NaN
+		if size(last(iteration_stats, 1))[1] > 0
+			function_value = last(iteration_stats, 1)[!, "fval"][1]
+			gradient_value = last(iteration_stats, 1)[!, "gradval"][1]
+		end
+		computation_stats_modified = Dict("function_value" => function_value, "gradient_value" => gradient_value)
+		for key in keys(computation_stats)
+			computation_stats_modified[key] = computation_stats[key]
+		end
+		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
+		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
+
+		total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
+		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
 	catch e
 		@show e
 		status = "INCOMPLETE"
@@ -230,11 +242,11 @@ function runModelFromProblem(
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats, total_results_output_file_path, max_it + 1, max_it + 1)
-  finally
-  	if nlp != nothing
-    	finalize(nlp)
-    end
-  end
+  	finally
+	  	if nlp != nothing
+	    	finalize(nlp)
+	    end
+  	end
 end
 
 function computeGeomeans(df::DataFrame, max_it::Int64)
@@ -281,23 +293,32 @@ function runProblems(
 	problem_data_vec::Vector{Any},
 	δ::Float64,
 	folder_name::String,
-  default_problems::Bool,
-  min_nvar::Int64,
-  max_nvar::Int64,
+	default_problems::Bool,
+	min_nvar::Int64,
+	max_nvar::Int64,
 	print_level::Int64)
 
-		cutest_problems = []
-		if default_problems
-			cutest_problems = CUTEst.select(contype="unc")
-		else
-			cutest_problems = get_problem_list(min_nvar, max_nvar)
-		end
+	cutest_problems = []
+	if default_problems
+		cutest_problems = CUTEst.select(contype="unc")
+	else
+		cutest_problems = get_problem_list(min_nvar, max_nvar)
+	end
 
-		println("CUTEst Problems are: $cutest_problems")
+	cutest_problems = filter!(e->e ∉ skip_list, cutest_problems)
 
-		geomean_results_file_path = string(folder_name, "/", "geomean_results_ablation_study.csv")
+	# default_test_problems = ["DIXMAANI", "LIARWHD", "SCHMVETT", "VAREIGVL", "CYCLOOCFLS", "DIXMAANJ", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "DMN37142LS", "EIGENALS", "YATP1LS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "S308NE", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "DQRTIC", "MISRA1ALS", "BOX", "DMN37143LS", "TOINTGSS", "SPARSINE", "VESUVIALS", "INTEQNELS", "COATINGNE", "HAIRY", "PALMER1C", "BA-L49LS", "SSCOSINE", "NONCVXU2", "BROYDN7D", "COSINE", "DIXMAANO", "SPINLS", "BROYDN3DLS", "PALMER2C", "CURLY20", "NONMSQRT", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "YATP2CLS", "DMN15332LS", "SCURLY20", "NONDQUAR", "SCURLY30", "LUKSAN21LS", "ECKERLE4LS", "HAHN1LS", "DMN15102LS", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "BROYDNBDLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "DEVGLA2NE", "BA-L1SPLS", "BA-L73LS", "DIAMON2DLS", "THURBERLS", "GAUSS1LS", "PENALTY3", "MODBEALE", "PALMER6C", "DIXMAANN", "LUKSAN17LS", "EIGENCLS", "INDEFM", "SROSENBR", "MNISTS5LS", "INDEF", "ARWHEAD", "DIXON3DQ", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "NCB20", "FLETCBV3", "CHAINWOO", "HATFLDE", "DIXMAANP", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "MSQRTALS", "CURLY10", "BOXPOWER", "DQDRTIC", "OSCIGRAD", "FLETCHBV", "ARGLINB", "DIXMAANF", "BA-L16LS", "MOREBV", "NONDIA", "MSQRTBLS", "SCURLY10", "TQUARTIC", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "DIXMAANG", "HILBERTB", "DIXMAANK", "QUARTC", "EDENSCH", "YATP1CLS", "TOINTPSP", "SSBRYBND", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "SINQUAD", "DIXMAANL", "PALMER4C", "TESTQUAD", "EIGENBLS", "TRIGON2", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS"]
+	#
+	# default_test_problems = filter!(e->e ∉ skip_list, default_test_problems)
 
-		if isfile(geomean_results_file_path)
+	# cutest_problems = default_test_problems
+
+	println("CUTEst Problems are: $cutest_problems")
+	@info length(cutest_problems)
+
+	geomean_results_file_path = string(folder_name, "/", "geomean_results_ablation_study.csv")
+
+	if isfile(geomean_results_file_path)
         rm(geomean_results_file_path)  # Delete the file if it already exists
     end
 
@@ -305,43 +326,43 @@ function runProblems(
         write(file, "criteria,total_failure,geomean_total_iterations_count,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
     end
 
-		for index in 1:length(criteria)
-			crt = criteria[index]
-			total_results_output_directory =  string(folder_name, "/$crt")
-			total_results_output_file_name = "table_cutest_$crt.csv"
-			total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
+	for index in 1:length(criteria)
+		crt = criteria[index]
+		total_results_output_directory =  string(folder_name, "/$crt")
+		total_results_output_file_name = "table_cutest_$crt.csv"
+		total_results_output_file_path = string(total_results_output_directory, "/", total_results_output_file_name)
 
-			if !isfile(total_results_output_file_path)
-				mkpath(total_results_output_directory);
-				open(total_results_output_file_path,"a") do iteration_status_csv_file
-					write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+		if !isfile(total_results_output_file_path)
+			mkpath(total_results_output_directory);
+			open(total_results_output_file_path,"a") do iteration_status_csv_file
+				write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
 		    end
-			end
-
-			for cutest_problem in cutest_problems
-				if cutest_problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
-					@show cutest_problem
-					dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-					@info "$dates_format Skipping Problem $cutest_problem."
-					continue
-				else
-					runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, total_results_output_file_path)
-				end
-			end
-
-			df = DataFrame(CSV.File(total_results_output_file_path))
-			df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
-			max_it = problem_data_vec[index][7]
-			geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
-			counts = countmap(df.status)
-			total_failure = length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
-			open(geomean_results_file_path, "a") do file
-	        write(file, "$crt,$total_failure,$geomean_total_iterations_count,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n");
-	    end
 		end
 
-		df_geomean_results = DataFrame(CSV.File(geomean_results_file_path))
-		return df_geomean_results
+		for cutest_problem in cutest_problems
+			if cutest_problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
+				@show cutest_problem
+				dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+				@info "$dates_format Skipping Problem $cutest_problem."
+				continue
+			else
+				runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, total_results_output_file_path)
+			end
+		end
+
+		df = DataFrame(CSV.File(total_results_output_file_path))
+		df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
+		max_it = problem_data_vec[index][7]
+		geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
+		counts = countmap(df.status)
+		total_failure = length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
+		open(geomean_results_file_path, "a") do file
+	    	write(file, "$crt,$total_failure,$geomean_total_iterations_count,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n");
+	  	end
+	end
+
+	df_geomean_results = DataFrame(CSV.File(geomean_results_file_path))
+	return df_geomean_results
 end
 
 function plotFigure(
@@ -353,15 +374,15 @@ function plotFigure(
 	plot_name::String
 	)
 	plot(
-			values_x,
-			values_y,
-      color = :blue,
-      ylabel=ylabel,
-			legend=false,
-			size=(900, 500)
+		values_x,
+		values_y,
+      	color = :blue,
+      	ylabel=ylabel,
+		legend=false
+		#size=(900, 500)
     )
     fullPath = string(folder_name, "/", plot_name)
-		@show fullPath
+	@show fullPath
     png(fullPath)
 end
 
@@ -401,43 +422,47 @@ function plotFigures(
 end
 
 function main()
-  parsed_args = parse_command_line()
+	parsed_args = parse_command_line()
+	folder_name = parsed_args["output_dir"]
 
-  folder_name = parsed_args["output_dir"]
-  if_mkpath("$folder_name")
-  default_problems = parsed_args["default_problems"]
-  min_nvar = 0
-  max_nvar = 0
-  if !default_problems
-    min_nvar = parsed_args["min_nvar"]
-    max_nvar = parsed_args["max_nvar"]
-  end
-  max_it = parsed_args["max_it"]
-  max_time = parsed_args["max_time"]
-  tol_opt = parsed_args["tol_opt"]
-  r_1 = parsed_args["r_1"]
+  	if_mkpath("$folder_name")
+  	default_problems = parsed_args["default_problems"]
+  	min_nvar = 0
+  	max_nvar = 0
+  	if !default_problems
+    	min_nvar = parsed_args["min_nvar"]
+    	max_nvar = parsed_args["max_nvar"]
+  	end
+  	max_it = parsed_args["max_it"]
+  	max_time = parsed_args["max_time"]
+  	tol_opt = parsed_args["tol_opt"]
+  	r_1 = parsed_args["r_1"]
 
-  θ = parsed_args["θ"]
-  β_1 = parsed_args["β_1"]
-  β_2 = parsed_args["β_2"]
-  ω_1 = parsed_args["ω_1"]
-  ω_2 = parsed_args["ω_2"]
-  γ_2 = parsed_args["γ_2"]
-  δ = parsed_args["δ"]
+  	θ = parsed_args["θ"]
+  	β_1 = parsed_args["β_1"]
+  	β_2 = parsed_args["β_2"]
+  	ω_1 = parsed_args["ω_1"]
+  	ω_2 = parsed_args["ω_2"]
+  	γ_2 = parsed_args["γ_2"]
+  	δ = parsed_args["δ"]
 	print_level = parsed_args["print_level"]
 
-  default_criteria = ["ρ_hat_rule", "GALAHAD_TRS", "initial_radius", "radius_update_rule"]
-  criteria = split(parsed_args["criteria"], ",")
-  for val in criteria
-    if val ∉ default_criteria
-      error("`criteria` allowed values are `ρ_hat_rule`, `GALAHAD_TRS`, `initial_radius`, `radius_update_rule`.")
-    end
-  end
+  	# default_criteria = ["ρ_hat_rule", "GALAHAD_TRS", "initial_radius", "radius_update_rule"]
+	default_criteria = ["ρ_hat_rule", "initial_radius", "radius_update_rule"]
+  	criteria = split(parsed_args["criteria"], ",")
+  	for val in criteria
+    	if val ∉ default_criteria
+      		error("`criteria` allowed values are `ρ_hat_rule`, `GALAHAD_TRS`, `initial_radius`, `radius_update_rule`.")
+    	end
+  	end
 	criteria = vcat("original", criteria)
 	criteria = String.(criteria)
-	@show criteria
-  # run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, min_nvar, max_nvar, train_batch_count, train_batch_index, parsed_args["solver"])
+	# criteria = criteria[1:2]
+	# criteria = criteria[3:4]
+  	# run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, min_nvar, max_nvar, train_batch_count, train_batch_index, parsed_args["solver"])
 	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1)
+	@info criteria
+	@info problem_data_vec
 	df_geomean_results = runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
 	plotFigures(df_geomean_results, folder_name)
 end
