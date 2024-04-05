@@ -1,4 +1,4 @@
-export phi, findinterval, bisection, findMinimumEigenValue
+export phi, findinterval, bisection
 using LinearAlgebra
 using Dates
 using Roots
