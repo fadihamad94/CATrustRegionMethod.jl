@@ -94,29 +94,28 @@ function getHessianSparseLowerTriangularPart(H)
 		end
 		temp = 0
 	end
-	#push!(H_ptr, size(H)[1] + 1)
 	push!(H_ptr, H_ne)
 	return H_ne, H_val, H_row, H_col, H_ptr
 end
 
 
-function solveTrustRegionSubproblem(f::Float64, g::Vector{Float64}, H, x_k::Vector{Float64}, δ::Float64, ϵ::Float64, r::Float64, min_grad::Float64, problem_name::String, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level::Int64=0)
+function solveTrustRegionSubproblem(f::Float64, g::Vector{Float64}, H, x_k::Vector{Float64}, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, problem_name::String, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level::Int64=0)
 	if subproblem_solver_method == OPTIMIZATION_METHOD_DEFAULT
-		return optimizeSecondOrderModel(g, H, δ, ϵ, r, min_grad, print_level)
+		return optimizeSecondOrderModel(g, H, δ, γ_2, r, min_grad, print_level)
 	end
 
 	if subproblem_solver_method == OPTIMIZATION_METHOD_TRS
-		return trs(f, g, H, δ, ϵ, r, problem_name, min_grad, print_level)
+		return trs(f, g, H, δ, γ_2, r, problem_name, min_grad, print_level)
 	end
 
 	if subproblem_solver_method == OPTIMIZATION_METHOD_GLTR
 		return gltr(f, g, H, r, min_grad, print_level)
 	end
 
-	return optimizeSecondOrderModel(g, H, δ, ϵ, r, min_grad, print_level)
+	return optimizeSecondOrderModel(g, H, δ, γ_2, r, min_grad, print_level)
 end
 
-function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, problem_name::String, min_grad::Float64, print_level::Int64=0)
+function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, problem_name::String, min_grad::Float64, print_level::Int64=0)
     max_factorizations = 1000
 	H_type = "sparse_by_rows"
 	#H_type = "dense"
@@ -137,8 +136,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 		H_ne, H_val, H_row, H_col, H_ptr = getHessianSparseLowerTriangularPart(H)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
-		@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
 		if print_level >= 2
+			@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
 			println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
 		end
 	end
@@ -170,8 +169,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 	end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	@info "calling GALAHAD operation took $total_time_temp."
 	if print_level >= 2
+		@info "calling GALAHAD operation took $total_time_temp."
 		println("calling GALAHAD operation took $total_time_temp.")
 	end
 
@@ -205,8 +204,8 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Flo
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
 				println("optimizeSecondOrderModel operation took $total_time_temp.")
 			end
 			return success, δ, d_k, total_number_factorizations, hard_case
@@ -246,12 +245,12 @@ end
 
 #Based on Theorem 4.3 in Numerical Optimization by Wright
 
-function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, total_number_factorizations::Int64, print_level::Int64=0)
+function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, total_number_factorizations::Int64, min_grad::Float64, print_level::Int64=0)
 	start_time_temp = time()
-	if print_level >= 1
-		println("STARting FIND INTERVAL")
+	if print_level >= 2
+		println("Starting Find Interval")
 	end
-	success, δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, ϵ, r, print_level)
+	success, δ, δ_prime, temp_total_number_factorizations = findinterval(g, H, δ, γ_2, r, print_level)
 	total_number_factorizations += temp_total_number_factorizations
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
@@ -260,52 +259,51 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64,
 	end
 
 	if !success
-		return false, false, δ, zeros(length(g)), total_number_factorizations, false
+		return false, false, δ, δ, δ_prime, zeros(length(g)), total_number_factorizations, false
 	end
 
 	start_time_temp = time()
-	success, δ_m, temp_total_number_factorizations = bisection(g, H, δ, ϵ, δ_prime, r, print_level)
+	success, δ_m, δ, δ_prime, temp_total_number_factorizations = bisection(g, H, δ, γ_2, δ_prime, r, min_grad, print_level)
 	total_number_factorizations += temp_total_number_factorizations
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
-	@info "$success. bisection operation took $total_time_temp."
 	if print_level >= 2
 		println("$success. bisection operation took $total_time_temp.")
 	end
 
 	if !success
-		return true, false, δ_m, zeros(length(g)), total_number_factorizations, false
+		return true, false, δ_m, δ, δ_prime, zeros(length(g)), total_number_factorizations, false
 	end
 
 	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 	total_number_factorizations  += 1
 
 	start_time_temp = time()
-	d_k = (cholesky(H + δ_m * sparse_identity) \ (-g))
+	d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
 	if print_level >= 2
 		println("d_k operation took $total_time_temp.")
 	end
-	return true, true, δ_m, d_k, total_number_factorizations, false
+	return true, true, δ_m, δ, δ_prime, d_k, total_number_factorizations, false
 end
 
-function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
+function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
     #When δ is 0 and the Hessian is positive semidefinite, we can directly compute the direction
     total_number_factorizations = 0
     try
 		total_number_factorizations += 1
-        cholesky(H)
-        d_k = H \ (-g)
-        if norm(d_k, 2) <= (1 + ϵ) * r
+        d_k = cholesky(H) \ (-g)
+		if norm(d_k, 2) <= r
         	return true, 0.0, d_k, total_number_factorizations, false
         end
     catch e
 		#Do nothing
     end
 	δ_m = δ
+	δ_prime = δ
     try
-		success_find_interval, success_bisection, δ_m, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, ϵ, r, total_number_factorizations, print_level)
+		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, γ_2, r, total_number_factorizations, min_grad, print_level)
 		total_number_factorizations += temp_total_number_factorizations
 		success = success_find_interval && success_bisection
 		if success
@@ -319,43 +317,27 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
     catch e
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
-			# This code was used when getting the preliminary results. Maybe we need it later
-			# if eigmin(Matrix(H)) >= 0 && ϵ != 0.1
-			# if ϵ != 0.1
-			# 	try
-			# 		success_find_interval, success_bisection, δ_m, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, 0.1, r, total_number_factorizations, print_level)
-			# 		total_number_factorizations += temp_total_number_factorizations
-			# 		success = success_find_interval && success_bisection
-			# 		if success
-			# 			return true, δ_m, d_k, total_number_factorizations, hard_case
-			# 		end
-			# 	catch e_
-			# 		total_number_factorizations += 1000
-			# 		@error e_
-			# 	end
-			# end
-
 			start_time_temp = time()
-	    	# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
-			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
+	    	# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, print_level)
+			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
 				println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
 			end
             return success, δ, d_k, total_number_factorizations, true
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
 			start_time_temp = time()
-            # success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, print_level)
-			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, ϵ, r, δ_m, min_grad, print_level)
+            # success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, print_level)
+			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
-			@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
 			if print_level >= 2
+				@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
 				println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
 			end
 	    	return success, δ, d_k, total_number_factorizations, true
@@ -367,13 +349,14 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, ϵ::Float6
 end
 
 
-function phi(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, print_level::Int64=0)
+function phi(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0)
     sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
     shifted_hessian = H + δ * sparse_identity
-    #cholesky factorization only works on positive definite matrices
+	temp_d = zeros(length(g))
+	positive_definite = true
     try
 		start_time_temp = time()
-        cholesky(shifted_hessian)
+        shifted_hessian_fact = cholesky(shifted_hessian)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
 		if print_level >= 2
@@ -381,7 +364,8 @@ function phi(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, print_
 		end
 
 		start_time_temp = time()
-		computed_norm = norm(shifted_hessian \ g, 2)
+		temp_d = shifted_hessian_fact \ (-g)
+		computed_norm = norm(temp_d, 2)
 		end_time_temp = time()
 		total_time_temp = end_time_temp - start_time_temp
 		if print_level >= 2
@@ -389,62 +373,25 @@ function phi(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, print_
 		end
 
 		if (δ <= 1e-6 && computed_norm <= r)
-			return 0
-		elseif computed_norm < (1 -ϵ) * r
-	        return -1
-		elseif abs(computed_norm - r) <= ϵ * r
-	        return 0
+			return 0, temp_d, positive_definite
+		elseif computed_norm < (1 - γ_2) * r
+	        return -1, temp_d, positive_definite
+		elseif computed_norm <= r
+	        return 0, temp_d, positive_definite
 	    else
-	        return 1
+	        return 1, temp_d, positive_definite
 	    end
     catch e
-        return 1
+		positive_definite = false
+        return 1, temp_d, positive_definite
     end
 end
 
-function phi(δ::Float64)
-	global g_
-	global H_
-	global ϵ_
-	global r_
-	global global_temp_total_number_factorizations
-    global_temp_total_number_factorizations = global_temp_total_number_factorizations + 1
-    sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H_)[1], size(H_)[2])
-    shifted_hessian = H_ + δ * sparse_identity
-    #cholesky factorization only works on positive definite matrices
-    try
-		start_time_temp = time()
-        cholesky(shifted_hessian)
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		println("cholesky inside phi function took $total_time_temp.")
-
-		start_time_temp = time()
-		computed_norm = norm(shifted_hessian \ g_, 2)
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		println("computed_norm opertion took $total_time_temp.")
-
-		if (δ <= 1e-6 && computed_norm <= r_)
-			return 0
-		elseif computed_norm < (1 -ϵ_) * r_
-	        return -1
-		# elseif computed_norm <= (2 - ϵ) * r
-		elseif abs(computed_norm - r_) <= ϵ_ * r_
-	        return 0
-	    else
-	        return 1
-	    end
-    catch e
-        return 1
-    end
-end
-
-function findinterval(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float64, print_level::Int64=0)
+function findinterval(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0)
 	if print_level >= 1
 		println("STARTING WITH δ = $δ.")
 	end
-    Φ_δ = phi(g, H, 0.0, ϵ, r)
+    Φ_δ, temp_d, positive_definite = phi(g, H, 0.0, γ_2, r)
 
     if Φ_δ == 0
         δ = 0.0
@@ -454,46 +401,33 @@ function findinterval(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float6
 
 	δ_original = δ
 
-	if δ_original < 1e-6
-		δ = 1e-2 * sqrt(δ)
-	end
-	if print_level >= 1
-		println("Updating δ to δ = $δ.")
-	end
-
-    Φ_δ = phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
 
     if Φ_δ == 0
         δ_prime = δ
         return true, δ, δ_prime, 2
     end
-
-    δ_prime = δ == 0.0 ? 1.0 : δ * 2
-	if Φ_δ > 0
-		if δ != 0.0
-			if δ_original < 1e-6
-				δ_prime = 1e-1 * sqrt(δ)
-			else
-				δ_prime = δ * 2 ^ 5
-			end
-		end
-	else
-		if δ != 0.0
-			if δ_original < 1e-6
-				δ_prime = 0.0
-			else
-				δ_prime = δ / 2 ^ 5
-			end
-		end
-	end
 	if δ < 0
-		δ_prime = -δ
+		@warn "---------THIS SHOULD NOT HAPPEN---------"
 	end
+	δ_prime = δ
+	if Φ_δ > 0
+		δ_prime = δ == 0.0 ? 1.0 : δ * 2
+	else
+		if δ == 0
+			@warn "---------THIS SHOULD NOT HAPPEN---------"
+			return false, δ, δ_prime, 2
+		else
+			δ_prime = δ
+			δ = δ / 2
+		end
+	end
+
     Φ_δ_prime = 0.0
-	max_iterations = 1000
+	max_iterations = 100
     k = 1
     while k < max_iterations
-        Φ_δ_prime = phi(g, H, δ_prime, ϵ, r)
+        Φ_δ_prime, temp_d, positive_definite = phi(g, H, δ_prime, γ_2, r)
         if Φ_δ_prime == 0
             δ = δ_prime
             return true, δ, δ_prime, k + 2
@@ -507,9 +441,9 @@ function findinterval(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float6
             break
         end
         if Φ_δ_prime < 0
-            δ_prime = δ_prime / 2
+			δ_prime = δ_prime / 2
         elseif Φ_δ_prime > 0
-            δ_prime = δ_prime * 2
+			δ_prime = δ_prime * 2
         end
         k = k + 1
     end
@@ -517,12 +451,8 @@ function findinterval(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float6
     #switch so that δ for ϕ_δ >= 0 and δ_prime for ϕ_δ_prime <= 0
 	#δ < δ_prime since ϕ is decreasing function
     if Φ_δ_prime > 0 && Φ_δ < 0
-        δ_temp = δ
-        Φ_δ_temp = Φ_δ
-        δ = δ_prime
-        δ_prime = δ_temp
-        Φ_δ = Φ_δ_prime
-        Φ_δ_prime = Φ_δ_temp
+		δ, δ_prime = δ_prime, δ
+		Φ_δ, Φ_δ_prime = Φ_δ_prime, Φ_δ
     end
 
     if (Φ_δ  * Φ_δ_prime > 0)
@@ -533,29 +463,25 @@ function findinterval(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, r::Float6
     end
 
 	if δ > δ_prime
-		δ_temp = δ
-        δ = δ_prime
-		δ_prime = δ_temp
+		δ, δ_prime = δ_prime, δ
 	end
 
     return true, δ, δ_prime, min(k, max_iterations) + 2
 end
 
-function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Float64, r::Float64, print_level::Int64=0)
+function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
-	if print_level >= 0
+	initial_δ = δ
+	if print_level >= 1
 		println("****************************STARTING BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************")
 	end
     #Bisection logic
     k = 1
-    # δ_m = (δ + δ_prime) / 2
-	δ_m = sqrt(δ * δ_prime)
-    Φ_δ_m = phi(g, H, δ_m, ϵ, r)
-	max_iterations = 50  #2 ^ 50 ~ 1e15
-	#ϕ_δ >= 0 and ϕ_δ_prime <= 0
-	while (Φ_δ_m != 0) && k <= max_iterations && (δ >= 1e-15 * δ_prime)
-	# while (Φ_δ_m != 0) && k <= max_iterations
+    δ_m = (δ + δ_prime) / 2
+    Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
+	max_iterations = 100
+    while (Φ_δ_m != 0) && k <= max_iterations
 		start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		if print_level >= 2
 			println("$start_time_str. Bisection iteration $k.")
@@ -565,164 +491,185 @@ function bisection(g::Vector{Float64}, H, δ::Float64, ϵ::Float64, δ_prime::Fl
         else
             δ_prime = δ_m
         end
-        # δ_m = (δ + δ_prime) / 2
-		δ_m = sqrt(δ * δ_prime)
-        Φ_δ_m = phi(g, H, δ_m, ϵ, r)
+        δ_m = (δ + δ_prime) / 2
+        Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
 		if Φ_δ_m != 0 && abs(δ - δ_prime) <= 1e-11
 			δ_prime = 2 * δ_prime
 			δ = δ / 2
 		end
         k = k + 1
+		if Φ_δ_m != 0
+			ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime = phi(g, H, δ_prime, γ_2, r)
+			ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
+			q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
+			q_2 = min_grad / (100)
+			if print_level >= 2
+				println("$k===============0Bisection entered here=================")
+			end
+			if q_1 > 1e-1 * norm(g)
+				norm_g = norm(g)
+				tremp_g =  1e-1 * norm(g)
+				@warn q_1, norm(g)
+				if print_level >= 2
+					println("$k+++++++++++++$q_1,$norm_g,$tremp_g.")
+				end
+			end
+			if q_1 > 1e-1 * min_grad
+				tremp_g =  1e-1 * min_grad
+				@warn q_1, norm(g)
+				if print_level >= 2
+					println("$k-------------$q_1,$min_grad,$tremp_g.")
+				end
+			end
+			if q_1 > 1e-3 * min_grad
+				tremp_g =  1e-3 * min_grad
+				@warn q_1, norm(g)
+				if print_level >= 2
+					println("$k#############$q_1,$min_grad,$tremp_g.")
+				end
+			end
+
+			if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) && q_1 <= q_2 && !positive_definite_δ
+				if print_level >= 2
+					println("$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============")
+					println("$k===================min_grad / (100 r) is $q_2.============")
+					println("$k===================ϕ_δ_prime is $ϕ_δ_prime.============")
+
+					println("$k===============Bisection entered here=================")
+					mimimum_eigenvalue = eigmin(Matrix(H))
+					mimimum_eigenvalue_abs = abs(mimimum_eigenvalue)
+					@info "$k=============1Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
+					println("$k=============1Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.")
+				end
+				break
+			end
+		end
     end
 
     if (Φ_δ_m != 0)
 		if print_level >= 1
 			println("Φ_δ_m is $Φ_δ_m.")
-			println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. ϵ is $ϵ.")
+			println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. γ_2 is $γ_2.")
 		end
-		return false, max(δ_m, δ_prime), min(k, max_iterations) + 1
+		return false, δ_m, δ, δ_prime, min(k, max_iterations) + 1
     end
-	if print_level >= 0
+	if print_level >= 1
 		println("****************************ENDING BISECTION with δ_m = $δ_m**************")
 	end
-    return true, δ_m, min(k, max_iterations) + 1
+    return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1
 end
 
-function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, δ_m::Float64, min_grad::Float64, print_level::Int64=0)
-	C = 10
+function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ::Float64, δ_prime::Float64, min_grad::Float64, print_level::Int64=0)
 	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 	total_number_factorizations = 1
-	δ = δ_m
 	try
-		temp_d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
+		temp_d_k = cholesky(H + δ_prime * sparse_identity) \ (-g)
 		norm_temp_d_k = norm(temp_d_k, 2)
-		@info "norm_d_k is $norm_temp_d_k, r is $r, and delta is $δ."
-		if abs(norm(temp_d_k)  - r) <= ϵ
-			return true, δ_m, temp_d_k, total_number_factorizations
-		end
-
-		while ((δ_m - δ) * norm_temp_d_k > min_grad / C)
-			δ = δ / 2
+		if (1 - γ_2) * r <= norm(temp_d_k) <= r
+			return true, δ_prime, temp_d_k, total_number_factorizations
 		end
 	catch e
 		@error e
 	end
-
+	temp_eigenvalue = 0
 	try
-		success, eigenvalue, eigenvector, itr = findMinimumEigenValue(H, δ)
+		start_time_temp = time()
+		success, eigenvalue, eigenvector, itr = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2)
+		temp_eigenvalue = eigenvalue
+		end_time_temp = time()
+	    total_time_temp = end_time_temp - start_time_temp
+		if print_level >= 2
+	    	@info "inverse_power_iteration operation took $total_time_temp."
+		end
 		eigenvalue = abs(eigenvalue)
-		@info "starting delta is $δ"
-		@info string("eigenvalue is ", eigenvalue)
-		temp_d_k = cholesky(H + (eigenvalue + 1e-1) * sparse_identity) \ (-g)
 		total_number_factorizations += itr
+		total_number_factorizations += 1
+		temp_d_k = cholesky(H + (eigenvalue + 1e-1) * sparse_identity) \ (-g)
 		norm_temp_d_k = norm(temp_d_k)
-		@info "candidate search direction norm is $norm_temp_d_k. r is $r. ϵ is $ϵ"
-		if abs(norm(temp_d_k) - r) <= ϵ
+		if print_level >= 2
+			@info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
+		end
+		if (1 - γ_2) * r <= norm(temp_d_k) <= r
 			return true, eigenvalue, temp_d_k, total_number_factorizations
+		end
+		if norm(temp_d_k) > r
+			if print_level >= 1
+				println("This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2")
+				@warn "This is noit a hard case. candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
+			end
 		end
 		return false, eigenvalue, zeros(length(g)), total_number_factorizations
 	catch e
-		total_number_factorizations += 100
 		@error e
-		return false, δ, zeros(length(g)), total_number_factorizations
+		if print_level >= 2
+			matrix_H = Matrix(H)
+			mimimum_eigenvalue = eigmin(Matrix(H))
+			println("FAILURE+++++++inverse_power_iteration operation returned non positive matrix. retunred_eigen_value is $temp_eigenvalue and mimimum_eigenvalue is $mimimum_eigenvalue.")
+		end
+		return false, δ_prime, zeros(length(g)), total_number_factorizations
 	end
 end
 
-function findMinimumEigenValue(H, sigma; max_iter=1000, ϵ=1e-3)
-	success, eigenvalue, eigenvector, itr = inverse_power_iteration(H, sigma, max_iter = max_iter, ϵ = ϵ)
-	attempt = 5
-	while attempt >= 0
-		if success
-			try
-				sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-				cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
-				itr += 1
-				return success, eigenvalue, eigenvector, itr
-			catch e
-				@error e
-				if eigenvalue > 0
-					eigenvalue = eigenvalue / 2
-				else
-					eigenvalue = 2 * eigenvalue
-				end
-				success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue, max_iter = max_iter, ϵ = ϵ)
-				itr += temp_itr
-			end
-		else
-			if eigenvalue > 0
-				eigenvalue = eigenvalue / 2
-			else
-				eigenvalue = 2 * eigenvalue
-			end
-			success, eigenvalue, eigenvector, temp_itr = inverse_power_iteration(H, eigenvalue, max_iter = max_iter, ϵ = ϵ)
-			itr += temp_itr
-		end
-		attempt -= 1
-	end
-	if success
-		try
-			sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-			total_number_factorizations  += 1
-			cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
-			itr += 1
-			return success, eigenvalue, eigenvector, itr
-		catch
-			return false, eigenvalue, eigenvector, itr
-		end
-	end
-	return false, eigenvalue, eigenvector, itr
-end
-
-function inverse_power_iteration(H, delta; max_iter=1000, ϵ=1e-3, print_level=2)
+function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter=1000, ϵ=1e-3, print_level=2)
+   sigma = δ_prime
    start_time_temp = time()
    n = size(H, 1)
    x = ones(n)
    y = ones(n)
    sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-   y_original_fact = cholesky(H + delta * sparse_identity)
-   @info "max_iter = $max_iter."
-   @info "ϵ = $ϵ."
+   y_original_fact = cholesky(H + sigma * sparse_identity)
+   temp_factorization = 1
    for k in 1:max_iter
-       # Solve (H - sigma * I) * y = x
        y = y_original_fact \ x
-	   # y = (H - delta * I) \ x
        y /= norm(y)
        temp_1 = norm(x + y)
        temp_2 = norm(x - y)
-       @info "norm(x + y) = $temp_1 and norm(x - y) = $temp_2."
+	   eigenvalue = dot(y, H * y)
+
+	   if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10 ^ 2 * r))
+		   try
+			   temp_factorization += 1
+			   cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
+       		   return true, eigenvalue, y, temp_factorization
+		   catch
+			   #DO NOTHING
+		   end
+	   end
+
+	   #Keep as a safety check. This a sign that we can't solve thr trust region subprobelm
        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
 		   eigenvalue = dot(y, H * y)
-		   #TODO This code just for debugging. Need to be removed
-		   mimimum_eigenvalue = eigmin(Matrix(H))
 		   try
-			cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
-			@info "Success. Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
-       		        return true, eigenvalue, y, k
+			   temp_factorization += 1
+			   cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity)
+			   return true, eigenvalue, y, temp_factorization
 		   catch
-			@info "Failure. Inverse power iteration finished with eigenvalue = $eigenvalue. mimimum_eigenvalue is $mimimum_eigenvalue."
-			#DO NOTHING
+			   #DO NOTHING
 		   end
        end
 
        x = y
    end
    temp_ = dot(y, H * y)
-   #TODO This code just for debugging. Need to be removed
-   mimimum_eigenvalue = eigmin(Matrix(H))
+
    temp_1 = norm(x + y)
    temp_2 = norm(x - y)
-   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. mimimum_eigenvalue is $mimimum_eigenvalue. norm(x + y) = $temp_1 and norm(x - y) = $temp_2.")
-   end_time_temp = time()
-   total_time_temp = end_time_temp - start_time_temp
-   @info "inverse_power_iteration operation took $total_time_temp."
    if print_level >= 2
+	   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. norm(x + y) = $temp_1 and norm(x - y) = $temp_2.")
+   end
+
+   if print_level >= 2
+	   end_time_temp = time()
+	   total_time_temp = end_time_temp - start_time_temp
+	   @info "inverse_power_iteration operation took $total_time_temp."
 	   println("inverse_power_iteration operation took $total_time_temp.")
    end
-   return false, temp_, y, max_iter
+   temp_factorization
+   return false, temp_, y, temp_factorization
 end
 
 #Based on 'THE HARD CASE' section from Numerical Optimization by Wright
-function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, print_level::Int64=0)
+function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, print_level::Int64=0)
     minimumEigenValue = eigmin(Matrix(H))
 	if minimumEigenValue >= 0
 		Q = eigvecs(Matrix(H))
@@ -780,7 +727,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, ϵ::Float64, r::Float64, prin
 			end
 			@error "This is not a hard case sub-problem."
 			try
-				success_find_interval, success_bisection, δ_m, d_k, total_number_factorizations, temp_hard_case  = computeSearchDirection(g, H, δ, ϵ, r, 0, print_level)
+				success_find_interval, success_bisection, δ_m, d_k, total_number_factorizations, temp_hard_case  = computeSearchDirection(g, H, δ, γ_2, r, 0, print_level)
 				temp_success = success_find_interval && success_bisection
 				return temp_success, δ_m, d_k, total_number_factorizations
 			catch e
