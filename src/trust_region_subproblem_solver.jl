@@ -318,7 +318,6 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
 			start_time_temp = time()
-	    	# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, print_level)
 			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
@@ -331,7 +330,6 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
 			start_time_temp = time()
-            # success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, print_level)
 			success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			end_time_temp = time()
@@ -504,7 +502,7 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
 			q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
 			q_2 = min_grad / (100)
 			if print_level >= 2
-				println("$k===============0Bisection entered here=================")
+				println("$k===============Bisection entered here=================")
 			end
 			if q_1 > 1e-1 * norm(g)
 				norm_g = norm(g)
@@ -622,8 +620,6 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
    for k in 1:max_iter
        y = y_original_fact \ x
        y /= norm(y)
-       temp_1 = norm(x + y)
-       temp_2 = norm(x - y)
 	   eigenvalue = dot(y, H * y)
 
 	   if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10 ^ 2 * r))
@@ -664,7 +660,7 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 	   @info "inverse_power_iteration operation took $total_time_temp."
 	   println("inverse_power_iteration operation took $total_time_temp.")
    end
-   temp_factorization
+
    return false, temp_, y, temp_factorization
 end
 

@@ -73,10 +73,8 @@ function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current:
 	if approach != "DEFAULT"
 		guarantee_factor = θ * 0.5 * norm(gval_next, 2) * norm(d_k, 2)
 	end
-	ϵ_machine = eps()
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
-	# ρ_hat = (actual_fct_decrease + ϵ_machine) / (predicted_fct_decrease + guarantee_factor)
 	ρ_hat = actual_fct_decrease / (predicted_fct_decrease + guarantee_factor)
 	if print_level >= 1 && ρ_hat == -Inf || isnan(ρ_hat)
 		println("ρ_hat is $ρ_hat. actual_fct_decrease is $actual_fct_decrease, predicted_fct_decrease is $predicted_fct_decrease, and guarantee_factor is $guarantee_factor.")
@@ -88,8 +86,6 @@ function compute_ρ_standard_trust_region_method(fval_current::Float64, fval_nex
     second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
-	ϵ_machine = eps()
-	# ρ = (actual_fct_decrease + ϵ_machine) / predicted_fct_decrease
 	ρ = actual_fct_decrease / predicted_fct_decrease
 	if print_level >= 1 && ρ == -Inf || isnan(ρ)
 		println("ρ is $ρ. actual_fct_decrease is $actual_fct_decrease and predicted_fct_decrease is $predicted_fct_decrease.")
@@ -150,8 +146,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	compute_ρ_hat_approach = problem.compute_ρ_hat_approach
 	#Save x_k, gval_current, and spectral norm of hessian_current
 	iteration_stats = DataFrame(k = [], fval = [], gradval = [])
-	# iteration_stats = DataFrame(k = [], deltaval = [], directionval = [], fval = [], gradval = [])
-	# iteration_stats_new = DataFrame(k = [], x = [], fval = [], gradval = [], grad_vec = [])
     total_function_evaluation = 0
     total_gradient_evaluation = 0
     total_hessian_evaluation = 0
@@ -174,8 +168,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             	println("*********************************Iteration Count: ", 1)
 			end
 			push!(iteration_stats, (1, fval_current, norm(gval_current, 2)))
-			# push!(iteration_stats, (1, δ, [], fval_current, norm(gval_current, 2)))
-			# push!(iteration_stats_new, (1, x_k, fval_current, norm(gval_current, 2), gval_current))
             return x_k, "SUCCESS", iteration_stats, computation_stats, 1
         end
         start_time = time()
@@ -197,12 +189,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				end
             end
 
-			# fval_next, gval_next_temp, success_subproblem_solve, termination_criteria_satisfied, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, temp_total_gradient_evaluation, hard_case, min_gval_norm = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			total_function_evaluation += temp_total_function_evaluation
 			gval_next = gval_current
-			# if success_subproblem_solve && termination_criteria_satisfied
 			if success_subproblem_solve
 				temp_grad = grad(nlp, x_k + d_k)
 				total_gradient_evaluation += 1
@@ -238,7 +228,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
 					total_number_factorizations += temp_total_number_factorizations
 					total_function_evaluation += temp_total_function_evaluation
-					# if success_subproblem_solve && termination_criteria_satisfied
 					if success_subproblem_solve
 						temp_grad = grad(nlp, x_k + d_k)
 						total_gradient_evaluation += 1
@@ -345,11 +334,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				r_k = max(ω_2 * norm(d_k, 2), r_k)
 			end
 
-			# min_gval_norm = min(min_gval_norm, norm(gval_current, 2))
 			push!(iteration_stats, (k, fval_current, norm(gval_current, 2)))
-			# push!(iteration_stats, (k, δ_k, d_k, fval_current, norm(gval_current, 2)))
-			# push!(iteration_stats_new, (k, x_k, fval_current, norm(gval_current, 2), gval_current))
-	        # if norm(gval_next, 2) <= gradient_termination_tolerance
+
 			if ρ_k < 0 && min(min_gval_norm, norm(grad(nlp, x_k + d_k), 2)) <= gradient_termination_tolerance
 				@info "========Convergence without accepting step========="
 				if print_level >= 0
@@ -357,10 +343,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				end
 			end
 			if norm(gval_next, 2) <= gradient_termination_tolerance ||  min_gval_norm <= gradient_termination_tolerance
-				# push!(iteration_stats, (k, δ_k, d_k, fval_next, norm(gval_next, 2)))
 				push!(iteration_stats, (k, fval_next, min_gval_norm))
-				# push!(iteration_stats, (k, δ_k, d_k, fval_next, min_gval_norm))
-				# push!(iteration_stats_new, (k, x_k, fval_next, min_gval_norm, temp_grad))
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 				if print_level >= 0
 	            	println("*********************************Iteration Count: ", k)
@@ -374,7 +357,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 				end
 
-	            # return x_k, "SUCCESS", iteration_stats, computation_stats, k, iteration_stats_new
 				return x_k, "SUCCESS", iteration_stats, computation_stats, k
 	        end
 
@@ -391,7 +373,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 	        if time() - start_time > MAX_TIME
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-	            # return x_k, "MAX_TIME", iteration_stats, computation_stats, k, iteration_stats_new
 				return x_k, "MAX_TIME", iteration_stats, computation_stats, k
 	        end
         	k += 1
@@ -414,11 +395,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 		else
 			@error e
 		end
-        # return x_k, status, iteration_stats, computation_stats, k, iteration_stats_new
 		return x_k, status, iteration_stats, computation_stats, k
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-    # return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, k, iteration_stats_new
 	return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, k
 end
 
