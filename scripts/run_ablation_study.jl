@@ -1,5 +1,6 @@
 import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics, Plots
+using Plots.PlotMeasures
 include("../src/CAT.jl")
 
 """
@@ -17,6 +18,8 @@ end
 function get_problem_list(min_nvar, max_nvar)
 	return CUTEst.select(min_var = min_nvar, max_var = max_nvar, max_con = 0, only_free_var = true)
 end
+
+const skip_list = ["DMN15333LS", "DIAMON2DLS", "DMN37142LS", "BA-L49LS", "NONCVXU2", "DMN15102LS", "DMN15332LS", "DMN37143LS", "EIGENCLS", "YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
 
 function parse_command_line()
   arg_parse = ArgParse.ArgParseSettings()
@@ -105,7 +108,8 @@ function parse_command_line()
     "--criteria"
     help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `GALAHAD_TRS`, `initial_radius`, `radius_update_rule`."
     arg_type = String
-    default = "ρ_hat_rule,GALAHAD_TRS,initial_radius,radius_update_rule"
+    # default = "ρ_hat_rule,GALAHAD_TRS,initial_radius,radius_update_rule"
+	default = "ρ_hat_rule,radius_update_rule,initial_radius"
   end
 
   return ArgParse.parse_args(arg_parse)
@@ -293,7 +297,9 @@ function runProblems(
 			cutest_problems = get_problem_list(min_nvar, max_nvar)
 		end
 
-		println("CUTEst Problems are: $cutest_problems")
+		cutest_problems = filter!(e->e ∉ skip_list, cutest_problems)
+
+		# println("CUTEst Problems are: $cutest_problems")
 
 		geomean_results_file_path = string(folder_name, "/", "geomean_results_ablation_study.csv")
 
@@ -318,19 +324,19 @@ function runProblems(
 		    end
 			end
 
-			for cutest_problem in cutest_problems
-				if cutest_problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
-					@show cutest_problem
-					dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-					@info "$dates_format Skipping Problem $cutest_problem."
-					continue
-				else
-					runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, total_results_output_file_path)
-				end
-			end
+			# for cutest_problem in cutest_problems
+			# 	if cutest_problem in DataFrame(CSV.File(total_results_output_file_path)).problem_name
+			# 		@show cutest_problem
+			# 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+			# 		@info "$dates_format Skipping Problem $cutest_problem."
+			# 		continue
+			# 	else
+			# 		runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, total_results_output_file_path)
+			# 	end
+			# end
 
 			df = DataFrame(CSV.File(total_results_output_file_path))
-			df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
+			# df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
 			max_it = problem_data_vec[index][7]
 			geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
 			counts = countmap(df.status)
@@ -352,14 +358,19 @@ function plotFigure(
 	folder_name::String,
 	plot_name::String
 	)
+	@show values_x
+	@show typeof(values_x)
 	plot(
 			values_x,
 			values_y,
       color = :blue,
       ylabel=ylabel,
 			legend=false,
-			size=(900, 500)
+			# size=(800, 600),
+			# xrotation=45
+			margin=7mm
     )
+	# size=(width, height)
     fullPath = string(folder_name, "/", plot_name)
 		@show fullPath
     png(fullPath)
@@ -383,7 +394,14 @@ function plotFigures(
 		push!(new_criteria, string("+", criteria[i]))
 	end
 	xlabel = hcat(new_criteria...)
+	xlabel = ["CAT" "+ρ_hat_rule" "+radius_rule" "+initial_radius"]
 	@show xlabel
+
+	#Plot how fraction evaluation changes based on each criteria
+	ylabel = "GEOMEAN for total # of iterations"
+	plot_name = "ablation_study_geomean_iterations.png"
+	plotFigure(new_criteria, geomean_total_iterations_count, ylabel, xlabel, folder_name, plot_name)
+
 	#Plot how fraction evaluation changes based on each criteria
 	ylabel = "GEOMEAN for total # of function evaluations"
 	plot_name = "ablation_study_geomean_fct_evaluations.png"
@@ -426,7 +444,8 @@ function main()
   δ = parsed_args["δ"]
 	print_level = parsed_args["print_level"]
 
-  default_criteria = ["ρ_hat_rule", "GALAHAD_TRS", "initial_radius", "radius_update_rule"]
+  # default_criteria = ["ρ_hat_rule", "GALAHAD_TRS", "initial_radius", "radius_update_rule"]
+  default_criteria = ["ρ_hat_rule", "radius_update_rule", "initial_radius"]
   criteria = split(parsed_args["criteria"], ",")
   for val in criteria
     if val ∉ default_criteria
