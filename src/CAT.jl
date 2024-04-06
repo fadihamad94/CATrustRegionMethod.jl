@@ -4,7 +4,7 @@ module consistently_adaptive_trust_region_method
 using NLPModels, LinearAlgebra, DataFrames, SparseArrays
 include("./trust_region_subproblem_solver.jl")
 
-export Problem_Data
+export TerminationConditions, INITIAL_RADIUS_STRUCT, Problem_Data
 export phi, findinterval, bisection, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT
 
 mutable struct SmallTrustRegionradius
@@ -12,54 +12,63 @@ mutable struct SmallTrustRegionradius
 	radius::Float64
 end
 
-mutable struct WrongFunctionPredictedReduction
-	message::String
-	predicted_reduction::Float64
-end
-
 mutable struct UnboundedObjective
 	message::String
 	fval::Float64
 end
 
-const MINIMUM_TRUST_REGION_RADIUS = 1e-40
-const MINIMUM_OBJECTIVE_FUNCTION = -1e30
-const RADIUS_UPDATE_SAFETY_CHECK_FAILURE_SUBPROBLEM = 2.0
-const INITIAL_RADIUS_MULTIPLICATIVE_RULEE = 10
+mutable struct TerminationConditions
+	MAX_ITERATIONS::Int64
+	gradient_termination_tolerance::Float64
+	MAX_TIME::Float64
+	MINIMUM_TRUST_REGION_RADIUS::Float64
+	MINIMUM_OBJECTIVE_FUNCTION::Float64
+
+	function TerminationConditions(MAX_ITERATIONS::Int64=10000, gradient_termination_tolerance::Float64=1e-5,
+		MAX_TIME::Float64=30 * 60.0, MINIMUM_TRUST_REGION_RADIUS::Float64=1e-40, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
+		@assert(MAX_ITERATIONS > 0)
+		@assert(gradient_termination_tolerance > 0)
+        @assert(MAX_TIME > 0)
+		@assert(MINIMUM_TRUST_REGION_RADIUS > 0)
+		return new(MAX_ITERATIONS, gradient_termination_tolerance, MAX_TIME, MINIMUM_TRUST_REGION_RADIUS, MINIMUM_OBJECTIVE_FUNCTION)
+	end
+end
+
+mutable struct INITIAL_RADIUS_STRUCT
+	r_1::Float64
+	INITIAL_RADIUS_MULTIPLICATIVE_RULEE::Int64
+	function INITIAL_RADIUS_STRUCT(r_1::Float64, INITIAL_RADIUS_MULTIPLICATIVE_RULEE::Int64=10)
+		@assert(INITIAL_RADIUS_MULTIPLICATIVE_RULEE > 0)
+		return new(r_1, INITIAL_RADIUS_MULTIPLICATIVE_RULEE)
+	end
+end
 
 mutable struct Problem_Data
     nlp::AbstractNLPModel
+	termination_conditions_struct::TerminationConditions
+	initial_radius_struct::INITIAL_RADIUS_STRUCT
 	β_1::Float64
 	β_2::Float64
     θ::Float64
     ω_1::Float64
 	ω_2::Float64
-    r_1::Float64
-    MAX_ITERATION::Int64
-    gradient_termination_tolerance::Float64
 	γ_2::Float64
-    MAX_TIME::Float64
 	print_level::Int64
 	compute_ρ_hat_approach::String
     # initialize parameters
-    function Problem_Data(nlp::AbstractNLPModel, β_1::Float64=0.1, β_2::Float64=0.8,
-                           θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, r_1::Float64=1.0,
-                           MAX_ITERATION::Int64=10000, gradient_termination_tolerance::Float64=1e-5, γ_2::Float64=0.1,
-                           MAX_TIME::Float64=30 * 60.0, print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT")
+    function Problem_Data(nlp::AbstractNLPModel, termination_conditions_struct::TerminationConditions,
+						  initial_radius_struct::INITIAL_RADIUS_STRUCT, β_1::Float64=0.1, β_2::Float64=0.8,
+						  θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, γ_2::Float64=0.1,
+						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
 		@assert(β_2 > 0 && β_2 < 1)
 		@assert(β_2 >= β_1)
         @assert(θ >= 0 && θ < 1)
-        # @assert(β_1 * θ < 1 - β_1)
         @assert(ω_1 >= 1)
 		@assert(ω_2 >= 1)
 		@assert(ω_2 >= ω_1)
-        # @assert(r_1 > 0)
-        @assert(MAX_ITERATION > 0)
-        @assert(MAX_TIME > 0)
-		@assert(1 > γ_2 > 0)
-        # @assert(γ_2 > (1 / ω) && γ_2 <= 1)
-        return new(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, MAX_ITERATION, gradient_termination_tolerance, γ_2, MAX_TIME, print_level, compute_ρ_hat_approach)
+		# @assert(1>= γ_2 > (1 / ω_1))
+        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, β_2, θ, ω_1, ω_2, γ_2, print_level, compute_ρ_hat_approach)
     end
 end
 
@@ -98,6 +107,8 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	gval_next_temp = gval_current
 	start_time_temp = time()
 	temp_total_function_evaluation = 0
+
+	# Solve the trust-region subproblem to generate the search direction d_k
 	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
@@ -112,6 +123,11 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	if print_level >= 2
 		println("computeSecondOrderModel operation took $total_time_temp.")
 	end
+
+	# When we are able to solve the trust-region subproblem, we check for numerical error
+	# in computing the predicted reduction from the second order model M_k. If no numerical
+	# errors, we compute the objective function for the candidate solution to check if
+	# we will accept the step in case this leads to reduction in the function value.
 	if success_subproblem_solve && second_order_model_value_current_iterate < 0
 		start_time_temp = time()
 		fval_next = obj(nlp, x_k + d_k)
@@ -128,28 +144,46 @@ end
 
 function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
     @assert(δ >= 0)
-    MAX_ITERATION = problem.MAX_ITERATION
-    MAX_TIME = problem.MAX_TIME
-    gradient_termination_tolerance = problem.gradient_termination_tolerance
+	#Termination conditions
+	termination_conditions_struct = problem.termination_conditions_struct
+    MAX_ITERATIONS = termination_conditions_struct.MAX_ITERATIONS
+    MAX_TIME = termination_conditions_struct.MAX_TIME
+    gradient_termination_tolerance = termination_conditions_struct.gradient_termination_tolerance
+	MINIMUM_TRUST_REGION_RADIUS = termination_conditions_struct.MINIMUM_TRUST_REGION_RADIUS
+	MINIMUM_OBJECTIVE_FUNCTION = termination_conditions_struct.MINIMUM_OBJECTIVE_FUNCTION
+
+	#Algorithm parameters
     β_1 = problem.β_1
 	β_2 = problem.β_2
-
     ω_1 = problem.ω_1
 	ω_2 = problem.ω_2
+	γ_2 = problem.γ_2
+	θ = problem.θ
+
+	#Initial radius
+	initial_radius_struct = problem.initial_radius_struct
+	r_1 = initial_radius_struct.r_1
+	INITIAL_RADIUS_MULTIPLICATIVE_RULEE = initial_radius_struct.INITIAL_RADIUS_MULTIPLICATIVE_RULEE
+
+	#Initial conditions
     x_k = x
     δ_k = δ
-    r_k = problem.r_1
-    γ_2 = problem.γ_2
+    r_k = r_1
+
     nlp = problem.nlp
-    θ = problem.θ
+
 	print_level = problem.print_level
 	compute_ρ_hat_approach = problem.compute_ρ_hat_approach
-	#Save x_k, gval_current, and spectral norm of hessian_current
+
+	#Algorithm history
 	iteration_stats = DataFrame(k = [], fval = [], gradval = [])
+
+	#Algorithm stats
     total_function_evaluation = 0
     total_gradient_evaluation = 0
     total_hessian_evaluation = 0
     total_number_factorizations = 0
+
     k = 1
     try
         gval_current = grad(nlp, x_k)
@@ -158,9 +192,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         total_gradient_evaluation += 1
 		hessian_current = hess(nlp, x_k)
 		total_hessian_evaluation += 1
+
+		#If user doesn't change the starting radius, we select the radius as described in the paper:
+		#Initial radius heuristic selection rule : r_1 = 10 * ||gval_current|| / ||hessian_current||
 		if r_k <= 0.0
 			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULEE * norm(gval_current, Inf) / norm(hessian_current, Inf)
 		end
+
         compute_hessian = false
         if norm(gval_current, 2) <= gradient_termination_tolerance
             computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
@@ -170,9 +208,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			push!(iteration_stats, (1, fval_current, norm(gval_current, 2)))
             return x_k, "SUCCESS", iteration_stats, computation_stats, 1
         end
+
         start_time = time()
 		min_gval_norm = norm(gval_current, 2)
-        while k <= MAX_ITERATION
+        while k <= MAX_ITERATIONS
 			temp_grad = gval_current
 			if print_level >= 1
 				start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -189,10 +228,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				end
             end
 
+			# Solve the trsut-region subproblem and generate the search direction d_k
 			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			total_function_evaluation += temp_total_function_evaluation
 			gval_next = gval_current
+			# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
+			# candidate solution has a reduction in the function value so that we accept the step by
 			if success_subproblem_solve
 				temp_grad = grad(nlp, x_k + d_k)
 				total_gradient_evaluation += 1
@@ -212,6 +254,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				if print_level >= 2
 					println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
 				end
+
+				# Check for numerical error if the predicted reduction from the second order morel is negative.
+				# In case it is negative, attempt to solve the trust-region subproblem using our default approach
+				# only in case the original trust-region subproblem solver was different than the default approach
 				if predicted_fct_decrease <= 0 && subproblem_solver_method != subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT
 					if print_level >= 1
 						println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
@@ -225,9 +271,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						println("Solving trust-region subproblem using our approach.")
 					end
 
+					# Solve the trsut-region subproblem and generate the search direction d_k
 					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
 					total_number_factorizations += temp_total_number_factorizations
 					total_function_evaluation += temp_total_function_evaluation
+
+					# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
+					# candidate solution has a reduction in the function value so that we accept the step by
 					if success_subproblem_solve
 						temp_grad = grad(nlp, x_k + d_k)
 						total_gradient_evaluation += 1
@@ -247,6 +297,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						if print_level >= 2
 							println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
 						end
+						# Check for numerical error if the predicted reduction from the second order morel is negative.
+						# In case it is negative, mark the solution of the trust-region subproblem as failure
+						# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
 						if predicted_fct_decrease <= 0.0
 							if print_level >= 1
 								println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
@@ -258,6 +311,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 							d_k = zeros(length(x_k))
 						end
 					else
+						# In case we failt to solve the trust-region subproblem using our default solver, we mark that as a failure
+						# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
 						ρ_k = -1.0
 						actual_fct_decrease = 0.0
 						predicted_fct_decrease = 0.0
@@ -265,6 +320,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 				end
 			else
+				# In case we failt to solve the trust-region subproblem, we mark that as a failure
+				# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
 				ρ_k = -1.0
 				actual_fct_decrease = 0.0
 				predicted_fct_decrease = 0.0
@@ -278,6 +335,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			ρ_hat_k = ρ_k
 			norm_gval_current = norm(gval_current, 2)
 			norm_gval_next = norm_gval_current
+			# Accept the generated search direction d_k when ρ_k is positive
+			# and compute ρ_hat_k for the radius update rule
 			if ρ_k >= 0.0 && (fval_next <= fval_current)
 				if print_level >= 1
 					println("$k. =======STEP IS ACCEPTED========== $ρ_k =========fval_next is $fval_next and fval_current is $fval_current.")
@@ -326,6 +385,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				norm_d_k = norm(d_k, 2)
 				println("$k. r_k is $r_k and ||d_k|| is $norm_d_k.")
 			end
+
+			# Radius update
 			if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β_1
 				r_k = r_k / ω_1
 			elseif ρ_k < β_2
@@ -335,13 +396,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			end
 
 			push!(iteration_stats, (k, fval_current, norm(gval_current, 2)))
-
 			if ρ_k < 0 && min(min_gval_norm, norm(grad(nlp, x_k + d_k), 2)) <= gradient_termination_tolerance
 				@info "========Convergence without accepting step========="
 				if print_level >= 0
 					println("========Convergence without accepting step=========")
 				end
 			end
+			# Check termination condition for gradient
 			if norm(gval_next, 2) <= gradient_termination_tolerance ||  min_gval_norm <= gradient_termination_tolerance
 				push!(iteration_stats, (k, fval_next, min_gval_norm))
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
@@ -360,6 +421,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				return x_k, "SUCCESS", iteration_stats, computation_stats, k
 	        end
 
+			# Check termination condition for trust-region radius if it becomes too small
 			if r_k <= MINIMUM_TRUST_REGION_RADIUS
 				if print_level >= 1
 					println("$k. Trust region radius $r_k is too small.")
@@ -367,26 +429,25 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				throw(SmallTrustRegionradius("Trust region radius $r_k is too small.", r_k))
 			end
 
+			# Check termination condition for function value if the objective function is unbounded (safety check)
 			if fval_current <= MINIMUM_OBJECTIVE_FUNCTION || fval_next <= MINIMUM_OBJECTIVE_FUNCTION
 				throw(UnboundedObjective("Function values ($fval_current, $fval_next) are too small.", fval_current))
 			end
 
+			# Check termination condition for time if we exceeded the time limit
 	        if time() - start_time > MAX_TIME
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 				return x_k, "MAX_TIME", iteration_stats, computation_stats, k
 	        end
         	k += 1
         end
+	# Handle exceptions
     catch e
-		@error e
 		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 		status = "FAILURE"
 		if isa(e, SmallTrustRegionradius)
 			@warn e.message
 			status = "FAILURE_SMALL_RADIUS"
-		elseif isa(e, WrongFunctionPredictedReduction)
-			@warn e.message
-			status = "FAILURE_WRONG_PREDICTED_REDUCTION"
 		elseif isa(e, UnboundedObjective)
 			@warn e.message
 			status = "FAILURE_UNBOUNDED_OBJECTIVE"
@@ -404,7 +465,7 @@ end
 
 function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
     @assert(δ >= 0)
-    MAX_ITERATION = problem.MAX_ITERATION
+    MAX_ITERATIONS = problem.MAX_ITERATIONS
     MAX_TIME = problem.MAX_TIME
     gradient_termination_tolerance = problem.gradient_termination_tolerance
     β_1 = problem.β_1
@@ -443,7 +504,7 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
         end
         start_time = time()
 		min_gval_norm = norm(gval_current, 2)
-        while k <= MAX_ITERATION
+        while k <= MAX_ITERATIONS
 			temp_grad = gval_current
 			if print_level >= 1
 				start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -614,9 +675,6 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
 		if isa(e, SmallTrustRegionradius)
 			@warn e.message
 			status = "FAILURE_SMALL_RADIUS"
-		elseif isa(e, WrongFunctionPredictedReduction)
-			@warn e.message
-			status = "FAILURE_WRONG_PREDICTED_REDUCTION"
 		elseif isa(e, UnboundedObjective)
 			@warn e.message
 			status = "FAILURE_UNBOUNDED_OBJECTIVE"

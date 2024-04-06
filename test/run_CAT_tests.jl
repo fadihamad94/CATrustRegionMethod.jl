@@ -329,7 +329,7 @@ function solveSimpleConvexNLPModel()
     problem = test_create_simple_convex_nlp_model()
     x = [0.0, 0.0]
     δ = 0.0
-    problem.r_1 = -1.0
+    problem.initial_radius_struct.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.0, 1.0], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0, 2) <= tol
@@ -353,7 +353,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     problem = test_create_simple_convex_nlp_model()
     x = [0.1, 0.1]
     δ = 0.0
-    problem.r_1 = -1.0
+    problem.initial_radius_struct.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.4, 0.6], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
@@ -365,7 +365,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     problem = test_create_simple_convex_nlp_model()
     x = [20.01, -10.01]
     δ = 0.0
-    problem.r_1 = -1.0
+    problem.initial_radius_struct.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [19.01, -18.01], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
@@ -375,7 +375,7 @@ end
 function solveComplexConvexNLP1()
     tol = 1e-3
     problem = test_create_complex_convex_nlp1_model()
-    problem.MAX_ITERATION = 10
+    problem.termination_conditions_struct.MAX_ITERATIONS = 10
     x = [0.0, 0.0]
     δ = 0.0
     x, status , iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
@@ -400,7 +400,7 @@ end
 function solveNLPSinCosModel1()
     tol = 1e-3
     problem = test_create_problem_sin_cos_mode_nlp1()
-    problem.gradient_termination_tolerance = 2e-2
+    problem.termination_conditions_struct.gradient_termination_tolerance = 2e-2
     x = [0.0, 0.0]
     δ = 0.049
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
@@ -431,7 +431,7 @@ end
 function solveNLPSinCosModel2()
     tol = 1e-3
     problem = test_create_problem_sin_cos_mode_nlp2()
-    problem.MAX_ITERATION = 1000
+    problem.termination_conditions_struct.MAX_ITERATIONS = 1000
     x = [10.0, 10.0]
     δ = 1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
