@@ -1,20 +1,34 @@
 __precompile__()
 #Main algorithm code goes here
 module consistently_adaptive_trust_region_method
-using NLPModels, LinearAlgebra, DataFrames, SparseArrays
+using NLPModels, LinearAlgebra, DataFrames, SparseArrays, EnumX
 include("./trust_region_subproblem_solver.jl")
 
 export TerminationConditions, INITIAL_RADIUS_STRUCT, Problem_Data
 export phi, findinterval, bisection, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT
 
-mutable struct SmallTrustRegionradius
-	message::String
-	radius::Float64
-end
+"""
+	TerminationStatusCode
 
-mutable struct UnboundedObjective
-	message::String
-	fval::Float64
+An Enum of possible values for the `TerminationStatus` attribute.
+"""
+@enumx TerminationStatusCode begin
+    "The algorithm found an optimal solution."
+    OPTIMAL
+    "The algorithm stopped because it decided that the problem is unbounded."
+    UNBOUNDED
+    "An iterative algorithm stopped after conducting the maximum number of iterations."
+    ITERATION_LIMIT
+    "The algorithm stopped after a user-specified computation time."
+    TIME_LIMIT
+    "The algorithm stopped because it ran out of memory."
+    MEMORY_LIMIT
+	"The algorithm stopped because the trust region radius is too small."
+	TRUST_REGION_RADIUS_LIMIT
+    "The algorithm stopped because it encountered unrecoverable numerical error."
+    NUMERICAL_ERROR
+    "The algorithm stopped because of an error not covered by one of the statuses defined above."
+    OTHER_ERROR
 end
 
 mutable struct TerminationConditions
@@ -206,7 +220,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             	println("*********************************Iteration Count: ", 1)
 			end
 			push!(iteration_stats, (1, fval_current, norm(gval_current, 2)))
-            return x_k, "SUCCESS", iteration_stats, computation_stats, 1
+			return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, 1
         end
 
         start_time = time()
@@ -418,48 +432,46 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 				end
 
-				return x_k, "SUCCESS", iteration_stats, computation_stats, k
+				return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, k
 	        end
 
 			# Check termination condition for trust-region radius if it becomes too small
 			if r_k <= MINIMUM_TRUST_REGION_RADIUS
-				if print_level >= 1
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				if print_level >= 0
 					println("$k. Trust region radius $r_k is too small.")
 				end
-				throw(SmallTrustRegionradius("Trust region radius $r_k is too small.", r_k))
+				return x_k, TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT, iteration_stats, computation_stats, k
 			end
 
 			# Check termination condition for function value if the objective function is unbounded (safety check)
 			if fval_current <= MINIMUM_OBJECTIVE_FUNCTION || fval_next <= MINIMUM_OBJECTIVE_FUNCTION
-				throw(UnboundedObjective("Function values ($fval_current, $fval_next) are too small.", fval_current))
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				if print_level >= 0
+					println("$k. Function values ($fval_current, $fval_next) are too small.")
+				end
+				return x_k, TerminationStatusCode.UNBOUNDED, iteration_stats, computation_stats, k
 			end
 
 			# Check termination condition for time if we exceeded the time limit
 	        if time() - start_time > MAX_TIME
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-				return x_k, "MAX_TIME", iteration_stats, computation_stats, k
+				return x_k, TerminationStatusCode.TIME_LIMIT, iteration_stats, computation_stats, k
 	        end
         	k += 1
         end
 	# Handle exceptions
     catch e
+		@error e
 		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-		status = "FAILURE"
-		if isa(e, SmallTrustRegionradius)
-			@warn e.message
-			status = "FAILURE_SMALL_RADIUS"
-		elseif isa(e, UnboundedObjective)
-			@warn e.message
-			status = "FAILURE_UNBOUNDED_OBJECTIVE"
-		elseif isa(e, OutOfMemoryError)
-			status = "FAILURE_OUT_OF_MEMORY_ERROR"
-		else
-			@error e
+		status = TerminationStatusCode.OTHER_ERROR
+		if isa(e, OutOfMemoryError)
+			status = TerminationStatusCode.MEMORY_LIMIT
 		end
 		return x_k, status, iteration_stats, computation_stats, k
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-	return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, k
+	return x_k, TerminationStatusCode.ITERARION_LIMIT, iteration_stats, computation_stats, k
 end
 
 
@@ -500,7 +512,7 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
             	println("*********************************Iteration Count: ", 1)
 			end
 			push!(iteration_stats, (1, fval_current, norm(gval_current, 2)))
-            return x_k, "SUCCESS", iteration_stats, computation_stats, 1
+            return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, 1
         end
         start_time = time()
 		min_gval_norm = norm(gval_current, 2)
@@ -648,45 +660,42 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
 					end
 				end
 
-				return x_k, "SUCCESS", iteration_stats, computation_stats, k
+				return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, k
 	        end
 
 			if r_k <= MINIMUM_TRUST_REGION_RADIUS
-				if print_level >= 1
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				if print_level >= 0
 					println("$k. Trust region radius $r_k is too small.")
 				end
-				throw(SmallTrustRegionradius("Trust region radius $r_k is too small.", r_k))
+				return x_k, TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT, iteration_stats, computation_stats, k
 			end
 
 			if fval_current <= MINIMUM_OBJECTIVE_FUNCTION || fval_next <= MINIMUM_OBJECTIVE_FUNCTION
-				throw(UnboundedObjective("Function values ($fval_current, $fval_next) are too small.", fval_current))
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				if print_level >= 0
+					println("$k. Function values ($fval_current, $fval_next) are too small.")
+				end
+				return x_k, TerminationStatusCode.UNBOUNDED, iteration_stats, computation_stats, k
 			end
 
 	        if time() - start_time > MAX_TIME
 	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-				return x_k, "MAX_TIME", iteration_stats, computation_stats, k
+				return x_k, TerminationStatusCode.TIME_LIMIT, iteration_stats, computation_stats, k
 	        end
         	k += 1
         end
     catch e
 		@error e
 		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-		status = "FAILURE"
-		if isa(e, SmallTrustRegionradius)
-			@warn e.message
-			status = "FAILURE_SMALL_RADIUS"
-		elseif isa(e, UnboundedObjective)
-			@warn e.message
-			status = "FAILURE_UNBOUNDED_OBJECTIVE"
-		elseif isa(e, OutOfMemoryError)
-			status = "FAILURE_OUT_OF_MEMORY_ERROR"
-		else
-			@error e
+		status = TerminationStatusCode.OTHER_ERROR
+		if isa(e, OutOfMemoryError)
+			status = TerminationStatusCode.MEMORY_LIMIT
 		end
 		return x_k, status, iteration_stats, computation_stats, k
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-	return x_k, "ITERARION_LIMIT", iteration_stats, computation_stats, k
+	return x_k, TerminationStatusCode.ITERARION_LIMIT, iteration_stats, computation_stats, k
 end
 
 end # module

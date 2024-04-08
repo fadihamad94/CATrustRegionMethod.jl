@@ -321,7 +321,7 @@ function solve_NLP1_starting_at_global_optimum()
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test x == [1.0, 1.0]
     @test obj(problem.nlp, x) == 0.0
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModel()
@@ -333,7 +333,7 @@ function solveSimpleConvexNLPModel()
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.0, 1.0], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexConvexNLPModel()
@@ -345,7 +345,7 @@ function solveComplexConvexNLPModel()
     @test norm(x[1] - 1, 2) <= tol
     @test norm(x[2] - 1, 2) <= tol
     @test norm(obj(problem.nlp, x) - 0, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModelDifferentStartingPoint()
@@ -357,7 +357,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [0.4, 0.6], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModelAnotherStartingPoint()
@@ -369,7 +369,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(x - [19.01, -18.01], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexConvexNLP1()
@@ -382,7 +382,7 @@ function solveComplexConvexNLP1()
     @test norm(obj(problem.nlp, x) - 0.750000000125, 2) <= tol
     @test norm(x[1] - 0.33332500000000004, 2) <= tol
     @test norm(x[2] - 0.166665, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexNLPModeL1()
@@ -394,7 +394,7 @@ function solveComplexNLPModeL1()
     @test norm(obj(problem.nlp, x) - 0.183430792966865, 2) <= tol
     @test norm(x[1] - 0.7221896985843893, 2) <= tol
     @test norm(x[2] - (-0.5819243669997765), 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1()
@@ -405,7 +405,7 @@ function solveNLPSinCosModel1()
     δ = 0.049
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(obj(problem.nlp, x) + 1, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1DifferentStartingPoint()
@@ -415,7 +415,7 @@ function solveNLPSinCosModel1DifferentStartingPoint()
     δ = 0.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(obj(problem.nlp, x) + 1, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1DeltaNotZero()
@@ -425,7 +425,7 @@ function solveNLPSinCosModel1DeltaNotZero()
     δ = 1.0
     x, status = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
     @test norm(obj(problem.nlp, x) + 1, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel2()
@@ -438,7 +438,7 @@ function solveNLPSinCosModel2()
     @test norm(obj(problem.nlp, x) - (-2), 2) <= tol
     @test norm(x[1] - 10.995653476776056, 2) <= tol
     @test norm(x[2] - 9.424777960768635, 2) <= tol
-    @test status == "SUCCESS"
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
 
 function optimize_models()
