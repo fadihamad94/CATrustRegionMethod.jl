@@ -5,13 +5,13 @@ const CAT_II_FACTORIZATION = "CAT_II_FACTORIZATION"
 const CAT_II_THETA_ZERO_FACTORIZATION = "CAT_II_THETA_ZERO_FACTORIZATION"
 const ARC_FACTORIZATION = "ARC_FACTORIZATION"
 const TRU_FACTORIZATION = "TRU_FACTORIZATION"
-const NewtonTrustRegion = "TRU_FACTORIZATION"
+const TRU_FACTORIZATION = "TRU_FACTORIZATION"
 
 const CAT_I_FACTORIZATION_COLOR = :blue
 const CAT_II_FACTORIZATION_COLOR = :black
 const CAT_II_THETA_ZERO_FACTORIZATION_COLOR = :red
 const ARC_FACTORIZATION_COLOR = :orange
-const NewtonTrustRegion_COLOR = :purple
+const TRU_FACTORIZATION_COLOR = :purple
 
 ITR_LIMIT = 100000
 TIME_LIMIT = 18000
@@ -58,9 +58,9 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Int64}, criteria::String)
         total_problems_CAT_II_THETA_ZERO_FACTORIZATION = length(filterRows(total, df[:, CAT_II_THETA_ZERO_FACTORIZATION]))
         # total_problems_CAT_THETA_ZERO_FACTORIZATION = length(filterRows(total, df[:, CAT_FACTORIZATION]))
         total_problems_ARC_FACTORIZATION = length(filterRows(total, df[:, ARC_FACTORIZATION]))
-        total_problems_NewtonTrustRegion = length(filterRows(total, df[:, TRU_FACTORIZATION]))
-        push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_NewtonTrustRegion / total_number_problems))
-        push!(results_total, (total, total_problems_CAT_I_FACTORIZATION, total_problems_CAT_II_FACTORIZATION, total_problems_CAT_II_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_NewtonTrustRegion))
+        total_problems_TRU_FACTORIZATION = length(filterRows(total, df[:, TRU_FACTORIZATION]))
+        push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_TRU_FACTORIZATION / total_number_problems))
+        push!(results_total, (total, total_problems_CAT_I_FACTORIZATION, total_problems_CAT_II_FACTORIZATION, total_problems_CAT_II_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_TRU_FACTORIZATION))
     end
 
     return results_fraction
@@ -128,9 +128,9 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Float64}, criteria::String
         total_problems_CAT_II_THETA_ZERO_FACTORIZATION = length(filterRows(total, df[:, CAT_II_THETA_ZERO_FACTORIZATION]))
         # total_problems_CAT_THETA_ZERO_FACTORIZATION = length(filterRows(total, df[:, CAT_FACTORIZATION]))
         total_problems_ARC_FACTORIZATION = length(filterRows(total, df[:, ARC_FACTORIZATION]))
-        total_problems_NewtonTrustRegion = length(filterRows(total, df[:, TRU_FACTORIZATION]))
-        push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_NewtonTrustRegion / total_number_problems))
-        push!(results_total, (total, total_problems_CAT_I_FACTORIZATION, total_problems_CAT_II_FACTORIZATION, total_problems_CAT_II_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_NewtonTrustRegion))
+        total_problems_TRU_FACTORIZATION = length(filterRows(total, df[:, TRU_FACTORIZATION]))
+        push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_TRU_FACTORIZATION / total_number_problems))
+        push!(results_total, (total, total_problems_CAT_I_FACTORIZATION, total_problems_CAT_II_FACTORIZATION, total_problems_CAT_II_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_TRU_FACTORIZATION))
     end
     @show length(TOTAL)
     @show first(df[:, CAT_II_FACTORIZATION ], 5)
@@ -195,9 +195,9 @@ function plotFiguresComparisonFinal(df::DataFrame, criteria::String, dirrectoryN
         data,
         # label=["Our method" "ARC with g-rule" "Newton trust region"],
         label=["CAT I" "CAT II" "ARC" "TRU"],
-        color = [CAT_I_FACTORIZATION_COLOR CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR NewtonTrustRegion_COLOR],
+        color = [CAT_I_FACTORIZATION_COLOR CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR TRU_FACTORIZATION_COLOR],
         # label=["CAT II" "ARC" "TRU"],
-        # color = [CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR NewtonTrustRegion_COLOR],
+        # color = [CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR TRU_FACTORIZATION_COLOR],
         ylabel="Fraction of problems solved",
         # xlabel="Wall clock time (secs)",
         xlabel="Total number of $criteria_keyrword",
@@ -220,8 +220,8 @@ function generateFiguresIterationsComparisonFinal(dirrectoryName::String)
     fullPath = string(dirrectoryName, "/", fileName)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_ITERATIONS, "Iterations")
-    results = results[:, filter(x -> (x in ["Iterations", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
-    # results = results[:, filter(x -> (x in ["Iterations", CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Iterations", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
+    # results = results[:, filter(x -> (x in ["Iterations", CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_functions_count_final.png"
     plotFiguresComparisonFinal(results, "Iterations", dirrectoryName, plot_name)
 end
@@ -232,8 +232,8 @@ function generateFiguresGradientsComparisonFinal(dirrectoryName::String)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_ITERATIONS, "Gradients")
     # @show names(results)
-    results = results[:, filter(x -> (x in ["Gradients", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
-    # results = results[:, filter(x -> (x in ["Gradients" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Gradients", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
+    # results = results[:, filter(x -> (x in ["Gradients" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_gradients_count_final.png"
     plotFiguresComparisonFinal(results, "Gradients", dirrectoryName, plot_name)
 end
@@ -244,20 +244,20 @@ function generateFiguresHessianComparisonFinal(dirrectoryName::String)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_ITERATIONS, "Hessian")
     # @show names(results)
-    results = results[:, filter(x -> (x in ["Hessian", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
-    # results = results[:, filter(x -> (x in ["Hessian" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Hessian", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
+    # results = results[:, filter(x -> (x in ["Hessian" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_hessian_count_final.png"
     plotFiguresComparisonFinal(results, "Hessian", dirrectoryName, plot_name)
 end
 
 function generateFiguresFactorizationComparisonFinal(dirrectoryName::String)
-    fileName = "all_algorithms_results_factorization.csv"
+    fileName = "all_algorithm_results_factorization.csv"
     fullPath = string(dirrectoryName, "/", fileName)
     df = readFile(fullPath)
     results = computeFraction(df, TOTAL_ITERATIONS, "Factorization")
     # @show names(results)
-    results = results[:, filter(x -> (x in ["Factorization", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
-    # results = results[:, filter(x -> (x in ["Factorization" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
+    results = results[:, filter(x -> (x in ["Factorization", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
+    # results = results[:, filter(x -> (x in ["Factorization" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_factorization_count_final.png"
     plotFiguresComparisonFinal(results, "Factorization", dirrectoryName, plot_name)
 end
@@ -269,19 +269,22 @@ function generateFiguresTimeComparisonFinal(dirrectoryName::String)
     # results = computeFraction(df, TOTAL_TIME, "Time")
     results = computeFraction(df, TOTAL_TIME_2, "Time")
     # @show names(results)
-    # results = results[:, filter(x -> (x in ["Time", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
-    results = results[:, filter(x -> (x in ["Time" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,NewtonTrustRegion]), names(results))]
+    # results = results[:, filter(x -> (x in ["Time", CAT_I_FACTORIZATION,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
+    results = results[:, filter(x -> (x in ["Time" ,CAT_II_FACTORIZATION,ARC_FACTORIZATION,TRU_FACTORIZATION]), names(results))]
     plot_name = "fraction_of_problems_solved_versus_total_time_final.png"
     plotFiguresComparisonFinal(results, "Time", dirrectoryName, plot_name)
 end
 
 function plotAllFigures(dirrectoryName::String)
     generateFiguresComparisonCAT(dirrectoryName)
-    # generateFiguresIterationsComparisonFinal(dirrectoryName)
-    # generateFiguresGradientsComparisonFinal(dirrectoryName)
-    # generateFiguresHessianComparisonFinal(dirrectoryName)
-    # generateFiguresFactorizationComparisonFinal(dirrectoryName)
+    generateFiguresIterationsComparisonFinal(dirrectoryName)
+    generateFiguresGradientsComparisonFinal(dirrectoryName)
+    generateFiguresHessianComparisonFinal(dirrectoryName)
+    generateFiguresFactorizationComparisonFinal(dirrectoryName)
     # generateFiguresTimeComparisonFinal(dirrectoryName)
 end
 
 plotAllFigures("/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/FINAL_VERSION")
+# This code to debug the implementation
+# dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_debug_collect_results_script"
+# plotAllFigures(dir_)
