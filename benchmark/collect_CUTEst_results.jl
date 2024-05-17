@@ -22,6 +22,10 @@ const TOTAL_GRADIENT_EVALUATION_COLUMN = "total_gradient_evaluation"
 const TOTAL_HESSIAN_EVALUATION_COLUMN = "total_hessian_evaluation"
 const TOTAL_FACTORIZATION_EVALUATION_COLUMN = "total_factorization_evaluation"
 
+const STATUS_COLUMN = "status"
+
+DEFAULT_FAILURES_VAL = 100001
+
 function readFile(filePath::String)
     df = DataFrame(CSV.File(filePath))
     return df
@@ -53,6 +57,16 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     df_test = readFile(total_results_file_path_test)
     df = vcat(df_train, df_test)
     sorted_df = sort(df, PROBLEM_NAME_COLUMN)
+
+    successful_statuses = Set(["SUCCESS", "OPTIMAL", "success", "optimal"])
+
+    # Update the columns to a default value where 'status' is not in the set of successful statuses
+    sorted_df.total_iterations_count[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_function_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_gradient_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_hessian_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_factorization_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+
     return sorted_df
 end
 
