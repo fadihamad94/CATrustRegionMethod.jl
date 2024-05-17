@@ -1,14 +1,16 @@
 using CSV, DataFrames
 
-const CAT_FACTORIZATION = "CAT_FACTORIZATION"
-const CAT_THETA_ZERO_FACTORIZATION = "CAT_THETA_ZERO_FACTORIZATION"
+const CAT_FACTORIZATION_I = "CAT_I_FACTORIZATION"
+const CAT_FACTORIZATION_II = "CAT_II_FACTORIZATION"
+const CAT_THETA_ZERO_FACTORIZATION = "CAT_II_THETA_ZERO_FACTORIZATION"
 const ARC_FACTORIZATION = "ARC_FACTORIZATION"
-const NEWTON_TRUST_REGION= "NewtonTrustRegion"
+const NEWTON_TRUST_REGION= "TRU_FACTORIZATION"
 
-const CAT_OPTIMIZATION_METHOD = "CAT"
+const CAT_OPTIMIZATION_METHOD_I = "CAT_I"
+const CAT_OPTIMIZATION_METHOD_II = "CAT_II"
 const CAT_THETA_ZERO_OPTIMIZATION_METHOD = "CAT_THETA_ZERO"
 const ARC_FACTORIZATION_OPTIMIZATION_METHOD = "ARC_FACTORIZATION"
-const NEWTON_TRUST_REGION_OPTIMIZATION_METHOD = "NewtonTrustRegion"
+const NEWTON_TRUST_REGION_OPTIMIZATION_METHOD = "TRU_FACTORIZATION"
 
 const CURRENT_DIRECTORY = dirname(Base.source_path())
 const RESULTS_DEFAULT_DIRECTORY_NAME = string(CURRENT_DIRECTORY, "/../results")
@@ -17,6 +19,8 @@ const PROBLEM_NAME_COLUMN = "problem_name"
 const TOTAL_ITERATIONS_COUNT_COLUMN = "total_iterations_count"
 const TOTAL_FUNCTION_EVALUATION_COLUMN = "total_function_evaluation"
 const TOTAL_GRADIENT_EVALUATION_COLUMN = "total_gradient_evaluation"
+const TOTAL_HESSIAN_EVALUATION_COLUMN = "total_hessian_evaluation"
+const TOTAL_FACTORIZATION_EVALUATION_COLUMN = "total_factorization_evaluation"
 
 function readFile(filePath::String)
     df = DataFrame(CSV.File(filePath))
@@ -37,24 +41,28 @@ function buildFilePath(directoryName::String, optimization_method::String)
 end
 
 function collectResultsPerSolver(directoryName::String, optimization_method::String)
-    total_results_file_path = buildFilePath(directoryName, optimization_method)
-    if isfile(total_results_file_path)
-        return readFile(total_results_file_path)
+    total_results_file_path_train = buildFilePath(directoryName, String("train_", optimization_method))
+    total_results_file_path_test  = buildFilePath(directoryName, String("test_", optimization_method))
+    if isfile(total_results_file_path_train) && isfile(total_results_file_path_test)
+        df_train = readFile(total_results_file_path)
+        df_test = readFile(total_results_file_path_test)
+        return vcat(df_train, df_test)
     else
         total_results_file_path = buildFilePath(RESULTS_DEFAULT_DIRECTORY_NAME, optimization_method)
         return readFile(total_results_file_path)
     end
 end
 
-function mergeDataFrames(df_results_CAT_FACTORIZATION_CRITERIA::DataFrame, df_results_CAT_THETA_ZERO_FACTORIZATION_CRITERIA::DataFrame, df_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA::DataFrame, df_results_TRUST_REGION_OPTIMIZATION_CRITERIA::DataFrame)
-    df = DataFrame(PROBLEM_NAME = [], CAT_FACTORIZATION = [], CAT_THETA_ZERO_FACTORIZATION = [], ARC_FACTORIZATION = [], NEWTON_TRUST_REGION = [])
-    matrix_results_CAT_FACTORIZATION_CRITERIA = Matrix(df_results_CAT_FACTORIZATION_CRITERIA)
-    matrix_results_CAT_THETA_ZERO_FACTORIZATION_CRITERIA = Matrix(df_results_CAT_THETA_ZERO_FACTORIZATION_CRITERIA)
+function mergeDataFrames(df_results_CAT_I_FACTORIZATION_CRITERIA::DataFrame, df_results_CAT_II_FACTORIZATION_CRITERIA::DataFrame, , df_results_CAT_II_THETA_ZERO_FACTORIZATION_CRITERIA::DataFrame, df_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA::DataFrame, df_results_TRUST_REGION_OPTIMIZATION_CRITERIA::DataFrame)
+    df = DataFrame(PROBLEM_NAME = [], CAT_I_FACTORIZATION = [], CAT_II_FACTORIZATION = [], CAT_THETA_II_ZERO_FACTORIZATION = [], ARC_FACTORIZATION = [], NEWTON_TRUST_REGION = [])
+    matrix_results_CAT_I_FACTORIZATION_CRITERIA = Matrix(df_results_CAT_I_FACTORIZATION_CRITERIA)
+    matrix_results_CAT_II_FACTORIZATION_CRITERIA = Matrix(df_results_CAT_II_FACTORIZATION_CRITERIA)
+    matrix_results_CAT_II_THETA_ZERO_FACTORIZATION_CRITERIA = Matrix(df_results_CAT_II_THETA_ZERO_FACTORIZATION_CRITERIA)
     matrix_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA = Matrix(df_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA)
     matrix_results_TRUST_REGION_OPTIMIZATION_CRITERIA = Matrix(df_results_TRUST_REGION_OPTIMIZATION_CRITERIA)
 
-    for row in 1:size(matrix_results_CAT_FACTORIZATION_CRITERIA)[1]
-        merged_vector = vcat(matrix_results_CAT_FACTORIZATION_CRITERIA[row, :], matrix_results_CAT_THETA_ZERO_FACTORIZATION_CRITERIA[row, :], matrix_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA[row, :], matrix_results_TRUST_REGION_OPTIMIZATION_CRITERIA[row, :])
+    for row in 1:size(matrix_results_CAT_I_FACTORIZATION_CRITERIA)[1]
+        merged_vector = vcat(matrix_results_CAT_I_FACTORIZATION_CRITERIA[row, :], matrix_results_CAT_II_FACTORIZATION_CRITERIA[row, :], , matrix_results_CAT_II_THETA_ZERO_FACTORIZATION_CRITERIA[row, :], matrix_results_ARC_FACTORIZATION_OPTIMIZATION_CRITERIA[row, :], matrix_results_TRUST_REGION_OPTIMIZATION_CRITERIA[row, :])
         push!(df, merged_vector)
     end
 
@@ -66,15 +74,18 @@ function saveCSVFile(directoryName::String, criteria::String, results::DataFrame
     CSV.write(results_file_path, results, header = true)
 end
 
-function generateALLResultsCSVFile(directoryName::String, df_results_CAT_FACTORIZATION::DataFrame, df_results_CAT_THETA_ZERO_FACTORIZATION::DataFrame, df_results_ARC_FACTORIZATION_OPTIMIZATION::DataFrame, df_results_TRUST_REGION_OPTIMIZATION::DataFrame)
-    results = DataFrame(PROBLEM_NAME = [], CAT_FACTORIZATION_ITR = [], CAT_FACTORIZATION_F = [], CAT_FACTORIZATION_G = [], CAT_THETA_ZERO_FACTORIZATION_ITR = [], CAT_THETA_ZERO_FACTORIZATION_F = [], CAT_THETA_ZERO_FACTORIZATION_G= [], ARC_FACTORIZATION_ITR = [], ARC_FACTORIZATION_F = [], ARC_FACTORIZATION_G = [], NEWTON_TRUST_REGION_ITR = [], NEWTON_TRUST_REGION_F = [], NEWTON_TRUST_REGION_G = [])
-    matrix_results_CAT_FACTORIZATION = Matrix(df_results_CAT_FACTORIZATION)
-    matrix_results_CAT_THETA_ZERO_FACTORIZATION = Matrix(df_results_CAT_THETA_ZERO_FACTORIZATION)
+function generateALLResultsCSVFile(directoryName::String, df_results_CAT_I_FACTORIZATION::DataFrame, df_results_CAT_II_FACTORIZATION::DataFrame, df_results_CAT_II_THETA_ZERO_FACTORIZATION::DataFrame, df_results_ARC_FACTORIZATION_OPTIMIZATION::DataFrame, df_results_TRUST_REGION_OPTIMIZATION::DataFrame)
+    results = DataFrame(PROBLEM_NAME = [], CAT_FACTORIZATION_I_ITR = [], CAT_FACTORIZATION_I_F = [], CAT_FACTORIZATION_I_G = [], CAT_FACTORIZATION_I_H = [],CAT_FACTORIZATION_I_FCT = [], CAT_FACTORIZATION_II_ITR = [], CAT_FACTORIZATION_II_F = [], CAT_FACTORIZATION_II_G = [], CAT_FACTORIZATION_II_H = [], CAT_FACTORIZATION_II_FCT = [],
+    CAT_II_THETA_ZERO_FACTORIZATION_ITR = [], CAT_II_THETA_ZERO_FACTORIZATION_F = [], CAT_II_THETA_ZERO_FACTORIZATION_G = [], CAT_II_THETA_ZERO_FACTORIZATION_H = [], CAT_II_THETA_ZERO_FACTORIZATION_FCT = [], ARC_FACTORIZATION_ITR = [], ARC_FACTORIZATION_F = [], ARC_FACTORIZATION_G = [], ARC_FACTORIZATION_H = [],
+    ARC_FACTORIZATION_FCT = [], NEWTON_TRUST_REGION_ITR = [], NEWTON_TRUST_REGION_F = [], NEWTON_TRUST_REGION_G = [], NEWTON_TRUST_REGION_H = [],  NEWTON_TRUST_REGION_FCT = [])
+    matrix_results_CAT_I_FACTORIZATION = Matrix(df_results_CAT_I_FACTORIZATION)
+    matrix_results_CAT_II_FACTORIZATION = Matrix(df_results_CAT_II_FACTORIZATION)
+    matrix_results_CAT_II_THETA_ZERO_FACTORIZATION = Matrix(df_results_CAT_II_THETA_ZERO_FACTORIZATION)
     matrix_results_ARC_FACTORIZATION_OPTIMIZATION = Matrix(df_results_ARC_FACTORIZATION_OPTIMIZATION)
     matrix_results_TRUST_REGION_OPTIMIZATION = Matrix(df_results_TRUST_REGION_OPTIMIZATION)
 
-    for row in 1:size(matrix_results_CAT_FACTORIZATION)[1]
-        merged_vector = vcat(matrix_results_CAT_FACTORIZATION[row, :], matrix_results_CAT_THETA_ZERO_FACTORIZATION[row, :], matrix_results_ARC_FACTORIZATION_OPTIMIZATION[row, :], matrix_results_TRUST_REGION_OPTIMIZATION[row, :])
+    for row in 1:size(matrix_results_CAT_I_FACTORIZATION)[1]
+        merged_vector = vcat(matrix_results_CAT_I_FACTORIZATION[row, :], matrix_results_CAT_II_FACTORIZATION[row, :], matrix_results_CAT_II_THETA_ZERO_FACTORIZATION[row, :], matrix_results_ARC_FACTORIZATION_OPTIMIZATION[row, :], matrix_results_TRUST_REGION_OPTIMIZATION[row, :])
         push!(results, merged_vector)
     end
     if_mkpath(directoryName)
@@ -88,51 +99,94 @@ Collect results for each optimization method
 this optimization method, then get the results from what we saved based on our experiments
 =#
 function collectAllResults(directoryName::String)
-    #Collect results for CAT
-    optimization_method = CAT_OPTIMIZATION_METHOD
-    df_results_CAT_FACTORIZATION = collectResultsPerSolver(directoryName, optimization_method)
+    #Collect results for CAT I
+    optimization_method = CAT_OPTIMIZATION_METHOD_I
+    df_results_CAT_I_FACTORIZATION = collectResultsPerSolver(directoryName, optimization_method)
 
-    #Collect results for CAT θ = 0.0 Factorizarion
+    #Collect results for CAT II
+    optimization_method = CAT_OPTIMIZATION_METHOD_II
+    df_results_CAT_II_FACTORIZATION = collectResultsPerSolver(directoryName, optimization_method)
+
+    #Collect results for CAT II θ = 0.0 Factorizarion
     optimization_method = CAT_THETA_ZERO_OPTIMIZATION_METHOD
-    df_results_CAT_THETA_ZERO_FACTORIZATION = collectResultsPerSolver(directoryName, optimization_method)
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION = collectResultsPerSolver(directoryName, optimization_method)
 
-    #Collect results for ARC g-rule
+    #Collect results for ARC
     optimization_method = ARC_FACTORIZATION_OPTIMIZATION_METHOD
     df_results_ARC_FACTORIZATION_OPTIMIZATION = collectResultsPerSolver(directoryName, optimization_method)
 
-    #Collect results for Newton Trust Region
+    #Collect results for TRU
     optimization_method = NEWTON_TRUST_REGION_OPTIMIZATION_METHOD
     df_results_TRUST_REGION_OPTIMIZATION = collectResultsPerSolver(directoryName, optimization_method)
 
     #Generate results for all algorithm  for total number of iterations,  total number of function evaluations,
-    #and total number of gradient evaluations in same file
-    df_results_CAT_FACTORIZATION_ALL = df_results_CAT_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_FACTORIZATION))]
-    df_results_CAT_THETA_ZERO_FACTORIZATION_ALL = df_results_CAT_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_THETA_ZERO_FACTORIZATION))]
-    df_results_ARC_FACTORIZATION_OPTIMIZATION_ALL = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
-    df_results_TRUST_REGION_OPTIMIZATION_ALL = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
-    generateALLResultsCSVFile(directoryName, df_results_CAT_FACTORIZATION_ALL, df_results_CAT_THETA_ZERO_FACTORIZATION_ALL, df_results_ARC_FACTORIZATION_OPTIMIZATION_ALL, df_results_TRUST_REGION_OPTIMIZATION_ALL)
+    #and total number of gradient evaluations, total number of hessian evaluation, and total number
+    #of factorizations  in same file
+    df_results_CAT_I_FACTORIZATION_ALL = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_ALL = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_ALL = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_CAT_I_THETA_ZERO_FACTORIZATION))]
+    df_results_ARC_FACTORIZATION_OPTIMIZATION_ALL = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
+    df_results_TRUST_REGION_OPTIMIZATION_ALL = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
+    generateALLResultsCSVFile(directoryName, df_results_CAT_I_FACTORIZATION_ALL, df_results_CAT_II_FACTORIZATION_ALL, df_results_CAT_II_THETA_ZERO_FACTORIZATION_ALL, df_results_ARC_FACTORIZATION_OPTIMIZATION_ALL, df_results_TRUST_REGION_OPTIMIZATION_ALL)
 
     #Generate results for all algorithm for total number of iterations in a separate file
-    df_results_CAT_FACTORIZATION_ITERATIONS = df_results_CAT_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_CAT_FACTORIZATION))]
-    df_results_CAT_THETA_ZERO_FACTORIZATION_ITERATIONS = df_results_CAT_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_CAT_THETA_ZERO_FACTORIZATION))]
+    df_results_CAT_I_FACTORIZATION_ITERATIONS = df_results_I_CAT_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_I_CAT_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_ITERATIONS = df_results_II_CAT_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_II_CAT_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_ITERATIONS  = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_CAT_I_THETA_ZERO_FACTORIZATION))]
     df_results_ARC_FACTORIZATION_OPTIMIZATION_ITERATIONS = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
     df_results_TRUST_REGION_OPTIMIZATION_ITERATIONS = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_ITERATIONS_COUNT_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
-    df_results_ITERATIONS = mergeDataFrames(df_results_CAT_FACTORIZATION_ITERATIONS, df_results_CAT_THETA_ZERO_FACTORIZATION_ITERATIONS, df_results_ARC_FACTORIZATION_OPTIMIZATION_ITERATIONS, df_results_TRUST_REGION_OPTIMIZATION_ITERATIONS)
+    df_results_ITERATIONS = mergeDataFrames(df_results_I_CAT_FACTORIZATION_ITERATIONS, df_results_CAT_II_FACTORIZATION_ITERATIONS, df_results_CAT_II_THETA_ZERO_FACTORIZATION_ITERATIONS , df_results_ARC_FACTORIZATION_OPTIMIZATION_ITERATIONS, df_results_TRUST_REGION_OPTIMIZATION_ITERATIONS)
     saveCSVFile(directoryName, "iterations", df_results_ITERATIONS)
 
     #Generate results for all algorithm for total number of function evaluations in a separate file
-    df_results_CAT_FACTORIZATION_FUNCTION = df_results_CAT_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_FACTORIZATION))]
-    df_results_CAT_THETA_ZERO_FACTORIZATION_FUNCTION = df_results_CAT_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_THETA_ZERO_FACTORIZATION))]
+    df_results_CAT_I_FACTORIZATION_FUNCTION = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_FUNCTION = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_FUNCTION  = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_II_THETA_ZERO_FACTORIZATION))]
     df_results_ARC_FACTORIZATION_OPTIMIZATION_FUNCTION = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
     df_results_TRUST_REGION_OPTIMIZATION_FUNCTION = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
-    df_results_FUNCTION = mergeDataFrames(df_results_CAT_FACTORIZATION_FUNCTION, df_results_CAT_THETA_ZERO_FACTORIZATION_FUNCTION, df_results_ARC_FACTORIZATION_OPTIMIZATION_FUNCTION, df_results_TRUST_REGION_OPTIMIZATION_FUNCTION)
+    df_results_FUNCTION = mergeDataFrames(df_results_CAT_I_FACTORIZATION_FUNCTION, df_results_CAT_II_FACTORIZATION_FUNCTION, df_results_CAT_II_THETA_ZERO_FACTORIZATION_FUNCTION , df_results_ARC_FACTORIZATION_OPTIMIZATION_FUNCTION, df_results_TRUST_REGION_OPTIMIZATION_FUNCTION)
     saveCSVFile(directoryName, "functions", df_results_FUNCTION)
 
     #Generate results for all algorithm for total number of gradient evaluations in a separate file
-    df_results_CAT_FACTORIZATION_GRADIENT = df_results_CAT_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_FACTORIZATION))]
-    df_results_CAT_THETA_ZERO_FACTORIZATION_GRADIENT = df_results_CAT_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_THETA_ZERO_FACTORIZATION))]
+    df_results_CAT_I_FACTORIZATION_GRADIENT = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_GRADIENT = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_GRADIENT = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_CAT_II_THETA_ZERO_FACTORIZATION))]
     df_results_ARC_FACTORIZATION_OPTIMIZATION_GRADIENT = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
     df_results_TRUST_REGION_OPTIMIZATION_GRADIENT = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_GRADIENT_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
-    df_results_GRADIENT = mergeDataFrames(df_results_CAT_FACTORIZATION_GRADIENT, df_results_CAT_THETA_ZERO_FACTORIZATION_GRADIENT, df_results_ARC_FACTORIZATION_OPTIMIZATION_GRADIENT, df_results_TRUST_REGION_OPTIMIZATION_GRADIENT)
+    df_results_GRADIENT = mergeDataFrames(df_results_CAT_I_FACTORIZATION_GRADIENT, df_results_CAT_II_FACTORIZATION_GRADIENT, df_results_CAT_I_THETA_ZERO_FACTORIZATION_GRADIENT, df_results_ARC_FACTORIZATION_OPTIMIZATION_GRADIENT, df_results_TRUST_REGION_OPTIMIZATION_GRADIENT)
     saveCSVFile(directoryName, "gradients", df_results_GRADIENT)
+
+    #Generate results for all algorithm for total number of hessian evaluations in a separate file
+    df_results_CAT_I_FACTORIZATION_HESSIAN = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_HESSIAN = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_HESSIAN= df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_CAT_II_THETA_ZERO_FACTORIZATION))]
+    df_results_ARC_FACTORIZATION_OPTIMIZATION_HESSIAN = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
+    df_results_TRUST_REGION_OPTIMIZATION_HESSIAN = df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_HESSIAN_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
+    df_results_HESSIAN = mergeDataFrames(df_results_CAT_I_FACTORIZATION_HESSIAN, df_results_CAT_II_FACTORIZATION_HESSIAN, df_results_CAT_II_THETA_ZERO_FACTORIZATION_HESSIAN, df_results_ARC_FACTORIZATION_OPTIMIZATION_HESSIAN, df_results_TRUST_REGION_OPTIMIZATION_HESSIAN)
+    saveCSVFile(directoryName, "hessian", df_results_HESSIAN)
+
+    #Generate results for all algorithm for total number of factorization evaluations in a separate file
+    df_results_CAT_I_FACTORIZATION_TOTAL = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_TOTAL = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_CAT_I_THETA_ZERO_FACTORIZATION))]
+    df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
+    df_results_TRUST_REGION_OPTIMIZATION_TOTAL= df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_FACTORIZATION_EVALUATION_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
+    df_results_FACTORIZATION = mergeDataFrames(df_results_CAT_I_FACTORIZATION_TOTAL, df_results_CAT_II_FACTORIZATION_TOTAL, df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL, df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL, df_results_TRUST_REGION_OPTIMIZATION_TOTAL)
+    saveCSVFile(directoryName, "factorization", df_results_FACTORIZATION)
 end
+
+# using Plots
+#
+# # Example data
+# solvers = ["CAT II", "ARC", "TRU"]
+# fractions = [0.87, 0.82, 0.51]  # Example fractions (replace with actual data)
+#
+# # Plot the bar chart
+# bar(solvers, fractions,  legend=false)
+#
+# # Add labels and title
+# xlabel!("Solver")
+# ylabel!("Fraction within 1e-2 of best")
+# # title!("Fraction of instances within 1e-2 of best objective value by solver")
+#
+# # Show the plot
