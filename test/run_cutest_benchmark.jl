@@ -408,20 +408,20 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
-			push!(total_factorization_count_vec, df[i, :].count_factorization)
+			push!(total_factorization_count_vec, df[i, :].total_factorization_evaluation)
 			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
 			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
 			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
 		elseif df[i, :].status == "MAX_TIME"
 			temp_ = ϕ(df[i, :].gradient_value / ϵ) * time_limit
 			push!(total_iterations_count_vec, temp_)
-			push!(total_factorization_count_vec, temp_ == max_it + 1 ? max(temp_, df[i, :].count_factorization) : temp_)
+			push!(total_factorization_count_vec, temp_ == max_it + 1 ? max(temp_, df[i, :].total_factorization_evaluation) : temp_)
 			push!(total_function_evaluation_vec, temp_)
 			push!(total_gradient_evaluation_vec, temp_)
 			push!(total_hessian_evaluation_vec, temp_)
 		else
 			push!(total_iterations_count_vec, max_it + 1)
-			push!(total_factorization_count_vec, max(df[i, :].count_factorization, max_it + 1))
+			push!(total_factorization_count_vec, max(df[i, :].total_factorization_evaluation, max_it + 1))
 			push!(total_function_evaluation_vec, max_it + 1)
 			push!(total_gradient_evaluation_vec, max_it + 1)
 			push!(total_hessian_evaluation_vec, max_it + 1)
@@ -431,7 +431,7 @@ function computeShiftedAndCorrectedGeomeans(ϕ::Function, df::DataFrame, shift::
 	df_results_new = DataFrame()
 	df_results_new.problem_name = df.problem_name
 	df_results_new.total_iterations_count = total_iterations_count_vec
-	df_results_new.count_factorization = total_factorization_count_vec
+	df_results_new.total_factorization_evaluation = total_factorization_count_vec
 	df_results_new.total_function_evaluation = total_function_evaluation_vec
 	df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
 	df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
@@ -441,7 +441,7 @@ end
 
 function computeShiftedGeomeans(df::DataFrame, shift::Int64)
 	geomean_total_iterations_count = geomean(df.total_iterations_count .+ shift) - shift
-	geomean_count_factorization = geomean(df.count_factorization .+ shift) - shift
+	geomean_count_factorization = geomean(df.total_factorization_evaluation .+ shift) - shift
 	geomean_total_function_evaluation = geomean(df.total_function_evaluation .+ shift) - shift
 	geomean_total_gradient_evaluation = geomean(df.total_gradient_evaluation .+ shift) - shift
 	geomean_total_hessian_evaluation  = geomean(df.total_hessian_evaluation .+ shift) - shift
