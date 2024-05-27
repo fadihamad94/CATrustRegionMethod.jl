@@ -200,14 +200,16 @@ function runModelFromProblem(
 	)
 
 	global nlp = nothing
-	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach = problem_data
+	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach = problem_data
 	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	try
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
 		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
 		nlp = CUTEstModel(cutest_problem)
-		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_1, γ_2, max_time, print_level, compute_ρ_hat_approach)
+		termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(max_it, tol_opt, max_time)
+		initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
+		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level, compute_ρ_hat_approach, radius_update_rule_approach)
 		x_1 = problem.nlp.meta.x0
 		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		x = x_1

@@ -204,7 +204,9 @@ function runModelFromProblem(
 		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 		if optimization_method == optimization_method_CAT || optimization_method == optimization_method_CAT_theta_0 || optimization_method == optimization_method_CAT_galahad_factorization || optimization_method == optimization_method_CAT_galahad_iterative
-			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_1, γ_2, max_time, print_level)
+			termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(max_it, tol_opt, max_time)
+		    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
+			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level)
 	        x_1 = problem.nlp.meta.x0
 			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	        x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
