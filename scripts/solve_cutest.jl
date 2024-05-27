@@ -60,7 +60,7 @@ function parse_command_line()
     "--ω_1"
     help = "ω_1 parameter for CAT"
     arg_type = Float64
-    default = 4.0
+    default = 8.0
 
     "--ω_2"
     help = "ω_2 parameter for CAT"
