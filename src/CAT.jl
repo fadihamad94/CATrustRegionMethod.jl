@@ -69,11 +69,12 @@ mutable struct Problem_Data
 	γ_2::Float64
 	print_level::Int64
 	compute_ρ_hat_approach::String
+	radius_update_rule_approach::String
     # initialize parameters
     function Problem_Data(nlp::AbstractNLPModel, termination_conditions_struct::TerminationConditions,
 						  initial_radius_struct::INITIAL_RADIUS_STRUCT, β_1::Float64=0.1, β_2::Float64=0.8,
 						  θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, γ_2::Float64=0.1,
-						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT")
+						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT", radius_update_rule_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
 		@assert(β_2 > 0 && β_2 < 1)
 		@assert(β_2 >= β_1)
@@ -82,7 +83,7 @@ mutable struct Problem_Data
 		@assert(ω_2 >= 1)
 		@assert(ω_2 >= ω_1)
 		# @assert(1>= γ_2 > (1 / ω_1))
-        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, β_2, θ, ω_1, ω_2, γ_2, print_level, compute_ρ_hat_approach)
+        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, β_2, θ, ω_1, ω_2, γ_2, print_level, compute_ρ_hat_approach, radius_update_rule_approach)
     end
 end
 
@@ -123,7 +124,17 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	temp_total_function_evaluation = 0
 
 	# Solve the trust-region subproblem to generate the search direction d_k
-	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
+	# success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
+	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
+	if success_subproblem_solve
+		γ_1 = 1e-2
+		q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
+		q_2 = γ_1 * min_gval_norm
+		if q_1 > q_2
+			success_subproblem_solve = false
+			@warn "q_1: $q_1 is larger than q_2: $q_2."
+		end
+	end
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
 	if print_level >= 2
@@ -153,7 +164,8 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 		end
 	end
 
-	return fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case
+	# return fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case
+	return fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 end
 
 function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
@@ -171,7 +183,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	β_2 = problem.β_2
     ω_1 = problem.ω_1
 	ω_2 = problem.ω_2
+	γ_1 = 1e-2 # //TODO Make param
 	γ_2 = problem.γ_2
+	γ_3 = 1.0 # //TODO Make param
 	θ = problem.θ
 
 	#Initial radius
@@ -188,15 +202,20 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 	print_level = problem.print_level
 	compute_ρ_hat_approach = problem.compute_ρ_hat_approach
+	radius_update_rule_approach = problem.radius_update_rule_approach
 
 	#Algorithm history
 	iteration_stats = DataFrame(k = [], fval = [], gradval = [])
 
 	#Algorithm stats
-    total_function_evaluation = 0
+	total_function_evaluation = 0
     total_gradient_evaluation = 0
     total_hessian_evaluation = 0
     total_number_factorizations = 0
+	total_number_factorizations_findinterval = 0
+	total_number_factorizations_bisection = 0
+	total_number_factorizations_compute_search_direction = 0
+	total_number_factorizations_inverse_power_iteration = 0
 
     k = 1
     try
@@ -215,7 +234,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
         compute_hessian = false
         if norm(gval_current, 2) <= gradient_termination_tolerance
-            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+            # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+			total_number_factorization = 1
+			computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 			if print_level >= 0
             	println("*********************************Iteration Count: ", 1)
 			end
@@ -227,6 +248,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 		min_gval_norm = norm(gval_current, 2)
         while k <= MAX_ITERATIONS
 			temp_grad = gval_current
+			@assert total_number_factorizations == total_number_factorizations_findinterval + total_number_factorizations_bisection + total_number_factorizations_compute_search_direction + total_number_factorizations_inverse_power_iteration
 			if print_level >= 1
 				start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 				println("$start_time. Iteration $k with radius $r_k and total_number_factorizations $total_number_factorizations.")
@@ -243,7 +265,15 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
 
 			# Solve the trsut-region subproblem and generate the search direction d_k
-			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			# total_number_factorizations += temp_total_number_factorizations
+			# total_function_evaluation += temp_total_function_evaluation
+			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
+			total_number_factorizations_bisection += temp_total_number_factorizations_bisection
+			total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
+			total_number_factorizations_inverse_power_iteration += temp_total_number_factorizations_inverse_power_iteration
+
 			total_number_factorizations += temp_total_number_factorizations
 			total_function_evaluation += temp_total_function_evaluation
 			gval_next = gval_current
@@ -286,7 +316,14 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 
 					# Solve the trsut-region subproblem and generate the search direction d_k
-					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
+					# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
+					# total_number_factorizations += temp_total_number_factorizations
+					# total_function_evaluation += temp_total_function_evaluation
+					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
+					total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
+					total_number_factorizations_bisection += temp_total_number_factorizations_bisection
+					total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
+					total_number_factorizations_inverse_power_iteration += temp_total_number_factorizations_inverse_power_iteration
 					total_number_factorizations += temp_total_number_factorizations
 					total_function_evaluation += temp_total_function_evaluation
 
@@ -401,12 +438,23 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			end
 
 			# Radius update
-			if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β_1
-				r_k = r_k / ω_1
-			elseif ρ_k < β_2
-				r_k = max(ω_1 * norm(d_k, 2), r_k)
+			if radius_update_rule_approach == "DEFAULT"
+				if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β_1
+					r_k = r_k / ω_1
+				else
+					r_k = max(ω_2 * norm(d_k, 2), r_k)
+				end
+			# This to be able to test the performance of the algorithm for the ablation study
 			else
-				r_k = max(ω_2 * norm(d_k, 2), r_k)
+				if !success_subproblem_solve
+					r_k = r_k / ω_1
+				else
+					if isnan(ρ_hat_k) || ρ_hat_k < β_1
+						r_k = norm(d_k, 2) / ω_1
+					else
+						r_k = ω_1 * norm(d_k, 2)
+					end
+				end
 			end
 
 			push!(iteration_stats, (k, fval_current, norm(gval_current, 2)))
@@ -419,7 +467,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			# Check termination condition for gradient
 			if norm(gval_next, 2) <= gradient_termination_tolerance ||  min_gval_norm <= gradient_termination_tolerance
 				push!(iteration_stats, (k, fval_next, min_gval_norm))
-	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+	            # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0
 	            	println("*********************************Iteration Count: ", k)
 				end
@@ -437,7 +486,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 			# Check termination condition for trust-region radius if it becomes too small
 			if r_k <= MINIMUM_TRUST_REGION_RADIUS
-				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				# computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0
 					println("$k. Trust region radius $r_k is too small.")
 				end
@@ -446,7 +496,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 			# Check termination condition for function value if the objective function is unbounded (safety check)
 			if fval_current <= MINIMUM_OBJECTIVE_FUNCTION || fval_next <= MINIMUM_OBJECTIVE_FUNCTION
-				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				# computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0
 					println("$k. Function values ($fval_current, $fval_next) are too small.")
 				end
@@ -455,7 +506,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 			# Check termination condition for time if we exceeded the time limit
 	        if time() - start_time > MAX_TIME
-	            computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+	            # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				return x_k, TerminationStatusCode.TIME_LIMIT, iteration_stats, computation_stats, k
 	        end
         	k += 1
@@ -463,14 +515,16 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	# Handle exceptions
     catch e
 		@error e
-		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+		# computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+		computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 		status = TerminationStatusCode.OTHER_ERROR
 		if isa(e, OutOfMemoryError)
 			status = TerminationStatusCode.MEMORY_LIMIT
 		end
 		return x_k, status, iteration_stats, computation_stats, k
     end
-    computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+    # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
+	computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 	return x_k, TerminationStatusCode.ITERARION_LIMIT, iteration_stats, computation_stats, k
 end
 
