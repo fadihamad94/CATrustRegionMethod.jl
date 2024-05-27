@@ -1,9 +1,7 @@
 export phi, findinterval, bisection
 using LinearAlgebra
 using Dates
-using Roots
-using LinearMaps
-using IterativeSolvers
+
 #=
 The big picture idea here is to optimize the trust region subproblem using a factorization method based
 on the optimality conditions:
