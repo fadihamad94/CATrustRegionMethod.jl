@@ -95,6 +95,7 @@ function run_cutest_with_CAT(
 	end
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+	@info length(train_problems)
     executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end
@@ -469,7 +470,7 @@ end
 function convertSsatusCodeToStatusString(status)
     dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
     consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
-    consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT ",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT => "TRUST_REGION_RADIUS_LIMIT",
