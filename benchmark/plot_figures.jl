@@ -120,8 +120,8 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Float64}, criteria::String
         # results_total = DataFrame(Time=Int[], CAT_I_FACTORIZATION=Int[], CAT_II_FACTORIZATION=Float64[], CAT_II_THETA_ZERO_FACTORIZATION=Int[], ARC_FACTORIZATION=Int[], TRU_FACTORIZATION=Int[])
     end
 
-    @show first(df[:, CAT_I_FACTORIZATION ], 5)
-    @show first(df[:, CAT_II_FACTORIZATION ], 5)
+    # @show first(df[:, CAT_I_FACTORIZATION ], 5)
+    # @show first(df[:, CAT_II_FACTORIZATION ], 5)
     for total in TOTAL
         total_problems_CAT_I_FACTORIZATION = length(filterRows(total, df[:, CAT_I_FACTORIZATION]))
         total_problems_CAT_II_FACTORIZATION = length(filterRows(total, df[:, CAT_II_FACTORIZATION ]))
@@ -133,9 +133,9 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Float64}, criteria::String
         push!(results_total, (total, total_problems_CAT_I_FACTORIZATION, total_problems_CAT_II_FACTORIZATION, total_problems_CAT_II_THETA_ZERO_FACTORIZATION, total_problems_ARC_FACTORIZATION, total_problems_TRU_FACTORIZATION))
     end
     @show length(TOTAL)
-    @show first(df[:, CAT_II_FACTORIZATION ], 5)
-    @show first(df[:, ARC_FACTORIZATION ], 5)
-    @show first(df[:, TRU_FACTORIZATION ], 5)
+    # @show first(df[:, CAT_II_FACTORIZATION ], 5)
+    # @show first(df[:, ARC_FACTORIZATION ], 5)
+    # @show first(df[:, TRU_FACTORIZATION ], 5)
 
     return results_fraction
 end
@@ -146,8 +146,8 @@ function plotFigureComparisonCAT(df::DataFrame, criteria::String, dirrectoryName
     data = Matrix(df[!, Not(criteria)])
     # criteria_keyrword = criteria == "Iterations" ? "iterations" : "gradient evaluations"
     criteria_keyrword = criteria == "Iterations" ? "function evaluations" : "gradient evaluations"
-    @show first(df, 5)
-    @show last(df, 5)
+    # @show first(df, 5)
+    # @show last(df, 5)
     plot(df[!, criteria],
         data,
         label=["Our method default (θ = 0.1)" "Our method (θ = 0.0)"],
@@ -284,7 +284,10 @@ function plotAllFigures(dirrectoryName::String)
     # generateFiguresTimeComparisonFinal(dirrectoryName)
 end
 
-plotAllFigures("/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/FINAL_VERSION")
+# plotAllFigures("/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/FINAL_VERSION")
 # This code to debug the implementation
 # dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_debug_collect_results_script"
 # plotAllFigures(dir_)
+
+dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
+plotAllFigures(dir_)

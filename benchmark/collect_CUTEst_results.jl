@@ -24,7 +24,7 @@ const TOTAL_FACTORIZATION_EVALUATION_COLUMN = "total_factorization_evaluation"
 
 const STATUS_COLUMN = "status"
 
-DEFAULT_FAILURES_VAL = 100001
+DEFAULT_FAILURES_VAL = 200001
 
 function readFile(filePath::String)
     df = DataFrame(CSV.File(filePath))
@@ -61,11 +61,11 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     successful_statuses = Set(["SUCCESS", "OPTIMAL", "success", "optimal"])
 
     # Update the columns to a default value where 'status' is not in the set of successful statuses
-    sorted_df.total_iterations_count[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
-    sorted_df.total_function_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
-    sorted_df.total_gradient_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
-    sorted_df.total_hessian_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
-    sorted_df.total_factorization_evaluation[.!in.(df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_iterations_count[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_function_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_gradient_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_hessian_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_factorization_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
 
     return sorted_df
 end
@@ -221,8 +221,12 @@ function collectAllResults(directoryName::String)
     saveCSVFile(directoryName, "gradients_CAT", df_results_GRADIENT_CAT_II)
 end
 
-dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_debug_collect_results_script"
+# dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_debug_collect_results_script"
+# collectAllResults(dir_)
+
+dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
 collectAllResults(dir_)
+
 # using Plots
 #
 # # Example data
