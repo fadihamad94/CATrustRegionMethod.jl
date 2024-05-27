@@ -95,7 +95,6 @@ function run_cutest_with_CAT(
 	end
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-	@info length(train_problems)
     executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end

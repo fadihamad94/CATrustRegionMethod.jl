@@ -523,7 +523,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     end
     # computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
 	computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
-	return x_k, TerminationStatusCode.ITERARION_LIMIT, iteration_stats, computation_stats, k
+	return x_k, TerminationStatusCode.ITERATION_LIMIT, iteration_stats, computation_stats, k
 end
 
 
@@ -747,7 +747,7 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
 		return x_k, status, iteration_stats, computation_stats, k
     end
     computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations)
-	return x_k, TerminationStatusCode.ITERARION_LIMIT, iteration_stats, computation_stats, k
+	return x_k, TerminationStatusCode.ITERATION_LIMIT, iteration_stats, computation_stats, k
 end
 
 end # module
