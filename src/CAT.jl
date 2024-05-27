@@ -62,28 +62,29 @@ mutable struct Problem_Data
 	termination_conditions_struct::TerminationConditions
 	initial_radius_struct::INITIAL_RADIUS_STRUCT
 	β_1::Float64
-	β_2::Float64
     θ::Float64
     ω_1::Float64
 	ω_2::Float64
+	γ_1::Float64
 	γ_2::Float64
 	print_level::Int64
 	compute_ρ_hat_approach::String
 	radius_update_rule_approach::String
     # initialize parameters
     function Problem_Data(nlp::AbstractNLPModel, termination_conditions_struct::TerminationConditions,
-						  initial_radius_struct::INITIAL_RADIUS_STRUCT, β_1::Float64=0.1, β_2::Float64=0.8,
-						  θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, γ_2::Float64=0.1,
+						  initial_radius_struct::INITIAL_RADIUS_STRUCT, β_1::Float64=0.1,
+						  θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, γ_1::Float64=0.01, γ_2::Float64=0.2,
 						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT", radius_update_rule_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
-		@assert(β_2 > 0 && β_2 < 1)
-		@assert(β_2 >= β_1)
         @assert(θ >= 0 && θ < 1)
         @assert(ω_1 >= 1)
 		@assert(ω_2 >= 1)
 		@assert(ω_2 >= ω_1)
+		γ_3 = 1.0 # //TODO Make param
+		@assert(0 <= γ_1 < 0.5 * ( 1 - ((β_1 * θ) / (γ_3 * (1 - β_1)))))
+		@assert(1/ω_1 < (1 - γ_2) <= 1)
 		# @assert(1>= γ_2 > (1 / ω_1))
-        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, β_2, θ, ω_1, ω_2, γ_2, print_level, compute_ρ_hat_approach, radius_update_rule_approach)
+        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, θ, ω_1, ω_2, γ_1, γ_2, print_level, compute_ρ_hat_approach, radius_update_rule_approach)
     end
 end
 
@@ -117,7 +118,7 @@ function compute_ρ_standard_trust_region_method(fval_current::Float64, fval_nex
     return ρ, actual_fct_decrease, predicted_fct_decrease
 end
 
-function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 	fval_next = fval_current
 	gval_next_temp = gval_current
 	start_time_temp = time()
@@ -127,7 +128,6 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	# success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
 	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
 	if success_subproblem_solve
-		γ_1 = 1e-2
 		q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
 		q_2 = γ_1 * min_gval_norm
 		if q_1 > q_2
@@ -180,14 +180,15 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 
 	#Algorithm parameters
     β_1 = problem.β_1
-	β_2 = problem.β_2
     ω_1 = problem.ω_1
 	ω_2 = problem.ω_2
-	γ_1 = 1e-2 # //TODO Make param
+	γ_1 = problem.γ_1
 	γ_2 = problem.γ_2
 	γ_3 = 1.0 # //TODO Make param
 	θ = problem.θ
-
+	C = (2 + 3 * γ_3 * (1 - β_1)) / (3 * (γ_3 * (1 - 2 * γ_1) * (1 - β_1) - β_1 * θ))
+	ξ = 0.1# //TODO Make param
+	@assert ξ >= 1 / (6 * C)
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct
 	r_1 = initial_radius_struct.r_1
@@ -247,8 +248,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
         start_time = time()
 		min_gval_norm = norm(gval_current, 2)
         while k <= MAX_ITERATIONS
-			temp_grad = gval_current
 			@assert total_number_factorizations == total_number_factorizations_findinterval + total_number_factorizations_bisection + total_number_factorizations_compute_search_direction + total_number_factorizations_inverse_power_iteration
+			temp_grad = gval_current
 			if print_level >= 1
 				start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 				println("$start_time. Iteration $k with radius $r_k and total_number_factorizations $total_number_factorizations.")
@@ -265,10 +266,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
 
 			# Solve the trsut-region subproblem and generate the search direction d_k
-			# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			# total_number_factorizations += temp_total_number_factorizations
 			# total_function_evaluation += temp_total_function_evaluation
-			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
 			total_number_factorizations_bisection += temp_total_number_factorizations_bisection
 			total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
@@ -280,17 +281,20 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 			# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
 			# candidate solution has a reduction in the function value so that we accept the step by
 			if success_subproblem_solve
-				temp_grad = grad(nlp, x_k + d_k)
-				total_gradient_evaluation += 1
-				temp_norm = norm(temp_grad, 2)
-				if isnan(temp_norm)
-					@warn "$k grad(nlp, x_k + d_k) is NaN."
-					if print_level >= 0
-						println("$k. grad(nlp, x_k + d_k) is NaN.")
+				if fval_next <= fval_current + ξ * min_gval_norm * norm(d_k) + (1 + abs(fval_current)) * 1e-8
+					total_gradient_evaluation += 1
+					temp_grad = grad(nlp, x_k + d_k)
+					temp_norm = norm(temp_grad, 2)
+					if isnan(temp_norm)
+						if print_level >= 0
+							println("$k. grad(nlp, x_k + d_k) is NaN.")
+						end
+						@warn "$k grad(nlp, x_k + d_k) is NaN."
+					else
+						min_gval_norm = min(min_gval_norm, temp_norm)
 					end
-				else
-					min_gval_norm = min(min_gval_norm, temp_norm)
 				end
+
 				start_time_temp = time()
 				ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
 				end_time_temp = time()
@@ -316,10 +320,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 
 					# Solve the trsut-region subproblem and generate the search direction d_k
-					# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
+					# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
 					# total_number_factorizations += temp_total_number_factorizations
 					# total_function_evaluation += temp_total_function_evaluation
-					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
+					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
 					total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
 					total_number_factorizations_bisection += temp_total_number_factorizations_bisection
 					total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
@@ -330,17 +334,20 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
 					# candidate solution has a reduction in the function value so that we accept the step by
 					if success_subproblem_solve
-						temp_grad = grad(nlp, x_k + d_k)
-						total_gradient_evaluation += 1
-						temp_norm = norm(temp_grad, 2)
-						if isnan(temp_norm)
-							if print_level >= 0
-								println("$k. grad(nlp, x_k + d_k) is NaN.")
+						if fval_next <= fval_current + ξ * min_gval_norm * norm(d_k) + (1 + abs(fval_current)) * 1e-8
+							total_gradient_evaluation += 1
+							temp_grad = grad(nlp, x_k + d_k)
+							temp_norm = norm(temp_grad, 2)
+							if isnan(temp_norm)
+								if print_level >= 0
+									println("$k. grad(nlp, x_k + d_k) is NaN.")
+								end
+								@warn "$k grad(nlp, x_k + d_k) is NaN."
+							else
+								min_gval_norm = min(min_gval_norm, temp_norm)
 							end
-							@warn "$k grad(nlp, x_k + d_k) is NaN."
-						else
-							min_gval_norm = min(min_gval_norm, temp_norm)
 						end
+
 						start_time_temp = time()
 						ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
 						end_time_temp = time()
@@ -395,15 +402,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				x_k = x_k + d_k
 				start_time_temp = time()
 				gval_next = temp_grad
-				temp_norm = norm(gval_next, 2)
-				if isnan(temp_norm)
-					if print_level >= 0
-						println("$k. grad(nlp, x_k + d_k) is NaN.")
-					end
-					@warn "$k grad(nlp, x_k + d_k) is NaN."
-				else
-					min_gval_norm = min(min_gval_norm, temp_norm)
-				end
 				if isnan(min_gval_norm)
 					if print_level >= 0
 						println("$k. min_gval_norm is NaN")
@@ -587,7 +585,7 @@ function CAT_original_alg(problem::Problem_Data, x::Vector{Float64}, δ::Float64
                 total_hessian_evaluation += 1
             end
 
-			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			total_number_factorizations += temp_total_number_factorizations
 			total_function_evaluation += temp_total_function_evaluation
 			gval_next = gval_current

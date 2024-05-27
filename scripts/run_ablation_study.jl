@@ -1,5 +1,6 @@
 import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics, Plots
+using Plots.PlotMeasures
 include("../src/CAT.jl")
 
 """
@@ -8,7 +9,12 @@ Defines parses and args.
 A dictionary with the values of the command-line arguments.
 """
 
-const skip_list = ["DMN15333LS", "DIAMON2DLS", "DMN37142LS", "BA-L49LS", "NONCVXU2", "DMN15102LS", "DMN15332LS", "DMN37143LS", "EIGENCLS", "YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
+# const skip_list = ["BA-L52LS", "BA-L73LS", "DMN15333LS", "DIAMON2DLS", "DMN15103LS", "DMN37142LS", "BA-L49LS", "NONCVXU2", "DMN15102LS", "DMN15332LS", "DMN37143LS", "EIGENCLS", "YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
+const skip_list = ["YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
+
+const default_train_problems = ["AKIVA", "ALLINITU", "ARGLINA", "ARGTRIGLS", "BA-L1LS", "BARD", "BEALE", "BENNETT5LS", "BIGGS6", "BOX3", "BOXBODLS", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CERI651ALS", "CERI651BLS", "CERI651CLS", "CERI651DLS", "CERI651ELS", "CHNROSNB", "CHNRSNBM", "CLIFF", "CLUSTERLS", "COATING", "COOLHANSLS", "CUBE", "DANIWOODLS", "DANWOODLS", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DEVGLA1", "DEVGLA2", "DJTL", "EG2", "EGGCRATE", "ELATVIDU", "ENGVAL2", "ENSOLS", "ERRINROS", "EXPFIT", "EXTROSNB", "FBRAIN3LS", "GAUSS2LS", "GAUSS3LS", "GAUSSIAN", "GBRAINLS", "GENROSE", "GROWTHLS", "HATFLDD", "HATFLDFL", "HATFLDFLS", "HATFLDGLS", "HEART6LS", "HEART8LS", "HELIX", "HIELOW", "HILBERTA", "HIMMELBB", "HIMMELBCLS", "HIMMELBG", "HIMMELBH", "HUMPS", "HYDC20LS", "HYDCAR6LS", "JENSMP", "JUDGE", "KIRBY2LS", "KOWOSB", "KSSLS", "LANCZOS1LS", "LANCZOS2LS", "LOGHAIRY", "LSC1LS", "LSC2LS", "LUKSAN11LS", "LUKSAN12LS", "LUKSAN13LS", "LUKSAN14LS", "LUKSAN15LS", "LUKSAN16LS", "LUKSAN22LS", "MANCINO", "MARATOSB", "METHANL8LS", "MEXHAT", "MEYER3", "MGH10LS", "MGH10SLS", "MGH17LS", "MGH17SLS", "MISRA1BLS", "MISRA1CLS", "MISRA1DLS", "MNISTS0LS", "MUONSINELS", "NELSONLS", "OSBORNEA", "OSBORNEB", "PALMER1D", "PALMER3C", "PALMER5C", "PALMER5D", "PALMER7C", "PARKCH", "PENALTY1", "PENALTY2", "POWELLBSLS", "PRICE3", "PRICE4", "QING", "RAT42LS", "RAT43LS", "RECIPELS", "ROSENBR", "ROSZMAN1LS", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "SPIN2LS", "SSI", "STRATEC", "STREG", "STRTCHDV", "TOINTQOR", "TRIGON1", "VANDANMSLS", "VESUVIOLS", "VESUVIOULS", "VIBRBEAM", "WATSON", "WAYSEA1", "YFITU", "ZANGWIL2"]
+
+const default_test_problems = ["DIXMAANI", "LIARWHD", "SCHMVETT", "VAREIGVL", "CYCLOOCFLS", "DIXMAANJ", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "DMN37142LS", "EIGENALS", "YATP1LS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "S308NE", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "DQRTIC", "MISRA1ALS", "BOX", "DMN37143LS", "TOINTGSS", "SPARSINE", "VESUVIALS", "INTEQNELS", "COATINGNE", "HAIRY", "PALMER1C", "BA-L49LS", "SSCOSINE", "NONCVXU2", "BROYDN7D", "COSINE", "DIXMAANO", "SPINLS", "BROYDN3DLS", "PALMER2C", "CURLY20", "NONMSQRT", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "YATP2CLS", "DMN15332LS", "SCURLY20", "NONDQUAR", "SCURLY30", "LUKSAN21LS", "ECKERLE4LS", "HAHN1LS", "DMN15102LS", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "BROYDNBDLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "DEVGLA2NE", "BA-L1SPLS", "BA-L73LS", "DIAMON2DLS", "THURBERLS", "GAUSS1LS", "PENALTY3", "MODBEALE", "PALMER6C", "DIXMAANN", "LUKSAN17LS", "EIGENCLS", "INDEFM", "SROSENBR", "MNISTS5LS", "INDEF", "ARWHEAD", "DIXON3DQ", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "NCB20", "FLETCBV3", "CHAINWOO", "HATFLDE", "DIXMAANP", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "MSQRTALS", "CURLY10", "BOXPOWER", "DQDRTIC", "OSCIGRAD", "FLETCHBV", "ARGLINB", "DIXMAANF", "BA-L16LS", "MOREBV", "NONDIA", "MSQRTBLS", "SCURLY10", "TQUARTIC", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "DIXMAANG", "HILBERTB", "DIXMAANK", "QUARTC", "EDENSCH", "YATP1CLS", "TOINTPSP", "SSBRYBND", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "SINQUAD", "DIXMAANL", "PALMER4C", "TESTQUAD", "EIGENBLS", "TRIGON2", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS"]
 
 function if_mkpath(dir::String)
   if !isdir(dir)
@@ -54,15 +60,10 @@ function parse_command_line()
     arg_type = Float64
     default = 0.1
 
-    "--β_1"
-    help = "β_1 parameter for CAT"
-    arg_type = Float64
-    default = 0.1
-
-    "--β_2"
+    "--β"
     help = "β parameter for CAT"
     arg_type = Float64
-    default = 0.8
+    default = 0.1
 
     "--ω_1"
     help = "ω_1 parameter for CAT"
@@ -73,6 +74,11 @@ function parse_command_line()
     help = "ω_2 parameter for CAT"
     arg_type = Float64
     default = 20.0
+
+	"--γ_1"
+    help = "γ_1 parameter for CAT"
+    arg_type = Float64
+    default = 0.01
 
     "--γ_2"
     help = "γ_2 parameter for CAT"
@@ -120,16 +126,16 @@ function createProblemData(
 	max_time::Float64,
 	tol_opt::Float64,
 	θ::Float64,
-	β_1::Float64,
-	β_2::Float64,
+	β::Float64,
 	ω_1::Float64,
 	ω_2::Float64,
+	γ_1::Float64,
 	γ_2::Float64,
 	r_1::Float64)
 		problem_data_vec = []
 		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 		compute_ρ_hat_approach = "NOT DEFAULT"
-		problem_data = (β_1, β_1, θ, ω_1, ω_1, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach)
+		problem_data = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach)
 		for crt in criteria
 			if crt == "original"
 				push!(problem_data_vec, problem_data)
@@ -140,24 +146,21 @@ function createProblemData(
 				new_problem_data = (problem_data[1:index_to_override-1]..., compute_ρ_hat_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
-			elseif crt == "GALAHAD_TRS"
-				solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_TRS
-				index_to_override = 11
-				new_problem_data = (problem_data[1:index_to_override-1]..., solver, problem_data[index_to_override+1:end]...)
-				problem_data = new_problem_data
-				push!(problem_data_vec, problem_data)
 			elseif crt == "initial_radius"
 				r_1 = 0.0
-				index_to_override = 6
+				index_to_override = 5
 				new_problem_data = (problem_data[1:index_to_override-1]..., r_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
+			# radius_update_rule
 			else
-				index_to_override = 2
-				new_problem_data = (problem_data[1:index_to_override-1]..., β_2, problem_data[index_to_override+1:end]...)
+				index_to_override = 4
+				new_problem_data = (problem_data[1:index_to_override-1]..., ω_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
-				index_to_override = 5
-				new_problem_data = (problem_data[1:index_to_override-1]..., ω_2, problem_data[index_to_override+1:end]...)
+				push!(problem_data_vec, problem_data)
+				index_to_override = 13
+				radius_update_rule_approach = "NOT DEFAULT"
+				new_problem_data = (problem_data[1:index_to_override-1]..., radius_update_rule_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
 			end
@@ -183,7 +186,7 @@ function outputIterationsStatusToCSVFile(
     gradient_value = computation_stats["gradient_value"]
 
     open(total_results_output_file_path,"a") do iteration_status_csv_file
-			write(iteration_status_csv_file, "$start_time,$end_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		write(iteration_status_csv_file, "$start_time,$end_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
     end
 end
 
@@ -197,14 +200,14 @@ function runModelFromProblem(
 	)
 
 	global nlp = nothing
-	β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_2, solver, compute_ρ_hat_approach = problem_data
+	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach = problem_data
 	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	try
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
 		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
 		nlp = CUTEstModel(cutest_problem)
-		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level, compute_ρ_hat_approach)
+		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_1, γ_2, max_time, print_level, compute_ρ_hat_approach)
 		x_1 = problem.nlp.meta.x0
 		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		x = x_1
@@ -335,7 +338,7 @@ function runProblems(
 		if !isfile(total_results_output_file_path)
 			mkpath(total_results_output_directory);
 			open(total_results_output_file_path,"a") do iteration_status_csv_file
-				write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+				write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,total_factorization_evaluation\n");
 		    end
 		end
 
@@ -439,10 +442,10 @@ function main()
   	r_1 = parsed_args["r_1"]
 
   	θ = parsed_args["θ"]
-  	β_1 = parsed_args["β_1"]
-  	β_2 = parsed_args["β_2"]
+  	β = parsed_args["β"]
   	ω_1 = parsed_args["ω_1"]
   	ω_2 = parsed_args["ω_2"]
+	γ_1 = parsed_args["γ_1"]
   	γ_2 = parsed_args["γ_2"]
   	δ = parsed_args["δ"]
 	print_level = parsed_args["print_level"]
@@ -459,8 +462,7 @@ function main()
 	criteria = String.(criteria)
 	# criteria = criteria[1:2]
 	# criteria = criteria[3:4]
-  	# run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β, ω, γ_2, r_1, δ, min_nvar, max_nvar, train_batch_count, train_batch_index, parsed_args["solver"])
-	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1)
+	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1)
 	@info criteria
 	@info problem_data_vec
 	df_geomean_results = runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)

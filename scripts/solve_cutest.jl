@@ -52,15 +52,10 @@ function parse_command_line()
     arg_type = Float64
     default = 0.1
 
-    "--β_1"
-    help = "β_1 parameter for CAT"
-    arg_type = Float64
-    default = 0.1
-
-    "--β_2"
+    "--β"
     help = "β parameter for CAT"
     arg_type = Float64
-    default = 0.8
+    default = 0.1
 
     "--ω_1"
     help = "ω_1 parameter for CAT"
@@ -71,6 +66,11 @@ function parse_command_line()
     help = "ω_2 parameter for CAT"
     arg_type = Float64
     default = 20.0
+
+	"--γ_1"
+    help = "γ_1 parameter for CAT"
+    arg_type = Float64
+    default = 0.01
 
     "--γ_2"
     help = "γ_2 parameter for CAT"
@@ -127,13 +127,13 @@ function main()
 
   if parsed_args["solver"] == "CAT" || parsed_args["solver"] == "CAT_GALAHAD_FACTORIZATION" || parsed_args["solver"] == "CAT_GALAHAD_ITERATIVE"
     θ = parsed_args["θ"]
-    β_1 = parsed_args["β_1"]
-		β_2 = parsed_args["β_2"]
+    β = parsed_args["β"]
     ω_1 = parsed_args["ω_1"]
-		ω_2 = parsed_args["ω_2"]
+	ω_2 = parsed_args["ω_2"]
+	γ_1 = parsed_args["γ_1"]
     γ_2 = parsed_args["γ_2"]
     δ = parsed_args["δ"]
-    run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, δ, min_nvar, max_nvar, print_level, parsed_args["solver"])
+    run_cutest_with_CAT(folder_name, default_problems, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, δ, min_nvar, max_nvar, print_level, parsed_args["solver"])
   elseif parsed_args["solver"] == "NewtonTrustRegion"
     run_cutest_with_newton_trust_region(folder_name, default_problems, max_it, max_time, tol_opt, r_1, min_nvar, max_nvar, print_level)
   elseif parsed_args["solver"] == "ARC"

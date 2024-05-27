@@ -69,10 +69,10 @@ function run_cutest_with_CAT(
     max_time::Float64,
     tol_opt::Float64,
     θ::Float64,
-    β_1::Float64,
-	β_2::Float64,
+    β::Float64,
 	ω_1::Float64,
 	ω_2::Float64,
+	γ_1::Float64,
     γ_2::Float64,
     r_1::Float64,
 	δ::Float64,
@@ -95,8 +95,8 @@ function run_cutest_with_CAT(
 	end
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
-	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end
 
 function run_cutest_with_newton_trust_region(
@@ -118,11 +118,11 @@ function run_cutest_with_newton_trust_region(
     end
 
     optimization_method = optimization_metnod_newton_trust_region
-	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+	θ = β = ω_1 = ω_2 = γ_1 = γ_2 = 0.0
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
-	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level)
 end
 
 function run_cutest_with_arc(
@@ -144,11 +144,11 @@ function run_cutest_with_arc(
     end
 
     optimization_method = optimization_method_arc_galahad
-	θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+	θ = β = ω_1 = ω_2 = γ_1 = γ_2 = 0.0
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
-    executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, σ_1, print_level)
+    executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, σ_1, print_level)
 end
 
 function run_cutest_with_tru(
@@ -170,11 +170,11 @@ function run_cutest_with_tru(
 		cutest_problems = CUTEst.select(contype="unc")
     end
 
-    θ = β_1 = β_2 = ω_1 = ω_2 = γ_2 = 0.0
+    θ = β = ω_1 = ω_2 = γ_1 = γ_2 = 0.0
 
     train_problems, test_problems = get_problems_test_train_split(cutest_problems)
-    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
-	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, print_level)
+    executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level)
+	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level)
 end
 
 function runModelFromProblem(
@@ -186,10 +186,10 @@ function runModelFromProblem(
     max_time::Float64,
     tol_opt::Float64,
     θ::Float64,
-    β_1::Float64,
-	β_2::Float64,
+    β::Float64,
 	ω_1::Float64,
 	ω_2::Float64,
+	γ_1::Float64,
     γ_2::Float64,
     r_1::Float64,
 	δ::Float64,
@@ -204,7 +204,7 @@ function runModelFromProblem(
 		@info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 		if optimization_method == optimization_method_CAT || optimization_method == optimization_method_CAT_theta_0 || optimization_method == optimization_method_CAT_galahad_factorization || optimization_method == optimization_method_CAT_galahad_iterative
-			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β_1, β_2, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_2, max_time, print_level)
+			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, β, θ, ω_1, ω_2, r_1, max_it, tol_opt, γ_1, γ_2, max_time, print_level)
 	        x_1 = problem.nlp.meta.x0
 			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	        x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
@@ -324,11 +324,11 @@ function executeCUTEST_Models_benchmark(
     max_time::Float64=30*60,
     tol_opt::Float64=1e-5,
     θ::Float64=0.1,
-	β_1::Float64=0.1,
-	β_2::Float64=0.8,
+	β::Float64=0.1,
 	ω_1::Float64=4.0,
 	ω_2::Float64=20.0,
-    γ_2::Float64=0.8,
+	γ_1::Float64=0.01,
+    γ_2::Float64=0.2,
     r_1::Float64=1.0,
 	print_level::Int64=0,
 	δ::Float64=0.0,
@@ -349,7 +349,7 @@ function executeCUTEST_Models_benchmark(
 	if !isfile(total_results_output_file_path)
 		mkpath(total_results_output_directory);
 		open(total_results_output_file_path,"a") do iteration_status_csv_file
-			write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,count_factorization\n");
+			write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,total_factorization_evaluation\n");
     	end
 	end
 
@@ -361,7 +361,7 @@ function executeCUTEST_Models_benchmark(
 			@info "$dates_format Skipping Problem $problem."
 			continue
 		else
-        	runModelFromProblem(prefix, problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β_1, β_2, ω_1, ω_2, γ_2, r_1, δ, print_level, trust_region_method_subproblem_solver)
+        	runModelFromProblem(prefix, problem, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, δ, print_level, trust_region_method_subproblem_solver)
 		end
     end
 	df = DataFrame(CSV.File(total_results_output_file_path))

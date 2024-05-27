@@ -176,7 +176,7 @@ function test_create_dummy_problem()
     nlp = createDummyNLPModel()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -184,7 +184,7 @@ function test_create_dummy_problem2()
     nlp = createDummyNLPModel2()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -192,7 +192,7 @@ function test_create_simple_convex_nlp_model()
     nlp = createSimpleConvexNLPModeL()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -200,7 +200,7 @@ function test_create_complex_convex_nlp1_model()
     nlp = createComplexConvexNLPModeL1()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -208,7 +208,7 @@ function test_create_complex_nlp_modeL1()
     nlp = createComplexNLPModeL1()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -216,7 +216,7 @@ function test_create_problem_sin_cos_mode_nlp1()
     nlp = createSinCosNLPModeL1()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -224,7 +224,7 @@ function test_create_problem_sin_cos_mode_nlp2()
     nlp = createSinCosNLPModeL2()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -232,7 +232,7 @@ function test_create_simple_univariate_convex_model()
     nlp = createSimpleUnivariateConvexProblem()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -240,7 +240,7 @@ function test_create_simple_univariate_convex_model_solved_same_as_Newton()
     nlp = createSimpleUnivariateConvexProblem()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(2.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -248,7 +248,7 @@ function test_create_hard_case_using_simple_univariate_convex_model()
     nlp = createHardCaseUsingSimpleUnivariateConvexProblem()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -256,7 +256,7 @@ function test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -264,7 +264,7 @@ function test_create_hard_case_using_bivariate_convex_model_1()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem1()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -272,7 +272,7 @@ function test_create_hard_case_using_bivariate_convex_model_2()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem2()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
@@ -280,7 +280,7 @@ function test_create_hard_case_using_bivariate_convex_model_3()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem3()
     termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
     initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(5.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.25, 0.5, 2.0, 2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
     return problem
 end
 
