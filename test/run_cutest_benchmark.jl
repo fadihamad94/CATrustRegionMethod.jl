@@ -210,6 +210,7 @@ function runModelFromProblem(
 	        x_1 = problem.nlp.meta.x0
 			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	        x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
+			status_string = convertSsatusCodeToStatusString(status)
 			end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 			function_value = NaN
 			gradient_value = NaN
@@ -225,9 +226,9 @@ function runModelFromProblem(
 			println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 			@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 			directory_name = string(folder_name, "/", prefix, "_$optimization_method")
-			outputResultsToCSVFile(directory_name, cutest_problem, iteration_stats)
+			# outputResultsToCSVFile(directory_name, cutest_problem, iteration_stats)
 			total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
-			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
+			outputIterationsStatusToCSVFile(start_time, end_time, directory_name, cutest_problem, status_string, computation_stats_modified, total_iterations_count, optimization_method, total_number_factorizations)
 		elseif optimization_method == optimization_metnod_newton_trust_region
 			d = Optim.TwiceDifferentiable(f, g!, h!, nlp.meta.x0)
 			start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -463,6 +464,18 @@ end
 function outputResultsToCSVFile(directory_name::String, cutest_problem::String, results::DataFrame)
 	cutest_problem_file_name = string(directory_name, "/$cutest_problem.csv")
     CSV.write(cutest_problem_file_name, results, header = true)
+end
+
+function convertSsatusCodeToStatusString(status)
+    dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT ",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT => "TRUST_REGION_RADIUS_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR")
+    return dict_status_code[status]
 end
 
 function outputIterationsStatusToCSVFile(
