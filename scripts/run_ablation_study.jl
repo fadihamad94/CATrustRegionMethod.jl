@@ -88,7 +88,7 @@ function parse_command_line()
     "--r_1"
     help = "Initial trust region radius. Negative values indicates using our default radius of value 10 * \frac{|g(x_1)||}{||H(x_1)||}"
     arg_type = Float64
-    default = 1.0
+    default = 0.0
 
     "--min_nvar"
     help = "The minimum number of variables for CUTEst model"
@@ -135,6 +135,7 @@ function createProblemData(
 		problem_data_vec = []
 		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 		compute_ρ_hat_approach = "NOT DEFAULT"
+		radius_update_rule_approach = "DEFAULT"
 		problem_data = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach)
 		for crt in criteria
 			if crt == "original"
@@ -237,7 +238,8 @@ function runModelFromProblem(
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 
 		total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
-		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
+		status_string = convertSsatusCodeToStatusString(status)
+		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status_string, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
 	catch e
 		@show e
 		status = "INCOMPLETE"
@@ -263,13 +265,13 @@ function computeGeomeans(df::DataFrame, max_it::Int64)
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
 			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
-			push!(total_factorization_count_vec, df[i, :].count_factorization)
+			push!(total_factorization_count_vec, df[i, :].total_factorization_evaluation)
 			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
 			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
 			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
 		else
 			push!(total_iterations_count_vec, max_it + 1)
-			push!(total_factorization_count_vec, max(df[i, :].count_factorization, max_it + 1))
+			push!(total_factorization_count_vec, max(df[i, :].total_factorization_evaluation, max_it + 1))
 			push!(total_function_evaluation_vec, max_it + 1)
 			push!(total_gradient_evaluation_vec, max_it + 1)
 			push!(total_hessian_evaluation_vec, max_it + 1)
@@ -279,13 +281,13 @@ function computeGeomeans(df::DataFrame, max_it::Int64)
 	df_results_new = DataFrame()
 	df_results_new.problem_name = df.problem_name
 	df_results_new.total_iterations_count = total_iterations_count_vec
-	df_results_new.count_factorization = total_factorization_count_vec
+	df_results_new.total_factorization_evaluation = total_factorization_count_vec
 	df_results_new.total_function_evaluation = total_function_evaluation_vec
 	df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
 	df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
 
 	geomean_total_iterations_count = geomean(df_results_new.total_iterations_count)
-	geomean_count_factorization = geomean(df_results_new.count_factorization)
+	geomean_count_factorization = geomean(df_results_new.total_factorization_evaluation)
 	geomean_total_function_evaluation = geomean(df_results_new.total_function_evaluation)
 	geomean_total_gradient_evaluation = geomean(df_results_new.total_gradient_evaluation)
 	geomean_total_hessian_evaluation  = geomean(df_results_new.total_hessian_evaluation)
@@ -469,6 +471,18 @@ function main()
 	@info problem_data_vec
 	df_geomean_results = runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
 	plotFigures(df_geomean_results, folder_name)
+end
+
+function convertSsatusCodeToStatusString(status)
+    dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT => "TRUST_REGION_RADIUS_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR")
+    return dict_status_code[status]
 end
 
 main()
