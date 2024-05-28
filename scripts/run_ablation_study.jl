@@ -134,31 +134,34 @@ function createProblemData(
 	r_1::Float64)
 		problem_data_vec = []
 		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
-		compute_ρ_hat_approach = "NOT DEFAULT"
+		compute_ρ_hat_approach = "DEFAULT"
 		radius_update_rule_approach = "DEFAULT"
-		problem_data = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach)
+		problem_data_original = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach)
 		for crt in criteria
 			if crt == "original"
+				problem_data = problem_data_original
 				push!(problem_data_vec, problem_data)
 			elseif crt == "ρ_hat_rule"
-				compute_ρ_hat_approach = "DEFAULT"
+				problem_data = problem_data_original
+				compute_ρ_hat_approach = "NOT DEFAULT"
 				# Create a new tuple with the specified element overridden
 				index_to_override = 12
 				new_problem_data = (problem_data[1:index_to_override-1]..., compute_ρ_hat_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
 			elseif crt == "initial_radius"
-				r_1 = 0.0
+				problem_data = problem_data_original
+				r_1 = 1.0
 				index_to_override = 5
 				new_problem_data = (problem_data[1:index_to_override-1]..., r_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
 			# radius_update_rule
 			else
+				problem_data = problem_data_original
 				index_to_override = 4
 				new_problem_data = (problem_data[1:index_to_override-1]..., ω_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
-				push!(problem_data_vec, problem_data)
 				index_to_override = 13
 				radius_update_rule_approach = "NOT DEFAULT"
 				new_problem_data = (problem_data[1:index_to_override-1]..., radius_update_rule_approach, problem_data[index_to_override+1:end]...)
