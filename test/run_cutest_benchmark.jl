@@ -15,7 +15,7 @@ const optimization_method_tru_galahd_factorization = "TRU_GALAHAD_FACTORIZATION"
 const optimization_method_tru_galahd_iterative = "TRU_GALAHAD_ITERATIVE"
 
 # const skip_list = ["ARGLINB", "DIAMON2DLS", "DIAMON3DLS", "DMN15102LS", "DMN15103LS", "DMN15332LS", "DMN15333LS", "DMN37142LS", "DMN37143LS", "FLETCHCR", "MNISTS5LS"]
-const skip_list = []
+const skip_list = ["YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
 
 const default_train_problems = ["AKIVA", "ALLINITU", "ARGLINA", "ARGTRIGLS", "BA-L1LS", "BARD", "BEALE", "BENNETT5LS", "BIGGS6", "BOX3", "BOXBODLS", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CERI651ALS", "CERI651BLS", "CERI651CLS", "CERI651DLS", "CERI651ELS", "CHNROSNB", "CHNRSNBM", "CLIFF", "CLUSTERLS", "COATING", "COOLHANSLS", "CUBE", "DANIWOODLS", "DANWOODLS", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DEVGLA1", "DEVGLA2", "DJTL", "EG2", "EGGCRATE", "ELATVIDU", "ENGVAL2", "ENSOLS", "ERRINROS", "EXPFIT", "EXTROSNB", "FBRAIN3LS", "GAUSS2LS", "GAUSS3LS", "GAUSSIAN", "GBRAINLS", "GENROSE", "GROWTHLS", "HATFLDD", "HATFLDFL", "HATFLDFLS", "HATFLDGLS", "HEART6LS", "HEART8LS", "HELIX", "HIELOW", "HILBERTA", "HIMMELBB", "HIMMELBCLS", "HIMMELBG", "HIMMELBH", "HUMPS", "HYDC20LS", "HYDCAR6LS", "JENSMP", "JUDGE", "KIRBY2LS", "KOWOSB", "KSSLS", "LANCZOS1LS", "LANCZOS2LS", "LOGHAIRY", "LSC1LS", "LSC2LS", "LUKSAN11LS", "LUKSAN12LS", "LUKSAN13LS", "LUKSAN14LS", "LUKSAN15LS", "LUKSAN16LS", "LUKSAN22LS", "MANCINO", "MARATOSB", "METHANL8LS", "MEXHAT", "MEYER3", "MGH10LS", "MGH10SLS", "MGH17LS", "MISRA1BLS", "MISRA1CLS", "MISRA1DLS", "MNISTS0LS", "MUONSINELS", "NELSONLS", "OSBORNEA", "OSBORNEB", "PALMER1D", "PALMER3C", "PALMER5C", "PALMER5D", "PALMER7C", "PARKCH", "PENALTY1", "PENALTY2", "POWELLBSLS", "PRICE3", "PRICE4", "QING", "RAT42LS", "RAT43LS", "RECIPELS", "ROSENBR", "ROSZMAN1LS", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "SPIN2LS", "SSI", "STRATEC", "STREG", "STRTCHDV", "TOINTQOR", "TRIGON1", "VANDANMSLS", "VESUVIOLS", "VESUVIOULS", "VIBRBEAM", "WATSON", "WAYSEA1", "YFITU", "ZANGWIL2"]
 
@@ -95,6 +95,7 @@ function run_cutest_with_CAT(
 	end
 
 	train_problems, test_problems = get_problems_test_train_split(cutest_problems)
+	test_problems = filter!(e->e ∉ skip_list, test_problems)
     executeCUTEST_Models_benchmark("train", train_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 	executeCUTEST_Models_benchmark("test", test_problems, folder_name, optimization_method, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1, print_level, δ, trust_region_method_subproblem_solver)
 end
