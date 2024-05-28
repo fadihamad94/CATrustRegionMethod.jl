@@ -75,7 +75,7 @@ function parse_command_line()
     "--γ_2"
     help = "γ_2 parameter for CAT"
     arg_type = Float64
-    default = 0.1
+    default = 0.8
 
     "--r_1"
     help = "Initial trust region radius"

@@ -290,11 +290,11 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     nlp = problem.nlp
     x_k = [1.0, 1.0]
     δ = 0.0
-    ϵ = 0.8
+    γ_2 = 0.8
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -311,21 +311,21 @@ function test_optimize_second_order_model_phi_zero()
     nlp = problem.nlp
     x_k = nlp.meta.x0
     δ = 0.0
-    ϵ = 0.2
+    γ_2 = 0.8
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k - [0.106, 0.139], 2) <= tol
     @test abs(δ_k - 64.0) <= tol
-    @test abs(norm(d_k, 2) - r) <= ϵ
+    @test abs(norm(d_k, 2) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
@@ -335,21 +335,21 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     nlp = problem.nlp
     x_k = [0.0, 1.0]
     δ = 250.0
-    ϵ = 0.2
+    γ_2 = 0.8
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k - [-0.0032, 0.179], 2) <= tol
     @test abs(δ_k - 500.0) <= tol
-    @test abs(norm(d_k) - r) <= ϵ
+    @test abs(norm(d_k) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
@@ -359,18 +359,18 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     nlp = problem.nlp
     x_k = [0.0]
     δ = 0.0
-    ϵ = 0.2
+    γ_2 = 0.8
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     # @test norm((x_k + d_k) - [0.5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     # @test norm(obj(nlp, x_k + d_k) - 0.25, 2) <= tol
@@ -382,18 +382,19 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     nlp = problem.nlp
     x_k = [0.0]
     δ = 0.0
-    ϵ = 0.2
+    γ_2 = 0.8
     r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test δ_k == 0.0
+    @test norm((H + δ_k * I) \ g, 2) <= r
+    @test norm(d_k) <= r
     @test norm((x_k + d_k) - [1.0], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test norm(obj(nlp, x_k + d_k) - 0, 2) <= tol
@@ -405,20 +406,19 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     nlp = problem.nlp
     x_k = [0.0, 0.0]
     δ = 0.0
-    ϵ = 0.2
+    γ_2 = 0.8
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
-    @test abs(norm((H + δ_k * I) \ g, 2) - r) <= ϵ
-    @test (1 - ϵ) * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
+    @test abs(norm((H + δ_k * I) \ g, 2) - r) <= γ_2
     # @test norm((x_k + d_k) - [0.333, 0.333], 2) <= tol
     @test δ_k == 2.5
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -431,20 +431,20 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     # x_k = [0.01]
     x_k = [1e-5]
     δ = 0.0
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     # r = 2.0
     r = 0.0002
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     temp_ = norm(g)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k == 2.1) <= tol
     @test norm((x_k + d_k) - [0.00021], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -457,18 +457,18 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     nlp = problem.nlp
     x_k = [1e-5, 1e-5]
     δ = 0.0
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     r = 0.00029
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 2.097) <= tol
     @test norm((x_k + d_k) - [2.00001e-5, 2.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -481,18 +481,18 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     nlp = problem.nlp
     x_k = [1e-5, 1e-5]
     δ = 0.0
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     r = 4.0e-4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm(d_k) - r) <= tol
     @test abs(δ_k - 4.1) <= tol
     @test norm((x_k + d_k) - [2e-5, 4.00001e-5], 2) <= tol
@@ -506,18 +506,18 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     nlp = problem.nlp
     x_k = [1e-5, 1e-5]
     δ = 0.0
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     r = 0.00245
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k, 2) - r <= tol
     @test abs(δ_k - 2.102) <= tol
     @test norm((x_k + d_k) - [-0.0025, 2.00001e-5], 2) <= tol
@@ -531,18 +531,18 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     nlp = problem.nlp
     x_k = [1e-5, 1e-5]
     δ = 0.0
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     r = 0.00114
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 8.099) <= tol
     @test norm((x_k + d_k) - [8.1e-4, 8.1e-4], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -554,28 +554,28 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     r = 0.08343452704764227
     g = [3.4679032978601754e-9, 7.39587593251434e-9, 2.7183407851072428e-8, -0.003000483357027406, 0.008419134290306829]
     H = [66.0 65.0743102550725 65.67263629092243 -1.2900082661017744e7 3.6178787247129455e7; 65.0743102550725 64.1661603269859 64.75315415279051 -1.265594646809823e7 3.549303722643331e7; 65.67263629092243 64.75315415279051 65.34746955501134 -1.2813679600892197e7 3.59360895721625e7; -1.2900082661017744e7 -1.265594646809823e7 -1.2813679600892197e7 3.3981511777610044e12 -9.544912385973707e12; 3.6178787247129455e7 3.549303722643331e7 3.59360895721625e7 -9.544912385973707e12 2.6810622545473246e13]
-    ϵ = 1e-8
+    γ_2 = 1 - 1e-8
     δ = 6.205227748467783e-12
 
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     @test success
     @test abs(δ - 2.5e-8) <= tol
     @test abs(δ_prime - 0.0133096) <= tol
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_2, δ_prime, r, min_grad, 0)
     @test success
     @test abs(δ_m - 5.173e-7) <= tol
 
     r = 0.0018
-    ϵ = 1e-5
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g))
+    γ_2 = 1 - 1e-5
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test ϵ * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test ϵ * r <= norm(d_k) <= r
+    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
+    @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 5.173e-7) <= tol
     @test abs(δ_k - 1e-5) <= ϵ && abs(norm(d_k, 2) - r) <= ϵ
 end
@@ -588,13 +588,12 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     H = hess(nlp, x)
     r = 1e-8
     δ = 1e-10
-    ϵ = 1e-5
+    γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, ϵ, r, norm(g),print_level)
+    status, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g),print_level)
     @test status == false
     @test norm(d_k) == 0.0
     @test hard_case == true
-    @test abs(norm(d_k) - r) <= ϵ
 end
 
 function optimize_models()

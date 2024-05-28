@@ -414,7 +414,7 @@ function phi(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, prin
 
 		if (δ <= 1e-6 && computed_norm <= r)
 			return 0, temp_d, positive_definite
-		elseif computed_norm < (1 - γ_2) * r
+		elseif computed_norm < γ_2 * r
 	        return -1, temp_d, positive_definite
 		elseif computed_norm <= r
 	        return 0, temp_d, positive_definite
@@ -619,7 +619,7 @@ function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ
 		if print_level >= 2
 			@info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
 		end
-		if (1 - γ_2) * r <= norm(temp_d_k) <= r
+		if γ_2 * r <= norm(temp_d_k) <= r
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
 			return true, eigenvalue, temp_d_k, total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration

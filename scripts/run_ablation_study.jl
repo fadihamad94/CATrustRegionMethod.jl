@@ -83,7 +83,7 @@ function parse_command_line()
     "--γ_2"
     help = "γ_2 parameter for CAT"
     arg_type = Float64
-    default = 0.2
+    default = 0.8
 
     "--r_1"
     help = "Initial trust region radius. Negative values indicates using our default radius of value 10 * \frac{|g(x_1)||}{||H(x_1)||}"
@@ -358,7 +358,7 @@ function runProblems(
 
 		df = DataFrame(CSV.File(total_results_output_file_path))
 		df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
-		max_it = problem_data_vec[index][7]
+		max_it = problem_data_vec[index][6]
 		geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
 		counts = countmap(df.status)
 		total_failure = length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
