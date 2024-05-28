@@ -217,11 +217,7 @@ function runModelFromProblem(
 		status = Nothing
 		iteration_stats = Nothing
 		total_iterations_count = 0
-		if criteria == "original" || criteria == "CAT"
-			x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT_original_alg(problem, x_1, δ, solver)
-	    else
-			x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
-		end
+		x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
 		end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		function_value = NaN
 		gradient_value = NaN
