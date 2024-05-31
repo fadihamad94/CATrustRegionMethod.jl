@@ -68,18 +68,12 @@ struct EmptyNLPEvaluator <: MOI.AbstractNLPEvaluator end
 MOI.features_available(::EmptyNLPEvaluator) = [:Grad, :Jac, :Hess]
 MOI.initialize(::EmptyNLPEvaluator, features) = nothing
 MOI.eval_objective(::EmptyNLPEvaluator, x) = NaN
-function MOI.eval_constraint(::EmptyNLPEvaluator, g, x)
-    @assert length(g) == 0
-    return
-end
+
 
 MOI.eval_objective_gradient(::EmptyNLPEvaluator, g, x) = nothing
 MOI.jacobian_structure(::EmptyNLPEvaluator) = Tuple{Int64,Int64}[]
 MOI.hessian_lagrangian_structure(::EmptyNLPEvaluator) = Tuple{Int64,Int64}[]
-function MOI.eval_constraint_jacobian(::EmptyNLPEvaluator, J, x)
-    @assert length(J) == 0
-    return
-end
+
 function MOI.eval_hessian_lagrangian(::EmptyNLPEvaluator, H, x, s, mu)
     @assert length(H) == 0
     return
@@ -91,13 +85,7 @@ end
 
 empty_nlp_data() = MOI.NLPBlockData([], EmptyNLPEvaluator(), false)
 
-mutable struct ConstraintInfo{F, S}
-    func::F
-    set::S
-    dual_start::Union{Nothing, Float64}
-end
 
-ConstraintInfo(func, set) = ConstraintInfo(func, set, nothing)
 
 mutable struct CATSolver <: MOI.AbstractOptimizer
     #inner::CATProblem
@@ -108,18 +96,9 @@ mutable struct CATSolver <: MOI.AbstractOptimizer
 	nlp_data::MOI.NLPBlockData
 	sense :: MOI.OptimizationSense
 	objective::Union{MOI.VariableIndex, MOI.ScalarAffineFunction{Float64}, MOI.ScalarQuadraticFunction{Float64}, Nothing}
-    linear_le_constraints::Vector{ConstraintInfo{MOI.ScalarAffineFunction{Float64}, MOI.LessThan{Float64}}}
-    linear_ge_constraints::Vector{ConstraintInfo{MOI.ScalarAffineFunction{Float64}, MOI.GreaterThan{Float64}}}
-    linear_eq_constraints::Vector{ConstraintInfo{MOI.ScalarAffineFunction{Float64}, MOI.EqualTo{Float64}}}
-	linear_int_constraints::Vector{ConstraintInfo{MOI.ScalarAffineFunction{Float64}, MOI.Interval{Float64}}}
-    quadratic_le_constraints::Vector{ConstraintInfo{MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}}}
-    quadratic_ge_constraints::Vector{ConstraintInfo{MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}}}
-    quadratic_eq_constraints::Vector{ConstraintInfo{MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}}}
-	quadratic_int_constraints::Vector{ConstraintInfo{MOI.ScalarQuadraticFunction{Float64}, MOI.Interval{Float64}}}
+
     nlp_dual_start::Union{Nothing, Vector{Float64}}
 
-	##Constraint mappings
-	constraint_mapping::Dict{MOI.ConstraintIndex, Union{Cint, Vector{Cint}}}
 	# Parameters.
 	silent::Bool
 	options::Dict{String, Any}
@@ -141,16 +120,7 @@ function CATSolver(; options...)
         empty_nlp_data(),
         MOI.FEASIBILITY_SENSE,
         nothing,
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-		[],
-		[],
         nothing,
-		Dict{MOI.ConstraintIndex, Int}(),
         false,
         options_dict,
         NaN,
@@ -177,15 +147,7 @@ MOI.get(::CATSolver, ::MOI.SolverName) = "CATSolver"
 function MOI.is_empty(model::CATSolver)
     return isempty(model.variable_info) &&
            model.nlp_data.evaluator isa EmptyNLPEvaluator &&
-           model.sense == MOI.FEASIBILITY_SENSE &&
-           isempty(model.linear_le_constraints) &&
-           isempty(model.linear_ge_constraints) &&
-           isempty(model.linear_eq_constraints) &&
-		   isempty(model.linear_int_constraints) &&
-           isempty(model.quadratic_le_constraints) &&
-           isempty(model.quadratic_ge_constraints) &&
-           isempty(model.quadratic_eq_constraints) &&
-		   isempty(model.quadratic_int_constraints)
+           model.sense == MOI.FEASIBILITY_SENSE
 end
 
 # MOI.get(model::CATSolver, ::MOI.SolveTime) = model.solve_time
@@ -196,14 +158,6 @@ function MOI.empty!(model::CATSolver)
     model.nlp_data = empty_nlp_data()
     model.sense = MOI.FEASIBILITY_SENSE
     model.objective = nothing
-    empty!(model.linear_le_constraints)
-    empty!(model.linear_ge_constraints)
-    empty!(model.linear_eq_constraints)
-	empty!(model.linear_int_constraints)
-    empty!(model.quadratic_le_constraints)
-    empty!(model.quadratic_ge_constraints)
-    empty!(model.quadratic_eq_constraints)
-	empty!(model.quadratic_int_constraints)
     model.nlp_dual_start = nothing
 end
 
@@ -231,21 +185,6 @@ end
 function MOI.copy_to(model::CATSolver, src::MOI.ModelLike; copy_names = false)
     return MOI.Utilities.default_copy_to(model, src, copy_names)
 end
-# MathOptInterface constraints
-
-##################################################
-## Support constraints
-MOI.supports_constraint(::CATSolver, ::Type{MOI.VariableIndex}, ::Type{<:SS}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarAffineFunction{Float64}}, ::Type{MOI.LessThan{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarAffineFunction{Float64}}, ::Type{MOI.GreaterThan{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarAffineFunction{Float64}}, ::Type{MOI.EqualTo{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarAffineFunction{Float64}}, ::Type{MOI.Interval{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarQuadraticFunction{Float64}}, ::Type{MOI.LessThan{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarQuadraticFunction{Float64}}, ::Type{MOI.GreaterThan{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarQuadraticFunction{Float64}}, ::Type{MOI.EqualTo{Float64}}) = true
-MOI.supports_constraint(::CATSolver, ::Type{MOI.ScalarQuadraticFunction{Float64}}, ::Type{MOI.Interval{Float64}}) = true
-
-MOI.supports_constraint(::CATSolver, ::Type{<:SF}, ::Type{<:SS}) = true
 
 function has_upper_bound(model::CATSolver, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].has_upper_bound
@@ -258,190 +197,6 @@ end
 function is_fixed(model::CATSolver, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].is_fixed
 end
-
-function MOI.add_constraint(
-    model::CATSolver, v::MOI.VariableIndex, lt::MOI.LessThan{Float64},
-)
-	vi = v
-    MOI.throw_if_not_valid(model, vi)
-    if isnan(lt.upper)
-        error("Invalid upper bound value $(lt.upper).")
-    end
-    if has_upper_bound(model, vi)
-        throw(MOI.UpperBoundAlreadySet{typeof(lt), typeof(lt)}(vi))
-    end
-    if is_fixed(model, vi)
-        throw(MOI.UpperBoundAlreadySet{MOI.EqualTo{Float64}, typeof(lt)}(vi))
-    end
-
-	col = vi.value
-    model.variable_info[col].upper_bound = lt.upper
-    model.variable_info[col].has_upper_bound = true
-	ci = MOI.ConstraintIndex{MOI.VariableIndex, MOI.LessThan{Float64}}(col)
-    return ci
-end
-
-function MOI.set(
-    model::CATSolver,
-    ::MOI.ConstraintSet,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.LessThan{Float64}},
-    set::MOI.LessThan{Float64},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].upper_bound = set.upper
-    return
-end
-
-function MOI.delete(
-    model::CATSolver,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.LessThan{Float64}},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].upper_bound = Inf
-    model.variable_info[ci.value].has_upper_bound = false
-    return
-end
-
-function MOI.add_constraint(
-    model::CATSolver, v::MOI.VariableIndex, gt::MOI.GreaterThan{Float64},
-)
-	vi = v
-    MOI.throw_if_not_valid(model, vi)
-    if isnan(gt.lower)
-        error("Invalid lower bound value $(gt.lower).")
-    end
-    if has_lower_bound(model, vi)
-        throw(MOI.LowerBoundAlreadySet{typeof(gt), typeof(gt)}(vi))
-    end
-    if is_fixed(model, vi)
-        throw(MOI.LowerBoundAlreadySet{MOI.EqualTo{Float64}, typeof(gt)}(vi))
-    end
-
-	col = vi.value
-    model.variable_info[col].lower_bound = gt.lower
-    model.variable_info[col].has_lower_bound = true
-	ci = MOI.ConstraintIndex{MOI.VariableIndex, MOI.GreaterThan{Float64}}(col)
-	return ci
-end
-
-function MOI.set(
-    model::CATSolver,
-    ::MOI.ConstraintSet,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.GreaterThan{Float64}},
-    set::MOI.GreaterThan{Float64},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].lower_bound = set.lower
-    return
-end
-
-function MOI.delete(
-    model::CATSolver,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.GreaterThan{Float64}},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].lower_bound = -Inf
-    model.variable_info[ci.value].has_lower_bound = false
-    return
-end
-
-function MOI.add_constraint(
-    model::CATSolver,  v::MOI.VariableIndex, eq::MOI.EqualTo{Float64},
-)
-	vi = v
-    MOI.throw_if_not_valid(model, vi)
-    if isnan(eq.value)
-        error("Invalid fixed value $(eq.value).")
-    end
-    if has_lower_bound(model, vi)
-        throw(MOI.LowerBoundAlreadySet{MOI.GreaterThan{Float64}, typeof(eq)}(vi))
-    end
-    if has_upper_bound(model, vi)
-        throw(MOI.UpperBoundAlreadySet{MOI.LessThan{Float64}, typeof(eq)}(vi))
-    end
-    if is_fixed(model, vi)
-        throw(MOI.LowerBoundAlreadySet{typeof(eq), typeof(eq)}(vi))
-    end
-
-	col = vi.value
-    model.variable_info[col].lower_bound = eq.value
-    model.variable_info[col].upper_bound = eq.value
-    model.variable_info[col].is_fixed = true
-	ci = MOI.ConstraintIndex{MOI.VariableIndex, MOI.EqualTo{Float64}}(col)
-	return ci
-end
-
-function MOI.set(
-    model::CATSolver,
-    ::MOI.ConstraintSet,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.EqualTo{Float64}},
-    set::MOI.EqualTo{Float64},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].lower_bound = set.value
-    model.variable_info[ci.value].upper_bound = set.value
-    return
-end
-
-function MOI.delete(
-    model::CATSolver,
-    ci::MOI.ConstraintIndex{MOI.VariableIndex, MOI.EqualTo{Float64}},
-)
-    MOI.throw_if_not_valid(model, ci)
-    model.variable_info[ci.value].lower_bound = -Inf
-    model.variable_info[ci.value].upper_bound = Inf
-    model.variable_info[ci.value].is_fixed = false
-    return
-end
-
-macro define_add_constraint(function_type, set_type, prefix)
-    array_name = Symbol(string(prefix) * "_constraints")
-    return quote
-        function MOI.add_constraint(
-            model::CATSolver, func::$function_type, set::$set_type,
-        )
-            check_inbounds(model, func)
-            push!(model.$(array_name), ConstraintInfo(func, set))
-
-			col = length(model.$(array_name))
-			ci = MOI.ConstraintIndex{$function_type, $set_type}(col)
-			model.constraint_mapping[ci] = convert(Cint, col)
-			return ci
-        end
-    end
-end
-
-@define_add_constraint(
-    MOI.ScalarAffineFunction{Float64}, MOI.LessThan{Float64}, linear_le,
-)
-
-@define_add_constraint(
-    MOI.ScalarAffineFunction{Float64}, MOI.GreaterThan{Float64}, linear_ge,
-)
-
-@define_add_constraint(
-    MOI.ScalarAffineFunction{Float64}, MOI.EqualTo{Float64}, linear_eq,
-)
-
-@define_add_constraint(
-    MOI.ScalarAffineFunction{Float64}, MOI.Interval{Float64}, linear_int,
-)
-
-@define_add_constraint(
-    MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}, quadratic_le,
-)
-
-@define_add_constraint(
-    MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}, quadratic_ge,
-)
-
-@define_add_constraint(
-    MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}, quadratic_eq,
-)
-
-@define_add_constraint(
-    MOI.ScalarQuadraticFunction{Float64}, MOI.Interval{Float64}, quadratic_int,
-)
 
 function MOI.set(
     model::CATSolver,
@@ -496,18 +251,9 @@ end
 
 function hessian_lagrangian_structure(model::CATSolver, nlp :: MathOptNLPModel)
     hessian_sparsity = Tuple{Int64,Int64}[]
-    if model.objective !== nothing
-        append_to_hessian_sparsity!(hessian_sparsity, model.obj)
-    end
-    for info in model.quadratic_le_constraints
-        append_to_hessian_sparsity!(hessian_sparsity, info.func)
-    end
-    for info in model.quadratic_ge_constraints
-        append_to_hessian_sparsity!(hessian_sparsity, info.func)
-    end
-    for info in model.quadratic_eq_constraints
-        append_to_hessian_sparsity!(hessian_sparsity, info.func)
-    end
+	@assert model.objective !== nothing
+    append_to_hessian_sparsity!(hessian_sparsity, model.obj)
+
     nlp_hessian_sparsity =
         MOI.hessian_lagrangian_structure(nlp.eval)
     append!(hessian_sparsity, nlp_hessian_sparsity)
@@ -583,8 +329,6 @@ function MOI.optimize!(solver :: CATSolver)
 		has_hessian = (:Hess in features)
 		has_hessvec = (:HessVec in features)
 		has_nlp_objective = solver.nlp_data.has_objective
-		num_nlp_constraints = length(solver.nlp_data.constraint_bounds)
-		has_nlp_constraints = (num_nlp_constraints > 0)
 
 		init_feat = Symbol[]
 		has_nlp_objective && push!(init_feat, :Grad)
@@ -592,10 +336,6 @@ function MOI.optimize!(solver :: CATSolver)
 			push!(init_feat, :Hess)
 		elseif has_hessvec
 			push!(init_feat, :HessVec)
-		end
-
-		if has_nlp_constraints
-			push!(init_feat, :Jac)
 		end
 
 		MOI.initialize(solver.nlp_data.evaluator, init_feat)
