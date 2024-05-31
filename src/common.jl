@@ -29,7 +29,7 @@ mutable struct TerminationConditions
 	MINIMUM_TRUST_REGION_RADIUS::Float64
 	MINIMUM_OBJECTIVE_FUNCTION::Float64
 
-	function TerminationConditions(MAX_ITERATIONS::Int64=10000, gradient_termination_tolerance::Float64=1e-5,
+	function TerminationConditions(MAX_ITERATIONS::Int64=100000, gradient_termination_tolerance::Float64=1e-5,
 		MAX_TIME::Float64=30 * 60.0, MINIMUM_TRUST_REGION_RADIUS::Float64=1e-40, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
 		@assert(MAX_ITERATIONS > 0)
 		@assert(gradient_termination_tolerance > 0)
@@ -67,7 +67,7 @@ mutable struct Problem_Data
     # initialize parameters
     function Problem_Data(nlp::Union{AbstractNLPModel, MathOptInterface.NLPBlockData, Nothing}=nothing, termination_conditions_struct::TerminationConditions=termination_conditions_struct_default,
 						  initial_radius_struct::INITIAL_RADIUS_STRUCT=initial_radius_struct_default, β_1::Float64=0.1,
-						  θ::Float64=0.1, ω_1::Float64=4.0, ω_2::Float64=20.0, γ_1::Float64=0.01, γ_2::Float64=0.8,
+						  θ::Float64=0.1, ω_1::Float64=8.0, ω_2::Float64=20.0, γ_1::Float64=0.01, γ_2::Float64=0.8,
 						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT", radius_update_rule_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
         @assert(θ >= 0 && θ < 1)
