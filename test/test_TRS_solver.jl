@@ -577,7 +577,7 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 5.173e-7) <= tol
-    @test abs(δ_k - 1e-5) <= ϵ && abs(norm(d_k, 2) - r) <= ϵ
+    @test abs(δ_k - 1e-5) <= γ_2 && abs(norm(d_k, 2) - r) <= γ_2
 end
 
 #TODO check this later

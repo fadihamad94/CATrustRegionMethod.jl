@@ -1,6 +1,7 @@
 using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, DataFrames, SparseArrays
 
-include("../src/CAT.jl")
+# include("../src/CAT.jl")
+include("../src/CAT_Module.jl")
 include("./test_TRS_solver.jl")
 
 function test_phi_positive_one()
@@ -526,4 +527,46 @@ end
 
 @testset "optimization_CAT_tests" begin
     optimize_models()
+end
+
+######################
+##### ROSENBROOK #####
+######################
+function rosenbrook1()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    @NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
+    return model
+end
+
+function optimize_models_JuMPInterface()
+    model = rosenbrook1()
+    set_optimizer(model, consistently_adaptive_trust_region_method.CATSolver)
+
+    #Test using JUMP
+    optimize!(model)
+    x = JuMP.value.(model[:x])
+    y = JuMP.value.(model[:y])
+    status = MOI.get(model, MOI.TerminationStatus())
+    @test status == :Optimal
+    # Retrieve the solver instance
+    optimizer = backend(model).optimizer.model
+
+    nlp = MathOptNLPModel(model)
+    termination_conditions_struct_default = consistently_adaptive_trust_region_method.TerminationConditions()
+    initial_radius_struct_default = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT()
+    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct_default, initial_radius_struct_default)
+    x_k, status, iteration_stats, computation_stats, itr =  consistently_adaptive_trust_region_method.CAT(problem, nlp.meta.x0, 0.0)
+
+    @test x_k == [x, y]
+    @test itr == optimizer.inner.itr
+    @test x_k == optimizer.inner.x
+    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test iteration_stats == optimizer.inner.iteration_stats
+    @test computation_stats == optimizer.inner.computation_stats
+end
+
+@testset "optimization_using_JUMP_interface" begin
+    optimize_models_JuMPInterface()
 end
