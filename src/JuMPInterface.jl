@@ -55,7 +55,7 @@ mutable struct CATProblem
     # Custom attributes of the CATSolver
     iteration_stats::DataFrame
     computation_stats::Dict{String, Int64}
-    pars::Class_parameters
+    pars::Problem_Data
 
     function CATProblem()
         return new()
@@ -549,7 +549,7 @@ end
 ############################
 
 function create_pars_JuMP(options )
-    pars = Class_parameters()
+    pars = Problem_Data()
     for (param,value) in options
       what = split(String(param),"!") # we represent a parameter such as termination_conditions.MAX_ITERATIONS as termination_conditions!MAX_ITERATIONS because we cannot pass termination_conditions.MAX_ITERATIONS as a parameter
       node = pars # root
@@ -602,8 +602,6 @@ function MOI.optimize!(solver :: CATSolver)
 	end
 
     pars = create_pars_JuMP(solver.options)
-	@info pars
-	@info "-----"
 	x, status, iteration_stats, computation_stats, k = CAT_solve(solver, pars)
 
 	status_str = convertSsatusCodeToStatusString(status)
