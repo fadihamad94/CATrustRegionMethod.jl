@@ -16,15 +16,18 @@ const CURRENT_DIRECTORY = dirname(Base.source_path())
 const RESULTS_DEFAULT_DIRECTORY_NAME = string(CURRENT_DIRECTORY, "/../results")
 
 const PROBLEM_NAME_COLUMN = "problem_name"
+const OBJECTIVE_VALUE_COLUMN = "function_value"
 const TOTAL_ITERATIONS_COUNT_COLUMN = "total_iterations_count"
 const TOTAL_FUNCTION_EVALUATION_COLUMN = "total_function_evaluation"
 const TOTAL_GRADIENT_EVALUATION_COLUMN = "total_gradient_evaluation"
 const TOTAL_HESSIAN_EVALUATION_COLUMN = "total_hessian_evaluation"
 const TOTAL_FACTORIZATION_EVALUATION_COLUMN = "total_factorization_evaluation"
+const TOTAL_EXECUTION_TIME_COLUMN = "total_execution_time"
 
 const STATUS_COLUMN = "status"
 
 DEFAULT_FAILURES_VAL = 200001
+DEFAULT_FAILURES_TIME_VAL = 18000
 
 function readFile(filePath::String)
     df = DataFrame(CSV.File(filePath))
@@ -57,7 +60,8 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     df_test = readFile(total_results_file_path_test)
     df = vcat(df_train, df_test)
     sorted_df = sort(df, PROBLEM_NAME_COLUMN)
-
+    sorted_df[!, OBJECTIVE_VALUE_COLUMN] = replace!(sorted_df[!, OBJECTIVE_VALUE_COLUMN], NaN => Inf)
+    # sorted_df[!, OBJECTIVE_VALUE_COLUMN] = replace!(sorted_df[!, OBJECTIVE_VALUE_COLUMN], -Inf => Inf) #TODO check if -Inf exists for some problems
     successful_statuses = Set(["SUCCESS", "OPTIMAL", "success", "optimal"])
 
     # Update the columns to a default value where 'status' is not in the set of successful statuses
@@ -66,6 +70,7 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     sorted_df.total_gradient_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
     sorted_df.total_hessian_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
     sorted_df.total_factorization_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
+    sorted_df.total_execution_time[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_TIME_VAL
 
     return sorted_df
 end
@@ -210,6 +215,24 @@ function collectAllResults(directoryName::String)
     df_results_FACTORIZATION = mergeDataFrames(df_results_CAT_I_FACTORIZATION_TOTAL, df_results_CAT_II_FACTORIZATION_TOTAL, df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL, df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL, df_results_TRUST_REGION_OPTIMIZATION_TOTAL)
     saveCSVFile(directoryName, "factorization", df_results_FACTORIZATION)
 
+    #Generate results for all algorithm for execution time in a separate file
+    df_results_CAT_I_FACTORIZATION_TOTAL = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, OBJECTIVE_VALUE_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_TOTAL = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [OBJECTIVE_VALUE_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [OBJECTIVE_VALUE_COLUMN]), names(df_results_CAT_II_THETA_ZERO_FACTORIZATION))]
+    df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [OBJECTIVE_VALUE_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
+    df_results_TRUST_REGION_OPTIMIZATION_TOTAL= df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [OBJECTIVE_VALUE_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
+    df_results_OBJECTIVE_VALUE= mergeDataFrames(df_results_CAT_I_FACTORIZATION_TOTAL, df_results_CAT_II_FACTORIZATION_TOTAL, df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL, df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL, df_results_TRUST_REGION_OPTIMIZATION_TOTAL)
+    saveCSVFile(directoryName, "obj_value", df_results_OBJECTIVE_VALUE)
+
+    #Generate results for all algorithm for objective values in a separate file
+    df_results_CAT_I_FACTORIZATION_TOTAL = df_results_CAT_I_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_EXECUTION_TIME_COLUMN]), names(df_results_CAT_I_FACTORIZATION))]
+    df_results_CAT_II_FACTORIZATION_TOTAL = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [TOTAL_EXECUTION_TIME_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
+    df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL = df_results_CAT_II_THETA_ZERO_FACTORIZATION[:, filter(x -> (x in [TOTAL_EXECUTION_TIME_COLUMN]), names(df_results_CAT_II_THETA_ZERO_FACTORIZATION))]
+    df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL = df_results_ARC_FACTORIZATION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_EXECUTION_TIME_COLUMN]), names(df_results_ARC_FACTORIZATION_OPTIMIZATION))]
+    df_results_TRUST_REGION_OPTIMIZATION_TOTAL= df_results_TRUST_REGION_OPTIMIZATION[:, filter(x -> (x in [TOTAL_EXECUTION_TIME_COLUMN]), names(df_results_TRUST_REGION_OPTIMIZATION))]
+    df_results_TOTAL_EXECUTION_TIME= mergeDataFrames(df_results_CAT_I_FACTORIZATION_TOTAL, df_results_CAT_II_FACTORIZATION_TOTAL, df_results_CAT_II_THETA_ZERO_FACTORIZATION_TOTAL, df_results_ARC_FACTORIZATION_OPTIMIZATION_TOTAL, df_results_TRUST_REGION_OPTIMIZATION_TOTAL)
+    saveCSVFile(directoryName, "time", df_results_TOTAL_EXECUTION_TIME)
+
     #Generate results for comparison CAT II for total number of function evaluations in a separate file
     df_results_CAT_II_FACTORIZATION_FUNCTION = df_results_CAT_II_FACTORIZATION[:, filter(x -> (x in [PROBLEM_NAME_COLUMN, TOTAL_FUNCTION_EVALUATION_COLUMN]), names(df_results_CAT_II_FACTORIZATION))]
     df_results_FUNCTION_CAT_II = mergeDataFrames_CAT_II(df_results_CAT_II_FACTORIZATION_FUNCTION, df_results_CAT_II_THETA_ZERO_FACTORIZATION_FUNCTION)
@@ -224,7 +247,10 @@ end
 # dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_debug_collect_results_script"
 # collectAllResults(dir_)
 
-dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
+# dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
+# collectAllResults(dir_)
+
+dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION"
 collectAllResults(dir_)
 
 # using Plots
