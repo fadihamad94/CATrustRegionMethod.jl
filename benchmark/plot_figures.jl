@@ -249,7 +249,7 @@ function plotFiguresComparisonFinal(df::DataFrame, criteria::String, dirrectoryN
     data = Matrix(df[!, Not(criteria)])
     # criteria_keyrword = criteria == "Iterations" ? "iterations" : "gradient evaluations"
     dict_ = Dict("Iterations" => "function evaluations", "Gradients" => "gradient evaluations",
-    "Hessian" => "hessian evaluations", "Factorization" => "factorization", "Time" => "seconds")
+    "Hessian" => "hessian evaluations", "Factorization" => "factorizations", "Time" => "seconds")
     criteria_keyrword = dict_[criteria]
     LIMIT = criteria == "Time" ? TIME_LIMIT : ITR_LIMIT
     # @show first(df[!, criteria], 10)
@@ -348,7 +348,7 @@ function plotFiguresComparisonObjFinal(df::DataFrame, criteria::String, dirrecto
         xlims=(1e-6, 1e6),
         xaxis=:log10
     )
-    yaxis!((0.55, 0.95), 0.55:0.05:0.95)
+    yaxis!((0.55, 1.0), 0.55:0.05:1.0)
     fullPath = string(dirrectoryName, "/", plot_name)
     png(fullPath)
 end
@@ -357,6 +357,7 @@ function generateFiguresObjComparisonFinal(dirrectoryName::String)
     fileName = "all_algorithm_results_obj_value.csv"
     fullPath = string(dirrectoryName, "/", fileName)
     df = readFile(fullPath)
+
     # results = computeFraction(df, TOTAL_OBJ_VECTOR, "Obj")
     results = computeFraction(df, TOTAL_OBJ_VECTOR, "Obj")
     # @show names(results)
@@ -383,5 +384,8 @@ end
 # dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
 # plotAllFigures(dir_)
 
-dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION"
+# dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION"
+# plotAllFigures(dir_)
+
+dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION_FORTRAN/"
 plotAllFigures(dir_)

@@ -1,4 +1,5 @@
 using CSV, DataFrames
+using Printf
 
 const CAT_FACTORIZATION_I = "CAT_I_FACTORIZATION"
 const CAT_FACTORIZATION_II = "CAT_II_FACTORIZATION"
@@ -28,6 +29,7 @@ const STATUS_COLUMN = "status"
 
 DEFAULT_FAILURES_VAL = 200001
 DEFAULT_FAILURES_TIME_VAL = 18000
+DEFAULT_FAILURES_OBJ_VAL = Inf
 
 function readFile(filePath::String)
     df = DataFrame(CSV.File(filePath))
@@ -49,6 +51,12 @@ function buildFilePath(directoryName::String, optimization_method::String)
     return total_results_file_path
 end
 
+function format_to_six_decimals(x)
+    str =  @sprintf("%.6f", x)
+    num = parse(Float64, str)
+    return num
+end
+
 function collectResultsPerSolver(directoryName::String, optimization_method::String)
     total_results_file_path_train = buildFilePath(directoryName, "train_$optimization_method")
     total_results_file_path_test  = buildFilePath(directoryName, "test_$optimization_method")
@@ -61,6 +69,8 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     df = vcat(df_train, df_test)
     sorted_df = sort(df, PROBLEM_NAME_COLUMN)
     sorted_df[!, OBJECTIVE_VALUE_COLUMN] = replace!(sorted_df[!, OBJECTIVE_VALUE_COLUMN], NaN => Inf)
+    sorted_df[!, OBJECTIVE_VALUE_COLUMN] = map(format_to_six_decimals, sorted_df[!, OBJECTIVE_VALUE_COLUMN])
+
     # sorted_df[!, OBJECTIVE_VALUE_COLUMN] = replace!(sorted_df[!, OBJECTIVE_VALUE_COLUMN], -Inf => Inf) #TODO check if -Inf exists for some problems
     successful_statuses = Set(["SUCCESS", "OPTIMAL", "success", "optimal"])
 
@@ -71,6 +81,7 @@ function collectResultsPerSolver(directoryName::String, optimization_method::Str
     sorted_df.total_hessian_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
     sorted_df.total_factorization_evaluation[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_VAL
     sorted_df.total_execution_time[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_TIME_VAL
+    # sorted_df.function_value[.!in.(sorted_df.status, Ref(successful_statuses))] .= DEFAULT_FAILURES_OBJ_VAL
 
     return sorted_df
 end
@@ -250,7 +261,10 @@ end
 # dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/results_final_all_algorithms/CUTEST"
 # collectAllResults(dir_)
 
-dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION"
+# dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION"
+# collectAllResults(dir_)
+
+dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION_FORTRAN/"
 collectAllResults(dir_)
 
 # using Plots
