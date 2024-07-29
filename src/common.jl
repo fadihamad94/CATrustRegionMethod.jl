@@ -62,13 +62,12 @@ mutable struct Problem_Data
 	γ_1::Float64
 	γ_2::Float64
 	print_level::Int64
-	compute_ρ_hat_approach::String
 	radius_update_rule_approach::String
     # initialize parameters
     function Problem_Data(nlp::Union{AbstractNLPModel, MathOptInterface.NLPBlockData, Nothing}=nothing, termination_conditions_struct::TerminationConditions=termination_conditions_struct_default,
 						  initial_radius_struct::INITIAL_RADIUS_STRUCT=initial_radius_struct_default, β_1::Float64=0.1,
 						  θ::Float64=0.1, ω_1::Float64=8.0, ω_2::Float64=20.0, γ_1::Float64=0.01, γ_2::Float64=0.8,
-						  print_level::Int64=0, compute_ρ_hat_approach::String="DEFAULT", radius_update_rule_approach::String="DEFAULT")
+						  print_level::Int64=0, radius_update_rule_approach::String="DEFAULT")
 		@assert(β_1 > 0 && β_1 < 1)
         @assert(θ >= 0 && θ < 1)
         @assert(ω_1 >= 1)
@@ -77,6 +76,6 @@ mutable struct Problem_Data
 		γ_3 = 1.0 # //TODO Make param
 		@assert(0 <= γ_1 < 0.5 * ( 1 - ((β_1 * θ) / (γ_3 * (1 - β_1)))))
 		@assert(1/ω_1 < γ_2 <= 1)
-        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, θ, ω_1, ω_2, γ_1, γ_2, print_level, compute_ρ_hat_approach, radius_update_rule_approach)
+        return new(nlp, termination_conditions_struct, initial_radius_struct, β_1, θ, ω_1, ω_2, γ_1, γ_2, print_level, radius_update_rule_approach)
     end
 end

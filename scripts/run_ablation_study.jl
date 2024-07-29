@@ -136,21 +136,17 @@ function createProblemData(
 	r_1::Float64)
 		problem_data_vec = []
 		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
-		compute_ρ_hat_approach = "DEFAULT"
 		radius_update_rule_approach = "DEFAULT"
-		problem_data_original = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach)
+		problem_data_original = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, radius_update_rule_approach)
 		for crt in criteria
 			if crt == "original"
 				problem_data = problem_data_original
 				push!(problem_data_vec, problem_data)
 			elseif crt == "ρ_hat_rule"
 				problem_data = problem_data_original
-				compute_ρ_hat_approach = "NOT DEFAULT"
 				index_to_override = 2
 				new_problem_data = (problem_data[1:index_to_override-1]..., 0.0, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
-				index_to_override = 12
-				new_problem_data = (problem_data[1:index_to_override-1]..., compute_ρ_hat_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
 				push!(problem_data_vec, problem_data)
 			elseif crt == "initial_radius"
@@ -166,7 +162,7 @@ function createProblemData(
 				index_to_override = 4
 				new_problem_data = (problem_data[1:index_to_override-1]..., ω_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
-				index_to_override = 13
+				index_to_override = 12
 				radius_update_rule_approach = "NOT DEFAULT"
 				new_problem_data = (problem_data[1:index_to_override-1]..., radius_update_rule_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
@@ -205,7 +201,7 @@ function runModelFromProblem(
 	)
 
 	global nlp = nothing
-	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, compute_ρ_hat_approach, radius_update_rule_approach = problem_data
+	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, radius_update_rule_approach = problem_data
 	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	try
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -214,7 +210,7 @@ function runModelFromProblem(
 		nlp = CUTEstModel(cutest_problem)
 		termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(max_it, tol_opt, max_time)
 		initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
-		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level, compute_ρ_hat_approach, radius_update_rule_approach)
+		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level, radius_update_rule_approach)
 		x_1 = problem.nlp.meta.x0
 		x = x_1
 		status = Nothing

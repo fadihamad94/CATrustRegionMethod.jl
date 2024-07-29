@@ -4,13 +4,9 @@ function computeSecondOrderModel(f::Float64, g::Vector{Float64}, H, d_k::Vector{
     return transpose(g) * d_k + 0.5 * transpose(d_k) * H * d_k
 end
 
-function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64, print_level::Int64=0, approach::String="DEFAULT")
+function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64, print_level::Int64=0)
     second_order_model_value_current_iterate = computeSecondOrderModel(fval_current,  gval_current, H, d_k)
 	guarantee_factor = θ * 0.5 * min(norm(gval_current, 2), norm(gval_next, 2)) * norm(d_k, 2)
-	if approach != "DEFAULT"
-		# guarantee_factor = θ * 0.5 * norm(gval_next, 2) * norm(d_k, 2)
-		guarantee_factor = 0.0
-	end
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
 	ρ_hat = actual_fct_decrease / (predicted_fct_decrease + guarantee_factor)
@@ -194,7 +190,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     nlp = problem.nlp
 	@assert nlp != nothing
 	print_level = problem.print_level
-	compute_ρ_hat_approach = problem.compute_ρ_hat_approach
 	radius_update_rule_approach = problem.radius_update_rule_approach
 
 	#Algorithm history
@@ -407,7 +402,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					println("gval_next operation took $total_time_temp.")
 				end
 				start_time_temp = time()
-				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level, compute_ρ_hat_approach)
+				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
 				if print_level >= 2
