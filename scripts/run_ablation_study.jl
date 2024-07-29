@@ -146,7 +146,9 @@ function createProblemData(
 			elseif crt == "ρ_hat_rule"
 				problem_data = problem_data_original
 				compute_ρ_hat_approach = "NOT DEFAULT"
-				# Create a new tuple with the specified element overridden
+				index_to_override = 2
+				new_problem_data = (problem_data[1:index_to_override-1]..., 0.0, problem_data[index_to_override+1:end]...)
+				problem_data = new_problem_data
 				index_to_override = 12
 				new_problem_data = (problem_data[1:index_to_override-1]..., compute_ρ_hat_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
@@ -387,7 +389,6 @@ function main()
     	end
   	end
 	criteria = vcat("original", criteria)
-    	criteria = vcat("original_theta_0", criteria)
 	criteria = String.(criteria)
 	#criteria = criteria[2:2]
 	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1)
