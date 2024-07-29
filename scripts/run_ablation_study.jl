@@ -2,7 +2,7 @@ import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics, Plots
 using Plots.PlotMeasures
 using Random
-include("../src/CAT.jl")
+include("../src/CAT_Module.jl")
 
 """
 Defines parses and args.
