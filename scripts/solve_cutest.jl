@@ -1,5 +1,5 @@
 import ArgParse
-include("../test/run_cutest_benchmark.jl")
+include("../benchmark/run_cutest_benchmark.jl")
 
 """
 Defines parses and args.

@@ -525,7 +525,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 end
 
 function evalFunction(nlp, x)
-	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel
+	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return obj(nlp, x)
 	else
 		return MOI.eval_objective(nlp.evaluator, x)
@@ -533,7 +533,7 @@ function evalFunction(nlp, x)
 end
 
 function getProblemName(nlp)
-	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel
+	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return nlp.meta.name
 	else
 		return "Generic"
@@ -541,7 +541,7 @@ function getProblemName(nlp)
 end
 
 function evalGradient(nlp, x)
-	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel
+	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return grad(nlp, x)
 	else
 		gval = zeros(length(x))
@@ -562,7 +562,7 @@ function restoreFullMatrix(A)
 end
 
 function evalHessian(nlp, x)
-	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel
+	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return hess(nlp, x)
 	else
 		hessian = spzeros(Float64, (length(x), length(x)))

@@ -1,7 +1,7 @@
 __precompile__()
 #Main algorithm code goes here
 module consistently_adaptive_trust_region_method
-using NLPModels, LinearAlgebra, DataFrames, SparseArrays, EnumX, JuMP, NLPModelsJuMP, MathOptInterface, Random
+using NLPModels, LinearAlgebra, DataFrames, SparseArrays, EnumX, JuMP, NLPModelsJuMP, MathOptInterface, Random, CUTEst
 
 export TerminationConditions, INITIAL_RADIUS_STRUCT, Problem_Data
 export phi, findinterval, bisection, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT, CAT_solve
