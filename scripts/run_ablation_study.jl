@@ -402,7 +402,7 @@ function convertSsatusCodeToStatusString(status)
     consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
-    consistently_adaptive_trust_region_method.TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT => "TRUST_REGION_RADIUS_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
     consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR")
     return dict_status_code[status]
