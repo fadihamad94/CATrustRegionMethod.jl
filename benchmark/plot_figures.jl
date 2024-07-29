@@ -62,6 +62,7 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Int64}, criteria::String)
 
     if criteria == "Obj"
         df_temp = select(df, Not(:PROBLEM_NAME))
+        df_temp = select(df_temp, Not(:CAT_II_THETA_ZERO_FACTORIZATION))
         # Calculate the minimum obj_value per row
         min_obj_val = [minimum(row) for row in eachrow(df_temp)]
 
@@ -73,7 +74,7 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Int64}, criteria::String)
         for total in TOTAL
             total_problems_CAT_I_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_I_FACTORIZATION]))
             total_problems_CAT_II_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_II_FACTORIZATION]))
-            total_problems_CAT_II_THETA_ZERO_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_II_THETA_ZERO_FACTORIZATION]))
+            total_problems_CAT_II_THETA_ZERO_FACTORIZATION = 0
             total_problems_ARC_FACTORIZATION = length(filterRowsObj(total, df[:, ARC_FACTORIZATION]))
             total_problems_TRU_FACTORIZATION = length(filterRowsObj(total, df[:, TRU_FACTORIZATION]))
             push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_TRU_FACTORIZATION / total_number_problems))
@@ -153,6 +154,7 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Float64}, criteria::String
 
     if criteria == "Obj"
         df_temp = select(df, Not(:PROBLEM_NAME))
+        df_temp = select(df_temp, Not(:CAT_II_THETA_ZERO_FACTORIZATION))
         # Calculate the minimum obj_value per row
         min_obj_val = [minimum(row) for row in eachrow(df_temp)]
 
@@ -164,7 +166,7 @@ function computeFraction(df::DataFrame, TOTAL::Vector{Float64}, criteria::String
         for total in TOTAL
             total_problems_CAT_I_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_I_FACTORIZATION]))
             total_problems_CAT_II_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_II_FACTORIZATION]))
-            total_problems_CAT_II_THETA_ZERO_FACTORIZATION = length(filterRowsObj(total, df[:, CAT_II_THETA_ZERO_FACTORIZATION]))
+            total_problems_CAT_II_THETA_ZERO_FACTORIZATION = 0
             total_problems_ARC_FACTORIZATION = length(filterRowsObj(total, df[:, ARC_FACTORIZATION]))
             total_problems_TRU_FACTORIZATION = length(filterRowsObj(total, df[:, TRU_FACTORIZATION]))
             push!(results_fraction, (total, total_problems_CAT_I_FACTORIZATION / total_number_problems, total_problems_CAT_II_FACTORIZATION / total_number_problems, total_problems_CAT_II_THETA_ZERO_FACTORIZATION / total_number_problems, total_problems_ARC_FACTORIZATION / total_number_problems, total_problems_TRU_FACTORIZATION / total_number_problems))
@@ -344,6 +346,3 @@ function plotAllFigures(dirrectoryName::String)
     generateFiguresTimeComparisonFinal(dirrectoryName)
     generateFiguresObjComparisonFinal(dirrectoryName)
 end
-
-dir_ = "/Users/fah33/PhD_Research/CAT_RESULTS_BENCHMARK/ALL_ALGORITHM_FINAL_RESULTS_LAST_VERSION_FORTRAN/"
-plotAllFigures(dir_)
