@@ -374,7 +374,7 @@ function convertSsatusCodeToStatusString(status)
     consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
-    consistently_adaptive_trust_region_method.TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT => "TRUST_REGION_RADIUS_LIMIT",
+    consistently_adaptive_trust_region_method.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
     consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
     consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR")
     return dict_status_code[status]
@@ -386,7 +386,7 @@ function status_CAT_To_JuMP(status::String)
         return :Optimal
     elseif status == "UNBOUNDED"
         return :Unbounded
-    elseif status == "ITERATION_LIMIT" || status == "TIME_LIMIT" || status == "TRUST_REGION_RADIUS_LIMIT"
+    elseif status == "ITERATION_LIMIT" || status == "TIME_LIMIT" || status == "STEP_SIZE_LIMIT"
         return :UserLimit
     else
         return :Error

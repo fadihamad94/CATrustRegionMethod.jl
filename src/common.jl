@@ -14,8 +14,8 @@ An Enum of possible values for the `TerminationStatus` attribute.
     TIME_LIMIT
     "The algorithm stopped because it ran out of memory."
     MEMORY_LIMIT
-	"The algorithm stopped because the trust region radius is too small."
-	TRUST_REGION_RADIUS_LIMIT
+	"The algorithm stopped because the step size is too small."
+	STEP_SIZE_LIMIT
     "The algorithm stopped because it encountered unrecoverable numerical error."
     NUMERICAL_ERROR
     "The algorithm stopped because of an error not covered by one of the statuses defined above."
@@ -26,16 +26,16 @@ mutable struct TerminationConditions
 	MAX_ITERATIONS::Int64
 	gradient_termination_tolerance::Float64
 	MAX_TIME::Float64
-	MINIMUM_TRUST_REGION_RADIUS::Float64
+	STEP_SIZE_LIMIT::Float64
 	MINIMUM_OBJECTIVE_FUNCTION::Float64
 
 	function TerminationConditions(MAX_ITERATIONS::Int64=100000, gradient_termination_tolerance::Float64=1e-5,
-		MAX_TIME::Float64=30 * 60.0, MINIMUM_TRUST_REGION_RADIUS::Float64=1e-40, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
+		MAX_TIME::Float64=30 * 60.0, STEP_SIZE_LIMIT::Float64=1e-40, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
 		@assert(MAX_ITERATIONS > 0)
 		@assert(gradient_termination_tolerance > 0)
         @assert(MAX_TIME > 0)
-		@assert(MINIMUM_TRUST_REGION_RADIUS > 0)
-		return new(MAX_ITERATIONS, gradient_termination_tolerance, MAX_TIME, MINIMUM_TRUST_REGION_RADIUS, MINIMUM_OBJECTIVE_FUNCTION)
+		@assert(STEP_SIZE_LIMIT > 0)
+		return new(MAX_ITERATIONS, gradient_termination_tolerance, MAX_TIME, STEP_SIZE_LIMIT, MINIMUM_OBJECTIVE_FUNCTION)
 	end
 end
 

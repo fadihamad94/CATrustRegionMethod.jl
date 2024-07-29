@@ -6,7 +6,8 @@ function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current:
     second_order_model_value_current_iterate = computeSecondOrderModel(fval_current,  gval_current, H, d_k)
 	guarantee_factor = θ * 0.5 * min(norm(gval_current, 2), norm(gval_next, 2)) * norm(d_k, 2)
 	if approach != "DEFAULT"
-		guarantee_factor = θ * 0.5 * norm(gval_next, 2) * norm(d_k, 2)
+		# guarantee_factor = θ * 0.5 * norm(gval_next, 2) * norm(d_k, 2)
+		guarantee_factor = 0.0
 	end
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
@@ -79,6 +80,34 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	return fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 end
 
+
+function power_iteration(A; num_iter=20, tol=1e-6)
+    n = size(A, 1)
+    v = rand(n)  # Initialize a random vector
+    v /= norm(v)  # Normalize the vector
+
+    λ = 0.0  # Initialize the largest eigenvalue
+    for i in 1:num_iter
+        Av = A * v
+        v_new = Av / norm(Av)  # Normalize the new vector
+        λ_new = dot(v_new, A * v_new)  # Rayleigh quotient
+
+        # Check for convergence
+        if abs(λ_new - λ) < tol
+            break
+        end
+
+        v = v_new
+        λ = λ_new
+    end
+    return λ, v
+end
+
+function matrix_l2_norm(A; num_iter=20, tol=1e-6)
+    λ_max, _ = power_iteration(A; num_iter=num_iter, tol=tol)  # Largest eigenvalue of A^T A
+    return abs(λ_max)  # Largest singular value (spectral norm)
+end
+
 function CAT_solve(m::JuMP.Model)
     nlp_raw = MathOptNLPModel(m)
     return CAT_solve(nlp_raw)
@@ -135,7 +164,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
     MAX_ITERATIONS = termination_conditions_struct.MAX_ITERATIONS
     MAX_TIME = termination_conditions_struct.MAX_TIME
     gradient_termination_tolerance = termination_conditions_struct.gradient_termination_tolerance
-	MINIMUM_TRUST_REGION_RADIUS = termination_conditions_struct.MINIMUM_TRUST_REGION_RADIUS
+	STEP_SIZE_LIMIT = termination_conditions_struct.STEP_SIZE_LIMIT
 	MINIMUM_OBJECTIVE_FUNCTION = termination_conditions_struct.MINIMUM_OBJECTIVE_FUNCTION
 
 	#Algorithm parameters
@@ -148,7 +177,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	θ = problem.θ
 	C = (2 + 3 * γ_3 * (1 - β_1)) / (3 * (γ_3 * (1 - 2 * γ_1) * (1 - β_1) - β_1 * θ))
 	ξ = 0.1# //TODO Make param
-	@assert ξ >= 1 / (6 * C)
+	# @assert ξ >= 1 / (6 * C)
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct
 	r_1 = initial_radius_struct.r_1
@@ -190,7 +219,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 		#If user doesn't change the starting radius, we select the radius as described in the paper:
 		#Initial radius heuristic selection rule : r_1 = 10 * ||gval_current|| / ||hessian_current||
 		if r_k <= 0.0
-			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULEE * norm(gval_current, Inf) / norm(hessian_current, Inf)
+			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULEE * norm(gval_current, 2) / matrix_l2_norm(hessian_current, num_iter=20)
 		end
 
         compute_hessian = false
@@ -328,7 +357,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 							d_k = zeros(length(x_k))
 						end
 					else
-						# In case we failt to solve the trust-region subproblem using our default solver, we mark that as a failure
+						# In case we fail to solve the trust-region subproblem using our default solver, we mark that as a failure
 						# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
 						ρ_k = -1.0
 						actual_fct_decrease = 0.0
@@ -441,12 +470,12 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	        end
 
 			# Check termination condition for trust-region radius if it becomes too small
-			if r_k <= MINIMUM_TRUST_REGION_RADIUS
+			if r_k <= STEP_SIZE_LIMIT || 0 < norm(d_k) <= STEP_SIZE_LIMIT
 				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0
 					println("$k. Trust region radius $r_k is too small.")
 				end
-				return x_k, TerminationStatusCode.TRUST_REGION_RADIUS_LIMIT, iteration_stats, computation_stats, k
+				return x_k, TerminationStatusCode.STEP_SIZE_LIMIT, iteration_stats, computation_stats, k
 			end
 
 			# Check termination condition for function value if the objective function is unbounded (safety check)
