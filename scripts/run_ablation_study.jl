@@ -1,6 +1,6 @@
 import ArgParse
-using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics, Plots
-using Plots.PlotMeasures
+using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics
+
 using Random
 include("../src/CAT_Module.jl")
 
@@ -352,62 +352,6 @@ function runProblems(
 	return df_geomean_results
 end
 
-function plotFigure(
-	values_x,
-	values_y,
-	ylabel::String,
-	xlabel::Matrix{String},
-	folder_name::String,
-	plot_name::String
-	)
-	plot(
-		values_x,
-		values_y,
-      	color = :blue,
-      	ylabel=ylabel,
-		legend=false
-		#size=(900, 500)
-    )
-    fullPath = string(folder_name, "/", plot_name)
-	@show fullPath
-    png(fullPath)
-end
-
-function plotFigures(
-	df::DataFrame,
-	folder_name::String,
-	)
-
-	criteria = df.criteria
-	total_failure = df.total_failure
-	geomean_total_iterations_count = df.geomean_total_iterations_count
-	geomean_total_function_evaluation = df.geomean_total_function_evaluation
-	geomean_total_gradient_evaluation = df.geomean_total_gradient_evaluation
-	geomean_total_hessian_evaluation = df.geomean_total_hessian_evaluation
-	geomean_count_factorization = df.geomean_count_factorization
-
-	new_criteria = [String.("CAT")]
-	for i in 2:length(criteria)
-		push!(new_criteria, string("+", criteria[i]))
-	end
-	xlabel = hcat(new_criteria...)
-	@show xlabel
-	#Plot how fraction evaluation changes based on each criteria
-	ylabel = "GEOMEAN for total # of function evaluations"
-	plot_name = "ablation_study_geomean_fct_evaluations.png"
-	plotFigure(new_criteria, geomean_total_function_evaluation, ylabel, xlabel, folder_name, plot_name)
-
-	#Plot how gradient evaluation changes based on each criteria
-	ylabel = "GEOMEAN for total # of gradient evaluations"
-	plot_name = "ablation_study_geomean_grad_evaluations.png"
-	plotFigure(new_criteria, geomean_total_gradient_evaluation, ylabel, xlabel, folder_name, plot_name)
-
-	#Plot number of failures based on each criteria
-	ylabel = "Total number of failures"
-	plot_name = "ablation_study_total_number_failures.png"
-	plotFigure(new_criteria, total_failure, ylabel, xlabel, folder_name, plot_name)
-end
-
 function main()
 	parsed_args = parse_command_line()
 	folder_name = parsed_args["output_dir"]
@@ -449,8 +393,7 @@ function main()
 	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1)
 	@info criteria
 	@info problem_data_vec
-	df_geomean_results = runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
-	plotFigures(df_geomean_results, folder_name)
+	runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
 end
 
 function convertSsatusCodeToStatusString(status)
