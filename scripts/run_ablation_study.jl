@@ -1,6 +1,7 @@
 import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics, Plots
 using Plots.PlotMeasures
+using Random
 include("../src/CAT.jl")
 
 """
@@ -9,17 +10,19 @@ Defines parses and args.
 A dictionary with the values of the command-line arguments.
 """
 
-# const skip_list = ["BA-L52LS", "BA-L73LS", "DMN15333LS", "DIAMON2DLS", "DMN15103LS", "DMN37142LS", "BA-L49LS", "NONCVXU2", "DMN15102LS", "DMN15332LS", "DMN37143LS", "EIGENCLS", "YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
 const skip_list = ["YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
 
-const default_train_problems = ["AKIVA", "ALLINITU", "ARGLINA", "ARGTRIGLS", "BA-L1LS", "BARD", "BEALE", "BENNETT5LS", "BIGGS6", "BOX3", "BOXBODLS", "BRKMCC", "BROWNAL", "BROWNBS", "BROWNDEN", "CERI651ALS", "CERI651BLS", "CERI651CLS", "CERI651DLS", "CERI651ELS", "CHNROSNB", "CHNRSNBM", "CLIFF", "CLUSTERLS", "COATING", "COOLHANSLS", "CUBE", "DANIWOODLS", "DANWOODLS", "DENSCHNA", "DENSCHNB", "DENSCHNC", "DENSCHND", "DENSCHNE", "DENSCHNF", "DEVGLA1", "DEVGLA2", "DJTL", "EG2", "EGGCRATE", "ELATVIDU", "ENGVAL2", "ENSOLS", "ERRINROS", "EXPFIT", "EXTROSNB", "FBRAIN3LS", "GAUSS2LS", "GAUSS3LS", "GAUSSIAN", "GBRAINLS", "GENROSE", "GROWTHLS", "HATFLDD", "HATFLDFL", "HATFLDFLS", "HATFLDGLS", "HEART6LS", "HEART8LS", "HELIX", "HIELOW", "HILBERTA", "HIMMELBB", "HIMMELBCLS", "HIMMELBG", "HIMMELBH", "HUMPS", "HYDC20LS", "HYDCAR6LS", "JENSMP", "JUDGE", "KIRBY2LS", "KOWOSB", "KSSLS", "LANCZOS1LS", "LANCZOS2LS", "LOGHAIRY", "LSC1LS", "LSC2LS", "LUKSAN11LS", "LUKSAN12LS", "LUKSAN13LS", "LUKSAN14LS", "LUKSAN15LS", "LUKSAN16LS", "LUKSAN22LS", "MANCINO", "MARATOSB", "METHANL8LS", "MEXHAT", "MEYER3", "MGH10LS", "MGH10SLS", "MGH17LS", "MISRA1BLS", "MISRA1CLS", "MISRA1DLS", "MNISTS0LS", "MUONSINELS", "NELSONLS", "OSBORNEA", "OSBORNEB", "PALMER1D", "PALMER3C", "PALMER5C", "PALMER5D", "PALMER7C", "PARKCH", "PENALTY1", "PENALTY2", "POWELLBSLS", "PRICE3", "PRICE4", "QING", "RAT42LS", "RAT43LS", "RECIPELS", "ROSENBR", "ROSZMAN1LS", "S308", "SENSORS", "SINEVAL", "SISSER", "SNAIL", "SPIN2LS", "SSI", "STRATEC", "STREG", "STRTCHDV", "TOINTQOR", "TRIGON1", "VANDANMSLS", "VESUVIOLS", "VESUVIOULS", "VIBRBEAM", "WATSON", "WAYSEA1", "YFITU", "ZANGWIL2"]
-
-const default_test_problems = ["DIXMAANI", "LIARWHD", "SCHMVETT", "VAREIGVL", "CYCLOOCFLS", "DIXMAANJ", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "DMN37142LS", "EIGENALS", "YATP1LS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "S308NE", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "DQRTIC", "MISRA1ALS", "BOX", "DMN37143LS", "TOINTGSS", "SPARSINE", "VESUVIALS", "INTEQNELS", "COATINGNE", "HAIRY", "PALMER1C", "BA-L49LS", "SSCOSINE", "NONCVXU2", "BROYDN7D", "COSINE", "DIXMAANO", "SPINLS", "BROYDN3DLS", "PALMER2C", "CURLY20", "NONMSQRT", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "YATP2CLS", "DMN15332LS", "SCURLY20", "NONDQUAR", "SCURLY30", "LUKSAN21LS", "ECKERLE4LS", "HAHN1LS", "DMN15102LS", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "BROYDNBDLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "DEVGLA2NE", "BA-L1SPLS", "BA-L73LS", "DIAMON2DLS", "THURBERLS", "GAUSS1LS", "PENALTY3", "MODBEALE", "PALMER6C", "DIXMAANN", "LUKSAN17LS", "EIGENCLS", "INDEFM", "SROSENBR", "MNISTS5LS", "INDEF", "ARWHEAD", "DIXON3DQ", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "NCB20", "FLETCBV3", "CHAINWOO", "HATFLDE", "DIXMAANP", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "MSQRTALS", "CURLY10", "BOXPOWER", "DQDRTIC", "OSCIGRAD", "FLETCHBV", "ARGLINB", "DIXMAANF", "BA-L16LS", "MOREBV", "NONDIA", "MSQRTBLS", "SCURLY10", "TQUARTIC", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "DIXMAANG", "HILBERTB", "DIXMAANK", "QUARTC", "EDENSCH", "YATP1CLS", "TOINTPSP", "SSBRYBND", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "SINQUAD", "DIXMAANL", "PALMER4C", "TESTQUAD", "EIGENBLS", "TRIGON2", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS"]
+const default_problems = ["ARGLINA", "ARGLINB", "ARGLINC", "ARGTRIGLS", "ARWHEAD", "BA-L16LS", "BA-L21LS", "BA-L49LS", "BA-L52LS", "BA-L73LS", "BDQRTIC", "BOX", "BOXPOWER", "BROWNAL", "BROYDN3DLS", "BROYDN7D", "BROYDNBDLS", "BRYBND", "CHAINWOO", "COATING", "COATINGNE", "COSINE", "CRAGGLVY", "CURLY10", "CURLY20", "CURLY30", "CYCLOOCFLS", "DIXMAANA", "DIXMAANB", "DIXMAANC", "DIXMAAND", "DIXMAANE", "DIXMAANF", "DIXMAANG", "DIXMAANH", "DIXMAANI", "DIXMAANJ", "DIXMAANK", "DIXMAANL", "DIXMAANM", "DIXMAANN", "DIXMAANO", "DIXMAANP", "DIXON3DQ", "DQDRTIC", "DQRTIC", "EDENSCH", "EG2", "EIGENALS", "EIGENBLS", "EIGENCLS", "ENGVAL1", "EXTROSNB", "FLETBV3M", "FLETCBV2", "FLETCBV3", "FLETCHBV", "FLETCHCR", "FMINSRF2", "FMINSURF", "FREUROTH", "GENHUMPS", "GENROSE", "INDEF", "INDEFM", "INTEQNELS", "JIMACK", "KSSLS", "LIARWHD", "LUKSAN11LS", "LUKSAN15LS", "LUKSAN16LS", "LUKSAN17LS", "LUKSAN21LS", "LUKSAN22LS", "MANCINO", "MNISTS0LS", "MNISTS5LS", "MODBEALE", "MOREBV", "MSQRTALS", "MSQRTBLS", "NCB20", "NCB20B", "NONCVXU2", "NONCVXUN", "NONDIA", "NONDQUAR", "NONMSQRT", "OSCIGRAD", "OSCIPATH", "PENALTY1", "PENALTY2", "PENALTY3", "POWELLSG", "POWER", "QING", "QUARTC", "SBRYBND", "SCHMVETT", "SCOSINE", "SCURLY10", "SCURLY20", "SCURLY30", "SENSORS", "SINQUAD", "SPARSINE", "SPARSQUR", "SPIN2LS", "SPINLS", "SPMSRTLS", "SROSENBR", "SSBRYBND", "SSCOSINE", "TESTQUAD", "TOINTGSS", "TQUARTIC", "TRIDIA", "VARDIM", "VAREIGVL", "WOODS", "YATP1CLS", "YATP1LS", "YATP2CLS", "YATP2LS"]
 
 function if_mkpath(dir::String)
   if !isdir(dir)
      mkpath(dir)
   end
+end
+
+function readFile(filePath::String)
+    df = DataFrame(CSV.File(filePath))
+    return df
 end
 
 function get_problem_list(min_nvar, max_nvar)
@@ -111,9 +114,8 @@ function parse_command_line()
     default = 0
 
     "--criteria"
-    help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `GALAHAD_TRS`, `initial_radius`, `radius_update_rule`."
+    help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `initial_radius`, `radius_update_rule`."
     arg_type = String
-    # default = "ρ_hat_rule,GALAHAD_TRS,initial_radius,radius_update_rule"
 	default = "ρ_hat_rule,radius_update_rule,initial_radius"
   end
 
@@ -173,24 +175,21 @@ function createProblemData(
 end
 
 function outputIterationsStatusToCSVFile(
-	start_time::String,
-	end_time::String,
 	cutest_problem::String,
 	status::String,
+	total_execution_time::Float64,
 	computation_stats::Dict,
-	total_results_output_file_path::String,
-	total_iterations_count::Integer,
-	count_factorization::Integer
+	total_results_output_file_path::String
 	)
     total_function_evaluation = Int(computation_stats["total_function_evaluation"])
     total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
     total_hessian_evaluation  = Int(computation_stats["total_hessian_evaluation"])
-
+	total_number_factorizations = Int(computation_stats["total_number_factorizations"])
     function_value = computation_stats["function_value"]
     gradient_value = computation_stats["gradient_value"]
 
     open(total_results_output_file_path,"a") do iteration_status_csv_file
-		write(iteration_status_csv_file, "$start_time,$end_time,$cutest_problem,$status,$total_iterations_count,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$count_factorization\n")
+		write(iteration_status_csv_file, "$cutest_problem,$status,$total_execution_time,$function_value,$gradient_value,$total_function_evaluation,$total_gradient_evaluation,$total_hessian_evaluation,$total_number_factorizations\n")
     end
 end
 
@@ -215,13 +214,10 @@ function runModelFromProblem(
 		initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
 		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level, compute_ρ_hat_approach, radius_update_rule_approach)
 		x_1 = problem.nlp.meta.x0
-		start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		x = x_1
 		status = Nothing
 		iteration_stats = Nothing
-		total_iterations_count = 0
-		x, status, iteration_stats, computation_stats, total_iterations_count = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
-		end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+		x, status, iteration_stats, computation_stats, total_iterations_count, total_execution_time = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
 		function_value = NaN
 		gradient_value = NaN
 		if size(last(iteration_stats, 1))[1] > 0
@@ -236,18 +232,18 @@ function runModelFromProblem(
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 
-		total_number_factorizations = Int64(computation_stats_modified["total_number_factorizations"])
 		status_string = convertSsatusCodeToStatusString(status)
-		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status_string, computation_stats_modified, total_results_output_file_path, total_iterations_count, total_number_factorizations)
+		outputIterationsStatusToCSVFile(cutest_problem, status_string, total_execution_time, computation_stats_modified, total_results_output_file_path)
 	catch e
 		@show e
 		status = "INCOMPLETE"
-		computation_stats = Dict("total_function_evaluation" => max_it + 1, "total_gradient_evaluation" => max_it + 1, "total_hessian_evaluation" => max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
+		computation_stats = Dict("total_function_evaluation" => 2 * max_it + 1, "total_gradient_evaluation" => 2 * max_it + 1, "total_hessian_evaluation" => 2 * max_it + 1, "total_number_factorizations" => 2 * max_it + 1, "function_value" => NaN, "gradient_value" => NaN)
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 		end_time = dates_format
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
-		outputIterationsStatusToCSVFile(start_time, end_time, cutest_problem, status, computation_stats, total_results_output_file_path, max_it + 1, max_it + 1)
+		total_execution_time = 18000.0
+		outputIterationsStatusToCSVFile(cutest_problem, status, total_execution_time, computation_stats, total_results_output_file_path)
   	finally
 	  	if nlp != nothing
 	    	finalize(nlp)
@@ -256,42 +252,37 @@ function runModelFromProblem(
 end
 
 function computeGeomeans(df::DataFrame, max_it::Int64)
-	total_iterations_count_vec = Vector{Float64}()
 	total_factorization_count_vec = Vector{Float64}()
 	total_function_evaluation_vec = Vector{Float64}()
 	total_gradient_evaluation_vec = Vector{Float64}()
 	total_hessian_evaluation_vec = Vector{Float64}()
 	for i in 1:size(df)[1]
 		if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
-			push!(total_iterations_count_vec, df[i, :].total_iterations_count)
 			push!(total_factorization_count_vec, df[i, :].total_factorization_evaluation)
 			push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
 			push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
 			push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
 		else
-			push!(total_iterations_count_vec, max_it + 1)
-			push!(total_factorization_count_vec, max(df[i, :].total_factorization_evaluation, max_it + 1))
-			push!(total_function_evaluation_vec, max_it + 1)
-			push!(total_gradient_evaluation_vec, max_it + 1)
-			push!(total_hessian_evaluation_vec, max_it + 1)
+			push!(total_factorization_count_vec, 2 * max_it + 1)
+			push!(total_function_evaluation_vec, 2 * max_it + 1)
+			push!(total_gradient_evaluation_vec, 2 * max_it + 1)
+			push!(total_hessian_evaluation_vec, 2 * max_it + 1)
 		end
 	end
 
 	df_results_new = DataFrame()
 	df_results_new.problem_name = df.problem_name
-	df_results_new.total_iterations_count = total_iterations_count_vec
 	df_results_new.total_factorization_evaluation = total_factorization_count_vec
 	df_results_new.total_function_evaluation = total_function_evaluation_vec
 	df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
 	df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
 
-	geomean_total_iterations_count = geomean(df_results_new.total_iterations_count)
 	geomean_count_factorization = geomean(df_results_new.total_factorization_evaluation)
 	geomean_total_function_evaluation = geomean(df_results_new.total_function_evaluation)
 	geomean_total_gradient_evaluation = geomean(df_results_new.total_gradient_evaluation)
 	geomean_total_hessian_evaluation  = geomean(df_results_new.total_hessian_evaluation)
 
-	return (geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization)
+	return (geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization)
 end
 
 function runProblems(
@@ -305,22 +296,12 @@ function runProblems(
 	print_level::Int64)
 
 	cutest_problems = []
-	if default_problems
-		cutest_problems = CUTEst.select(contype="unc")
-	else
+    if default_problems
+		cutest_problems = default_problems
+    else
 		cutest_problems = get_problem_list(min_nvar, max_nvar)
-	end
-
+    end
 	cutest_problems = filter!(e->e ∉ skip_list, cutest_problems)
-
-	# default_test_problems = ["DIXMAANI", "LIARWHD", "SCHMVETT", "VAREIGVL", "CYCLOOCFLS", "DIXMAANJ", "SBRYBND", "ARGLINC", "TOINTGOR", "DIXMAANC", "WAYSEA2", "DMN37142LS", "EIGENALS", "YATP1LS", "GENHUMPS", "OSCIPATH", "FLETCBV2", "DIXMAAND", "S308NE", "SPMSRTLS", "NONCVXUN", "BRYBND", "DIXMAANM", "DQRTIC", "MISRA1ALS", "BOX", "DMN37143LS", "TOINTGSS", "SPARSINE", "VESUVIALS", "INTEQNELS", "COATINGNE", "HAIRY", "PALMER1C", "BA-L49LS", "SSCOSINE", "NONCVXU2", "BROYDN7D", "COSINE", "DIXMAANO", "SPINLS", "BROYDN3DLS", "PALMER2C", "CURLY20", "NONMSQRT", "CURLY30", "FREUROTH", "PALMER8C", "FMINSRF2", "YATP2CLS", "DMN15332LS", "SCURLY20", "NONDQUAR", "SCURLY30", "LUKSAN21LS", "ECKERLE4LS", "HAHN1LS", "DMN15102LS", "WOODS", "JIMACK", "HIMMELBF", "VARDIM", "BROYDNBDLS", "FLETBV3M", "DIXMAANA", "CHWIRUT2LS", "POWER", "DEVGLA2NE", "BA-L1SPLS", "BA-L73LS", "DIAMON2DLS", "THURBERLS", "GAUSS1LS", "PENALTY3", "MODBEALE", "PALMER6C", "DIXMAANN", "LUKSAN17LS", "EIGENCLS", "INDEFM", "SROSENBR", "MNISTS5LS", "INDEF", "ARWHEAD", "DIXON3DQ", "MGH09LS", "BDQRTIC", "DIXMAANH", "DIXMAANB", "BA-L21LS", "GULF", "POWELLSG", "TRIDIA", "DMN15333LS", "NCB20", "FLETCBV3", "CHAINWOO", "HATFLDE", "DIXMAANP", "FLETCHCR", "ERRINRSM", "FMINSURF", "DIXMAANE", "MSQRTALS", "CURLY10", "BOXPOWER", "DQDRTIC", "OSCIGRAD", "FLETCHBV", "ARGLINB", "DIXMAANF", "BA-L16LS", "MOREBV", "NONDIA", "MSQRTBLS", "SCURLY10", "TQUARTIC", "CHWIRUT1LS", "YATP2LS", "ENGVAL1", "DIXMAANG", "HILBERTB", "DIXMAANK", "QUARTC", "EDENSCH", "YATP1CLS", "TOINTPSP", "SSBRYBND", "CRAGGLVY", "SPARSQUR", "DMN15103LS", "NCB20B", "BA-L52LS", "POWERSUM", "ROSENBRTU", "SINQUAD", "DIXMAANL", "PALMER4C", "TESTQUAD", "EIGENBLS", "TRIGON2", "POWELLSQLS", "SCOSINE", "EXP2", "METHANB8LS", "LANCZOS3LS", "DIAMON3DLS"]
-	#
-	# default_test_problems = filter!(e->e ∉ skip_list, default_test_problems)
-
-	# cutest_problems = default_test_problems
-
-	println("CUTEst Problems are: $cutest_problems")
-	@info length(cutest_problems)
 
 	geomean_results_file_path = string(folder_name, "/", "geomean_results_ablation_study.csv")
 
@@ -329,7 +310,7 @@ function runProblems(
     end
 
     open(geomean_results_file_path, "w") do file
-        write(file, "criteria,total_failure,geomean_total_iterations_count,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
+        write(file, "criteria,total_failure,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n");
     end
 
 	for index in 1:length(criteria)
@@ -341,7 +322,7 @@ function runProblems(
 		if !isfile(total_results_output_file_path)
 			mkpath(total_results_output_directory);
 			open(total_results_output_file_path,"a") do iteration_status_csv_file
-				write(iteration_status_csv_file, "start_time,end_time,problem_name,status,total_iterations_count,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,total_factorization_evaluation\n");
+				write(iteration_status_csv_file, "problem_name,status,total_execution_time,function_value,gradient_value,total_function_evaluation,total_gradient_evaluation,total_hessian_evaluation,total_factorization_evaluation\n");
 		    end
 		end
 
@@ -359,11 +340,11 @@ function runProblems(
 		df = DataFrame(CSV.File(total_results_output_file_path))
 		df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
 		max_it = problem_data_vec[index][6]
-		geomean_total_iterations_count, geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
+		geomean_total_function_evaluation, geomean_total_gradient_evaluation, geomean_total_hessian_evaluation, geomean_count_factorization = computeGeomeans(df, max_it)
 		counts = countmap(df.status)
 		total_failure = length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
 		open(geomean_results_file_path, "a") do file
-	    	write(file, "$crt,$total_failure,$geomean_total_iterations_count,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n");
+	    	write(file, "$crt,$total_failure,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n");
 	  	end
 	end
 
@@ -462,9 +443,9 @@ function main()
     	end
   	end
 	criteria = vcat("original", criteria)
+    	criteria = vcat("original_theta_0", criteria)
 	criteria = String.(criteria)
-	# criteria = criteria[1:2]
-	# criteria = criteria[3:4]
+	#criteria = criteria[2:2]
 	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1)
 	@info criteria
 	@info problem_data_vec

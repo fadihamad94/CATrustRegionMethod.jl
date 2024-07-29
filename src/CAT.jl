@@ -1,3 +1,5 @@
+Random.seed!(1)
+
 function computeSecondOrderModel(f::Float64, g::Vector{Float64}, H, d_k::Vector{Float64})
     return transpose(g) * d_k + 0.5 * transpose(d_k) * H * d_k
 end
@@ -158,7 +160,8 @@ function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel, pars::Problem_Data)
 end
 
 function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
-    @assert(δ >= 0)
+	start_time_ = time()
+	@assert(δ >= 0)
 	#Termination conditions
 	termination_conditions_struct = problem.termination_conditions_struct
     MAX_ITERATIONS = termination_conditions_struct.MAX_ITERATIONS
@@ -230,7 +233,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             	println("*********************************Iteration Count: ", 1)
 			end
 			push!(iteration_stats, (1, fval_current, norm(gval_current, 2)))
-			return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, 1
+			end_time_ = time()
+			total_execution_time = end_time_ - start_time_
+			return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, 1, total_execution_time
         end
 
         start_time = time()
@@ -465,8 +470,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 						println("==============Saddle Point=============")
 					end
 				end
-
-				return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, k
+				end_time_ = time()
+				total_execution_time = end_time_ - start_time_
+				return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, k, total_execution_time
 	        end
 
 			# Check termination condition for trust-region radius if it becomes too small
@@ -475,7 +481,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				if print_level >= 0
 					println("$k. Trust region radius $r_k is too small.")
 				end
-				return x_k, TerminationStatusCode.STEP_SIZE_LIMIT, iteration_stats, computation_stats, k
+				end_time_ = time()
+				total_execution_time = end_time_ - start_time_
+				return x_k, TerminationStatusCode.STEP_SIZE_LIMIT, iteration_stats, computation_stats, k, total_execution_time
 			end
 
 			# Check termination condition for function value if the objective function is unbounded (safety check)
@@ -484,13 +492,17 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				if print_level >= 0
 					println("$k. Function values ($fval_current, $fval_next) are too small.")
 				end
-				return x_k, TerminationStatusCode.UNBOUNDED, iteration_stats, computation_stats, k
+				end_time_ = time()
+				total_execution_time = end_time_ - start_time_
+				return x_k, TerminationStatusCode.UNBOUNDED, iteration_stats, computation_stats, k, total_execution_time
 			end
 
 			# Check termination condition for time if we exceeded the time limit
 	        if time() - start_time > MAX_TIME
 				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
-				return x_k, TerminationStatusCode.TIME_LIMIT, iteration_stats, computation_stats, k
+				end_time_ = time()
+				total_execution_time = end_time_ - start_time_
+				return x_k, TerminationStatusCode.TIME_LIMIT, iteration_stats, computation_stats, k, total_execution_time
 	        end
         	k += 1
         end
@@ -502,10 +514,14 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 		if isa(e, OutOfMemoryError)
 			status = TerminationStatusCode.MEMORY_LIMIT
 		end
-		return x_k, status, iteration_stats, computation_stats, k
+		end_time_ = time()
+		total_execution_time = end_time_ - start_time_
+		return x_k, status, iteration_stats, computation_stats, k, total_execution_time
     end
 	computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
-	return x_k, TerminationStatusCode.ITERATION_LIMIT, iteration_stats, computation_stats, k
+	end_time_ = time()
+	total_execution_time = end_time_ - start_time_
+	return x_k, TerminationStatusCode.ITERATION_LIMIT, iteration_stats, computation_stats, k, total_execution_time
 end
 
 function evalFunction(nlp, x)
