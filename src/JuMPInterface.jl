@@ -178,10 +178,6 @@ function MOI.is_valid(model::CATSolver, vi::MOI.VariableIndex)
     return vi.value in eachindex(model.variable_info)
 end
 
-function MOI.Utilities.supports_default_copy_to(::CATSolver, copy_names::Bool)
-    return !copy_names
-end
-
 function MOI.copy_to(model::CATSolver, src::MOI.ModelLike; copy_names = false)
     return MOI.Utilities.default_copy_to(model, src, copy_names)
 end
@@ -344,7 +340,7 @@ function MOI.optimize!(solver :: CATSolver)
     pars = create_pars_JuMP(solver.options)
 	x, status, iteration_stats, computation_stats, k = CAT_solve(solver, pars)
 
-	status_str = convertSsatusCodeToStatusString(status)
+	status_str = convertStatusCodeToStatusString(status)
 
     solver.inner = CATProblem()
     solver.inner.status = status_CAT_To_JuMP(status_str)
@@ -368,7 +364,7 @@ function MOI.optimize!(solver :: CATSolver)
     solver.inner.computation_stats = computation_stats
 end
 
-function convertSsatusCodeToStatusString(status)
+function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
     consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
     consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
@@ -399,7 +395,7 @@ function MOI.optimize!(solver :: CATSolver, jumpModel:: Model)
 
 	x, status, iteration_stats, computation_stats, k = CAT_solve(solver, pars)
 
-	status_str = convertSsatusCodeToStatusString(status)
+	status_str = convertStatusCodeToStatusString(status)
 
     solver.inner = CATProblem()
     solver.inner.status = status_CAT_To_JuMP(status_str)

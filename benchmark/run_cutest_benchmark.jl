@@ -81,7 +81,7 @@ function runModelFromProblem(
 			problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level)
 	        x_1 = problem.nlp.meta.x0
 	        x, status, iteration_stats, computation_stats, total_iterations_count, total_execution_time = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, trust_region_method_subproblem_solver)
-			status_string = convertSsatusCodeToStatusString(status)
+			status_string = convertStatusCodeToStatusString(status)
 			function_value = NaN
 			gradient_value = NaN
 			if size(last(iteration_stats, 1))[1] > 0
@@ -231,7 +231,7 @@ function outputResultsToCSVFile(directory_name::String, cutest_problem::String, 
     CSV.write(cutest_problem_file_name, results, header = true)
 end
 
-function convertSsatusCodeToStatusString(status)
+function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
     consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
     consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",

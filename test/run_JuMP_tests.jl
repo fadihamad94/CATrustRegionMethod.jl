@@ -40,8 +40,26 @@ function attachSolverWithAttributesToJuMPModel(model:: Model, options::Dict{Stri
 end
 
 function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
-    model = rosenbrook1()
-    set_optimizer(model, consistently_adaptive_trust_region_method.CATSolver)
+	default_β_1 = 0.1
+	default_θ = 0.1
+	default_ω_1 = 8.0
+	default_ω_2 = 20.0
+	default_γ_1 = 1e-2
+	default_γ_2 = 0.8
+	default_r_1 = 0.0
+	default_print_level = 0
+	default_max_iterations = 100000
+	default_gradient_termination_tolerance = 1e-5
+	default_max_time =  30 * 60.0
+	default_step_size_limit = 2.0e-16
+	options = Dict{String, Any}("initial_radius_struct!r_1"=>default_r_1,
+    	"β_1"=>default_β_1,
+		"ω_2"=>default_ω_2,
+        "print_level"=>default_print_level,
+        "termination_conditions_struct!MAX_ITERATIONS"=>default_max_iterations,
+        "termination_conditions_struct!gradient_termination_tolerance"=>default_gradient_termination_tolerance)
+	model = rosenbrook1()
+	attachSolverWithAttributesToJuMPModel(model, options)
 
     #Test using JUMP
     optimize!(model)
@@ -65,17 +83,6 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     @test iteration_stats == optimizer.inner.iteration_stats
     @test computation_stats == optimizer.inner.computation_stats
 
-	default_β_1 = 0.1
-	default_θ = 0.1
-	default_ω_1 = 8.0
-	default_ω_2 = 20.0
-	default_γ_1 = 1e-2
-	default_γ_2 = 0.8
-	default_r_1 = 0.0
-	default_print_level = 0
-	default_max_iterations = 100000
-	default_gradient_termination_tolerance = 1e-5
-	default_max_time =  30 * 60.0
 	@test optimizer.inner.pars.β_1 == default_β_1
 	@test optimizer.inner.pars.θ == default_θ
 	@test optimizer.inner.pars.ω_1 == default_ω_1
@@ -87,6 +94,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
 	@test optimizer.inner.pars.termination_conditions_struct.MAX_ITERATIONS == default_max_iterations
 	@test optimizer.inner.pars.termination_conditions_struct.gradient_termination_tolerance == default_gradient_termination_tolerance
 	@test optimizer.inner.pars.termination_conditions_struct.MAX_TIME == default_max_time
+	@test optimizer.inner.pars.termination_conditions_struct.STEP_SIZE_LIMIT == default_step_size_limit
 end
 
 function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments()

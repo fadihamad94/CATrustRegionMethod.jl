@@ -230,7 +230,7 @@ function runModelFromProblem(
 		println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
 		@info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
 
-		status_string = convertSsatusCodeToStatusString(status)
+		status_string = convertStatusCodeToStatusString(status)
 		outputIterationsStatusToCSVFile(cutest_problem, status_string, total_execution_time, computation_stats_modified, total_results_output_file_path)
 	catch e
 		@show e
@@ -393,7 +393,7 @@ function main()
 	runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
 end
 
-function convertSsatusCodeToStatusString(status)
+function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL => "OPTIMAL",
     consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
     consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
