@@ -190,12 +190,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::F
 				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
 			end
 		end
-		# This code was used when getting the preliminary results. Maybe we need it later
-		# start_time_temp = time()
-		# δ = max(δ, abs(eigmin(Matrix(H))))
-		# end_time_temp = time()
-		# total_time_temp = end_time_temp - start_time_temp
-		# println("eigmin operation took $total_time_temp.")
+
 		try
 			start_time_temp = time()
 			success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, stop_normal, r, min_grad, print_level)
@@ -241,9 +236,6 @@ function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64, 
 	return true, userdata.multiplier, d, userdata.iter, false
 end
 
-#Based on Theorem 4.3 in Numerical Optimization by Wright
-
-# function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, total_number_factorizations::Int64, min_grad::Float64, print_level::Int64=0) (Old)
 function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
 	temp_total_number_factorizations_bisection = 0
 	temp_total_number_factorizations_findinterval = 0
@@ -263,7 +255,6 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float6
 
 	if !success
 		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
-		# return false, false, δ, δ, δ_prime, zeros(length(g)), total_number_factorizations, false old code
 		return false, false, δ, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 	end
 
@@ -278,7 +269,6 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float6
 
 	if !success
 		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
-		# return true, false, δ_m, δ, δ_prime, zeros(length(g)), total_number_factorizations, false Old code
 		return true, false, δ_m, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 	end
 
@@ -295,7 +285,6 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float6
 	if print_level >= 2
 		println("d_k operation took $total_time_temp.")
 	end
-	# return true, true, δ_m, δ, δ_prime, d_k, total_number_factorizations, false Old code
 	@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
 	return true, true, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 end
@@ -309,12 +298,10 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 	temp_total_number_factorizations_inverse_power_iteration = 0
 	temp_total_number_factorizations_ = 0
     try
-		# total_number_factorizations += 1
 		temp_total_number_factorizations_compute_search_direction += 1
 		temp_total_number_factorizations_ += temp_total_number_factorizations_compute_search_direction
         d_k = cholesky(H) \ (-g)
 		if norm(d_k, 2) <= r
-        	# return true, 0.0, d_k, total_number_factorizations, false
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
 			return true, 0.0, d_k, total_number_factorizations, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
@@ -325,14 +312,12 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 	δ_m = δ
 	δ_prime = δ
     try
-		# success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case = computeSearchDirection(g, H, δ, γ_2, r, total_number_factorizations, min_grad, print_level)
 		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, total_number_factorizations_compute_search_direction = computeSearchDirection(g, H, δ, γ_2, r, min_grad, print_level)
 		@assert temp_total_number_factorizations == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
 		temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction # TO ACCOUNT FOR THE FIRST ATTEMP WITH d_k = cholesky(H) \ (-g)
 		temp_total_number_factorizations_ += temp_total_number_factorizations
 		success = success_find_interval && success_bisection
 		if success
-			# return true, δ_m, d_k, total_number_factorizations, hard_case
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
 			return true, δ_m, d_k, total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
@@ -346,8 +331,6 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
 			start_time_temp = time()
-			# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
-			# total_number_factorizations += temp_total_number_factorizations
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
@@ -355,18 +338,15 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
 			if print_level >= 2
-				@info "$success. 1.solveHardCaseLogic operation took $total_time_temp."
-				println("$success. 1.solveHardCaseLogic operation took $total_time_temp.")
+				@info "$success. solveHardCaseLogic operation took $total_time_temp."
+				println("$success. solveHardCaseLogic operation took $total_time_temp.")
 			end
-            # return success, δ, d_k, total_number_factorizations, true
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
             return success, δ, d_k, total_number_factorizations, true, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
 			start_time_temp = time()
-			# success, δ, d_k, temp_total_number_factorizations = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
-			# total_number_factorizations += temp_total_number_factorizations
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
@@ -374,10 +354,9 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
 			end_time_temp = time()
 			total_time_temp = end_time_temp - start_time_temp
 			if print_level >= 2
-				@info "$success. 2.solveHardCaseLogic operation took $total_time_temp."
-				println("$success. 2.solveHardCaseLogic operation took $total_time_temp.")
+				@info "$success. solveHardCaseLogic operation took $total_time_temp."
+				println("$success. solveHardCaseLogic operation took $total_time_temp.")
 			end
-	    	# return success, δ, d_k, total_number_factorizations, true
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
 	    	return success, δ, d_k, total_number_factorizations, true, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
@@ -387,7 +366,6 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
         end
     end
 end
-
 
 function phi(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0)
     sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
@@ -559,7 +537,6 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
 			end
 
 			if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) && q_1 <= q_2 && !positive_definite_δ
-			# if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) && q_1 <= q_2 && !positive_definite_δ
 				if print_level >= 2
 					println("$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============")
 					println("$k===================min_grad / (100 r) is $q_2.============")
@@ -568,8 +545,8 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
 					println("$k===============Bisection entered here=================")
 					mimimum_eigenvalue = eigmin(Matrix(H))
 					mimimum_eigenvalue_abs = abs(mimimum_eigenvalue)
-					@info "$k=============1Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
-					println("$k=============1Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.")
+					@info "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
+					println("$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.")
 				end
 				break
 			end
@@ -671,7 +648,7 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 		   end
 	   end
 
-	   #Keep as a safety check. This a sign that we can't solve thr trust region subprobelm
+	   #Keep as a safety check. This a sign that we can't solve the trust region subprobelm
        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
 		   eigenvalue = dot(y, H * y)
 		   try
@@ -687,10 +664,8 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
    end
    temp_ = dot(y, H * y)
 
-   temp_1 = norm(x + y)
-   temp_2 = norm(x - y)
    if print_level >= 2
-	   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_. norm(x + y) = $temp_1 and norm(x - y) = $temp_2.")
+	   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
    end
 
    if print_level >= 2
@@ -702,128 +677,4 @@ function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter
 
    temp_d_k = zeros(length(g))
    return false, temp_, y, temp_factorization, temp_d_k
-end
-
-#Based on 'THE HARD CASE' section from Numerical Optimization by Wright
-function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, print_level::Int64=0)
-    minimumEigenValue = eigmin(Matrix(H))
-	if minimumEigenValue >= 0
-		Q = eigvecs(Matrix(H))
-		eigenvaluesVector = eigvals(Matrix(H))
-
-		temp_d_0 = zeros(length(g))
-		for i in 1:length(eigenvaluesVector)
-			temp_d_0 = temp_d_0 .- ((Q[:, i]' * g) / (eigenvaluesVector[i] + 0)) * Q[:, i]
-	    end
-
-		temp_d_0_norm = norm(temp_d_0, 2)
-		less_than_radius = temp_d_0_norm <= r
-		if print_level >= 1
-			println("temp_d_0_norm is $temp_d_0_norm and ||d(0)|| <= r is $less_than_radius.")
-		end
-		if less_than_radius
-			return true, 0.0, temp_d_0, 0
-		end
-		if print_level >= 1
-			println("minimumEigenValue is $minimumEigenValue")
-			println("r is $r")
-			println("g is $g")
-			H_matrix = Matrix(H)
-			println("H is $H_matrix")
-		end
-		return false, minimumEigenValue, zeros(length(g)), 0
-	end
-    δ = -minimumEigenValue
-	try
-		Q = eigvecs(Matrix(H))
-		z =  Q[:,1]
-		temp_ = dot(z', g)
-		if print_level >= 1
-			println("Q_1 ^ T g = $temp_.")
-			println("minimumEigenValue = $minimumEigenValue.")
-		end
-	    eigenvaluesVector = eigvals(Matrix(H))
-
-		temp_d = zeros(length(g))
-		for i in 1:length(eigenvaluesVector)
-			if eigenvaluesVector[i] != minimumEigenValue
-	            temp_d = temp_d .- ((Q[:, i]' * g) / (eigenvaluesVector[i] + δ)) * Q[:, i]
-	        end
-	    end
-
-		temp_d_norm = norm(temp_d, 2)
-		less_than_radius_ = temp_d_norm < r
-		if print_level >= 1
-			println("temp_d_norm is $temp_d_norm and ||d(-λ_1)|| < r is $less_than_radius_.")
-		end
-
-		if !less_than_radius_
-			if print_level >= 0
-				println("This is not a hard case sub-problem.")
-			end
-			@error "This is not a hard case sub-problem."
-			try
-				success_find_interval, success_bisection, δ_m, d_k, total_number_factorizations, temp_hard_case  = computeSearchDirection(g, H, δ, γ_2, r, 0, print_level)
-				temp_success = success_find_interval && success_bisection
-				return temp_success, δ_m, d_k, total_number_factorizations
-			catch e
-				@error e
-			end
-		end
-
-	    norm_d_k_squared_without_τ_squared = 0.0
-
-	    for i in 1:length(eigenvaluesVector)
-	        if eigenvaluesVector[i] != minimumEigenValue
-	            norm_d_k_squared_without_τ_squared = norm_d_k_squared_without_τ_squared + ((Q[:, i]' * g) ^ 2 / (eigenvaluesVector[i] + δ) ^ 2)
-	        end
-	    end
-
-	    norm_d_k_squared = r ^ 2
-		if norm_d_k_squared < norm_d_k_squared_without_τ_squared && print_level >= 1
-			println("norm_d_k_squared is $norm_d_k_squared and norm_d_k_squared_without_τ_squared is $norm_d_k_squared_without_τ_squared.")
-		end
-
-		if norm_d_k_squared < norm_d_k_squared_without_τ_squared
-			if less_than_radius
-				if print_level >= 1
-					println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_d_norm, and $r.")
-				end
-				return true, δ, temp_d, 0
-			end
-			if print_level >= 1
-				println("minimumEigenValue is $minimumEigenValue")
-				println("r is $r")
-				println("g is $g")
-				H_matrix = Matrix(H)
-				println("H is $H_matrix")
-			end
-			return false, δ, zeros(length(g)), 0
-		end
-
-	    τ = sqrt(norm_d_k_squared - norm_d_k_squared_without_τ_squared)
-	    d_k = τ .* z
-
-	    for i in 1:length(eigenvaluesVector)
-	        if eigenvaluesVector[i] != minimumEigenValue
-	            d_k = d_k .- ((Q[:, i]' * g) / (eigenvaluesVector[i] + δ)) * Q[:, i]
-	        end
-	    end
-		temp_norm_d_k = norm(d_k, 2)
-		if print_level >= 1
-			println("HAD CASE LOGIC: δ, d_k and r are $δ, $temp_norm_d_k, and $r.")
-		end
-	    return true, δ, d_k, 0
-	catch e
-		@show e
-		if print_level >= 1
-			println("minimumEigenValue is $minimumEigenValue")
-			println("r is $r")
-			println("g is $g")
-			H_matrix = Matrix(H)
-			println("H is $H_matrix")
-		end
-		return false, δ, zeros(length(g)), 0
-	end
-
 end

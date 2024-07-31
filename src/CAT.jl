@@ -34,7 +34,6 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 	temp_total_function_evaluation = 0
 
 	# Solve the trust-region subproblem to generate the search direction d_k
-	# success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, nlp.meta.name, subproblem_solver_method, print_level)
 	name = 	getProblemName(nlp)
 
 	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, name, subproblem_solver_method, print_level)
@@ -174,9 +173,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	γ_2 = problem.γ_2
 	γ_3 = 1.0 # //TODO Make param
 	θ = problem.θ
-	C = (2 + 3 * γ_3 * (1 - β_1)) / (3 * (γ_3 * (1 - 2 * γ_1) * (1 - β_1) - β_1 * θ))
 	ξ = 0.1# //TODO Make param
-	# @assert ξ >= 1 / (6 * C)
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct
 	r_1 = initial_radius_struct.r_1
@@ -254,9 +251,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
 
 			# Solve the trsut-region subproblem and generate the search direction d_k
-			# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
-			# total_number_factorizations += temp_total_number_factorizations
-			# total_function_evaluation += temp_total_function_evaluation
 			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
 			total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
 			total_number_factorizations_bisection += temp_total_number_factorizations_bisection
@@ -308,9 +302,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					end
 
 					# Solve the trsut-region subproblem and generate the search direction d_k
-					# fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
-					# total_number_factorizations += temp_total_number_factorizations
-					# total_function_evaluation += temp_total_function_evaluation
 					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
 					total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
 					total_number_factorizations_bisection += temp_total_number_factorizations_bisection
@@ -470,7 +461,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				return x_k, TerminationStatusCode.OPTIMAL, iteration_stats, computation_stats, k, total_execution_time
 	        end
 
-			# Check termination condition for trust-region radius if it becomes too small
+			# Check termination condition for step size if it becomes too small
 			if r_k <= STEP_SIZE_LIMIT || 0 < norm(d_k) <= STEP_SIZE_LIMIT
 				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0

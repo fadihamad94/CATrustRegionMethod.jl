@@ -45,7 +45,6 @@ VariableInfo() = VariableInfo(-Inf, false, nothing, Inf, false, nothing, false, 
 
 mutable struct CATProblem
     status::Symbol  # Final status
-    #status::MOI.TerminationStatusCode
     x::Vector{Float64}  # Starting and final solution
     grad_val::Float64  # Final objective gradient
     obj_val::Float64  # (length 1) Final objective
@@ -65,13 +64,12 @@ end
 ##################################################
 # EmptyNLPEvaluator for non-NLP problems.
 struct EmptyNLPEvaluator <: MOI.AbstractNLPEvaluator end
-MOI.features_available(::EmptyNLPEvaluator) = [:Grad, :Jac, :Hess]
+MOI.features_available(::EmptyNLPEvaluator) = [:Grad, :Hess]
 MOI.initialize(::EmptyNLPEvaluator, features) = nothing
 MOI.eval_objective(::EmptyNLPEvaluator, x) = NaN
 
 
 MOI.eval_objective_gradient(::EmptyNLPEvaluator, g, x) = nothing
-MOI.jacobian_structure(::EmptyNLPEvaluator) = Tuple{Int64,Int64}[]
 MOI.hessian_lagrangian_structure(::EmptyNLPEvaluator) = Tuple{Int64,Int64}[]
 
 function MOI.eval_hessian_lagrangian(::EmptyNLPEvaluator, H, x, s, mu)
@@ -149,8 +147,6 @@ function MOI.is_empty(model::CATSolver)
            model.nlp_data.evaluator isa EmptyNLPEvaluator &&
            model.sense == MOI.FEASIBILITY_SENSE
 end
-
-# MOI.get(model::CATSolver, ::MOI.SolveTime) = model.solve_time
 
 function MOI.empty!(model::CATSolver)
     model.inner = nothing
@@ -239,7 +235,6 @@ function append_to_hessian_sparsity!(
     for term in quad.quadratic_terms
         push!(
             hessian_sparsity,
-            # (term.variable_index_1.value, term.variable_index_2.value),
 			(term.variable_1.value, term.variable_2.value),
         )
     end
@@ -564,7 +559,6 @@ function MOI.get(model::CATSolver, ::MOI.RawStatusString)
 	return string(model.inner.status)
 end
 
-# Ipopt always has an iterate available.
 function MOI.get(model::CATSolver, ::MOI.ResultCount)
     return (model.inner !== nothing) ? 1 : 0
 end
