@@ -1,11 +1,19 @@
 Random.seed!(1)
 
-function computeSecondOrderModel(f::Float64, g::Vector{Float64}, H, d_k::Vector{Float64})
+function computeSecondOrderModel(
+	f::Float64, g::Vector{Float64},
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	d_k::Vector{Float64}
+	)
     return transpose(g) * d_k + 0.5 * transpose(d_k) * H * d_k
 end
 
-function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64}, H, d_k::Vector{Float64}, θ::Float64, min_gval_norm::Float64, print_level::Int64=0)
-    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current,  gval_current, H, d_k)
+function compute_ρ_hat(
+	fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64},
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	d_k::Vector{Float64}, θ::Float64, print_level::Int64=0
+	)
+    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
 	guarantee_factor = θ * 0.5 * min(norm(gval_current, 2), norm(gval_next, 2)) * norm(d_k, 2)
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
@@ -16,7 +24,11 @@ function compute_ρ_hat(fval_current::Float64, fval_next::Float64, gval_current:
     return ρ_hat, actual_fct_decrease, predicted_fct_decrease, guarantee_factor
 end
 
-function compute_ρ_standard_trust_region_method(fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, H, d_k::Vector{Float64}, print_level::Int64=0)
+function compute_ρ_standard_trust_region_method(
+	fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64},
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	d_k::Vector{Float64}, print_level::Int64=0
+	)
     second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
@@ -27,16 +39,20 @@ function compute_ρ_standard_trust_region_method(fval_current::Float64, fval_nex
     return ρ, actual_fct_decrease, predicted_fct_decrease
 end
 
-function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+function sub_routine_trust_region_sub_problem_solver(
+	fval_current::Float64, gval_current::Vector{Float64},
+	hessian_current::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	x_k::Vector{Float64}, δ_k::Float64, γ_1::Float64, γ_2::Float64, r_k::Float64,
+	min_gval_norm::Float64,
+	nlp::Union{AbstractNLPModel, MathOptNLPModel, MathOptInterface.NLPBlockData, CUTEstModel}, print_level::Int64
+	)
 	fval_next = fval_current
 	gval_next_temp = gval_current
 	start_time_temp = time()
 	temp_total_function_evaluation = 0
 
 	# Solve the trust-region subproblem to generate the search direction d_k
-	name = 	getProblemName(nlp)
-
-	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, name, subproblem_solver_method, print_level)
+	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, print_level)
 	if success_subproblem_solve
 		q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
 		q_2 = γ_1 * min_gval_norm
@@ -78,16 +94,19 @@ function sub_routine_trust_region_sub_problem_solver(fval_current, gval_current,
 end
 
 
-function power_iteration(A; num_iter=20, tol=1e-6)
-    n = size(A, 1)
+function power_iteration(
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}};
+	num_iter::Int64=20, tol::Float64=1e-6
+	)
+    n = size(H, 1)
     v = rand(n)  # Initialize a random vector
     v /= norm(v)  # Normalize the vector
 
     λ = 0.0  # Initialize the largest eigenvalue
     for i in 1:num_iter
-        Av = A * v
-        v_new = Av / norm(Av)  # Normalize the new vector
-        λ_new = dot(v_new, A * v_new)  # Rayleigh quotient
+        Hv = H * v
+        v_new = Hv / norm(Hv)  # Normalize the new vector
+        λ_new = dot(v_new, H * v_new)  # Rayleigh quotient
 
         # Check for convergence
         if abs(λ_new - λ) < tol
@@ -100,8 +119,11 @@ function power_iteration(A; num_iter=20, tol=1e-6)
     return λ, v
 end
 
-function matrix_l2_norm(A; num_iter=20, tol=1e-6)
-    λ_max, _ = power_iteration(A; num_iter=num_iter, tol=tol)  # Largest eigenvalue of A^T A
+function matrix_l2_norm(
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}};
+	num_iter::Int64=20, tol::Float64=1e-6
+	)
+    λ_max, _ = power_iteration(H; num_iter=num_iter, tol=tol)  # Largest eigenvalue of A^T A
     return abs(λ_max)  # Largest singular value (spectral norm)
 end
 
@@ -140,7 +162,7 @@ function CAT_solve(solver::CATSolver, pars::Problem_Data)
 	x = deepcopy(starting_points_vector)
 	δ = 0.0
 	pars.nlp = solver.nlp_data
-	return CAT(pars, x, δ, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
+	return CAT(pars, x, δ)
 end
 
 function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel, pars::Problem_Data)
@@ -148,13 +170,12 @@ function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel, pars::Problem_Data)
 		throw(ErrorException("Constrained minimization problems are unsupported"))
 	end
 	pars.nlp = nlp_raw
-	subproblem_solver_method = subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT
 	δ = 0.0
 	x = nlp_raw.meta.x0
-	return CAT(pars, x, δ, subproblem_solver_method)
+	return CAT(pars, x, δ)
 end
 
-function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT)
+function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	start_time_ = time()
 	@assert(δ >= 0)
 	#Termination conditions
@@ -177,7 +198,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct
 	r_1 = initial_radius_struct.r_1
-	INITIAL_RADIUS_MULTIPLICATIVE_RULEE = initial_radius_struct.INITIAL_RADIUS_MULTIPLICATIVE_RULEE
+	INITIAL_RADIUS_MULTIPLICATIVE_RULE = initial_radius_struct.INITIAL_RADIUS_MULTIPLICATIVE_RULE
 
 	#Initial conditions
     x_k = x
@@ -214,7 +235,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 		#If user doesn't change the starting radius, we select the radius as described in the paper:
 		#Initial radius heuristic selection rule : r_1 = 10 * ||gval_current|| / ||hessian_current||
 		if r_k <= 0.0
-			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULEE * norm(gval_current, 2) / matrix_l2_norm(hessian_current, num_iter=20)
+			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) / matrix_l2_norm(hessian_current, num_iter=20)
 		end
 
         compute_hessian = false
@@ -251,7 +272,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
             end
 
 			# Solve the trsut-region subproblem and generate the search direction d_k
-			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_method, print_level)
+			fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, print_level)
 			total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
 			total_number_factorizations_bisection += temp_total_number_factorizations_bisection
 			total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
@@ -283,78 +304,6 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 				total_time_temp = end_time_temp - start_time_temp
 				if print_level >= 2
 					println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
-				end
-
-				# Check for numerical error if the predicted reduction from the second order morel is negative.
-				# In case it is negative, attempt to solve the trust-region subproblem using our default approach
-				# only in case the original trust-region subproblem solver was different than the default approach
-				if predicted_fct_decrease <= 0 && subproblem_solver_method != subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT
-					if print_level >= 1
-						println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
-					end
-					@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
-					if print_level >= 3
-						hessian_current_matrix = Matrix(hessian_current)
-						println("Radius, Gradient, and Hessian are $r_k, $gval_current, and $hessian_current_matrix.")
-					end
-					if print_level >= 1
-						println("Solving trust-region subproblem using our approach.")
-					end
-
-					# Solve the trsut-region subproblem and generate the search direction d_k
-					fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level)
-					total_number_factorizations_findinterval += temp_total_number_factorizations_findinterval
-					total_number_factorizations_bisection += temp_total_number_factorizations_bisection
-					total_number_factorizations_compute_search_direction += temp_total_number_factorizations_compute_search_direction
-					total_number_factorizations_inverse_power_iteration += temp_total_number_factorizations_inverse_power_iteration
-					total_number_factorizations += temp_total_number_factorizations
-					total_function_evaluation += temp_total_function_evaluation
-
-					# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
-					# candidate solution has a reduction in the function value so that we accept the step by
-					if success_subproblem_solve
-						if fval_next <= fval_current + ξ * min_gval_norm * norm(d_k) + (1 + abs(fval_current)) * 1e-8
-							total_gradient_evaluation += 1
-							temp_grad = evalGradient(nlp, x_k + d_k)
-							temp_norm = norm(temp_grad, 2)
-							if isnan(temp_norm)
-								if print_level >= 0
-									println("$k. grad(nlp, x_k + d_k) is NaN.")
-								end
-								@warn "$k grad(nlp, x_k + d_k) is NaN."
-							else
-								min_gval_norm = min(min_gval_norm, temp_norm)
-							end
-						end
-
-						start_time_temp = time()
-						ρ_k, actual_fct_decrease, predicted_fct_decrease = compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, hessian_current, d_k, print_level)
-						end_time_temp = time()
-						total_time_temp = end_time_temp - start_time_temp
-						if print_level >= 2
-							println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
-						end
-						# Check for numerical error if the predicted reduction from the second order morel is negative.
-						# In case it is negative, mark the solution of the trust-region subproblem as failure
-						# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
-						if predicted_fct_decrease <= 0.0
-							if print_level >= 1
-								println("Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next.")
-							end
-							@warn "Predicted function decrease is $predicted_fct_decrease >=0. fval_current is $fval_current and fval_next is $fval_next."
-							ρ_k = -1.0
-							actual_fct_decrease = 0.0
-							predicted_fct_decrease = 0.0
-							d_k = zeros(length(x_k))
-						end
-					else
-						# In case we fail to solve the trust-region subproblem using our default solver, we mark that as a failure
-						# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
-						ρ_k = -1.0
-						actual_fct_decrease = 0.0
-						predicted_fct_decrease = 0.0
-						d_k = zeros(length(x_k))
-					end
 				end
 			else
 				# In case we failt to solve the trust-region subproblem, we mark that as a failure
@@ -393,7 +342,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 					println("gval_next operation took $total_time_temp.")
 				end
 				start_time_temp = time()
-				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, min_gval_norm, print_level)
+				ρ_hat_k, actual_fct_decrease, predicted_fct_decrease, guarantee_factor = compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, print_level)
 				end_time_temp = time()
 				total_time_temp = end_time_temp - start_time_temp
 				if print_level >= 2
@@ -510,7 +459,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64, subproblem_
 	return x_k, TerminationStatusCode.ITERATION_LIMIT, iteration_stats, computation_stats, k, total_execution_time
 end
 
-function evalFunction(nlp, x)
+function evalFunction(nlp::Union{AbstractNLPModel, MathOptNLPModel, MathOptInterface.NLPBlockData, CUTEstModel}, x::Vector{Float64})
 	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return obj(nlp, x)
 	else
@@ -518,15 +467,7 @@ function evalFunction(nlp, x)
 	end
 end
 
-function getProblemName(nlp)
-	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
-		return nlp.meta.name
-	else
-		return "Generic"
-	end
-end
-
-function evalGradient(nlp, x)
+function evalGradient(nlp::Union{AbstractNLPModel, MathOptNLPModel, MathOptInterface.NLPBlockData, CUTEstModel}, x::Vector{Float64})
 	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return grad(nlp, x)
 	else
@@ -536,18 +477,18 @@ function evalGradient(nlp, x)
 	end
 end
 
-function restoreFullMatrix(A)
-    nmbRows = size(A)[1]
-    numbColumns = size(A)[2]
+function restoreFullMatrix(H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}})
+    nmbRows = size(H)[1]
+    numbColumns = size(H)[2]
     for i in 1:nmbRows
         for j in i:numbColumns
-            A[i, j] = A[j, i]
+            H[i, j] = H[j, i]
         end
     end
-    return A
+    return H
 end
 
-function evalHessian(nlp, x)
+function evalHessian(nlp::Union{AbstractNLPModel, MathOptNLPModel, MathOptInterface.NLPBlockData, CUTEstModel}, x::Vector{Float64})
 	if typeof(nlp) == AbstractNLPModel || typeof(nlp) ==  MathOptNLPModel || typeof(nlp) == CUTEstModel
 		return hess(nlp, x)
 	else

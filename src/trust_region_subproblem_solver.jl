@@ -12,231 +12,25 @@ H + δ I ≥ 0
 That is why we defined the below phi to solve that using bisection logic.
 =#
 
-const OPTIMIZATION_METHOD_TRS = "GALAHAD_TRS"
-const OPTIMIZATION_METHOD_GLTR = "GALAHAD_GLTR"
-const OPTIMIZATION_METHOD_DEFAULT = "OUR_APPROACH"
-
-const LIBRARY_PATH_TRS = string(@__DIR__ ,"/../lib/trs.so")
-const LIBRARY_PATH_GLTR = string(@__DIR__ ,"/../lib/gltr.so")
-
-mutable struct Subproblem_Solver_Methods
-    OPTIMIZATION_METHOD_TRS::String
-    OPTIMIZATION_METHOD_GLTR::String
-    OPTIMIZATION_METHOD_DEFAULT::String
-    function Subproblem_Solver_Methods()
-        return new(OPTIMIZATION_METHOD_TRS, OPTIMIZATION_METHOD_GLTR, OPTIMIZATION_METHOD_DEFAULT)
-    end
-end
-
-const subproblem_solver_methods = Subproblem_Solver_Methods()
-
 function if_mkpath(dir::String)
   if !isdir(dir)
      mkpath(dir)
   end
 end
 
-struct userdata_type_trs
-	status::Cint
-	factorizations::Cint
-	hard_case::Cuchar
-	multiplier::Cdouble
-end
-
-#Data returned by calling the GALAHAD library in case we solve trust region subproblem
-#using their GLTR approach
-struct userdata_type_gltr
-	status::Cint
-	iter::Cint
-	obj::Cdouble
-	hard_case::Cuchar
-	multiplier::Cdouble
-	mnormx::Cdouble
-end
-
-function getHessianDenseLowerTriangularPart(H)
-	h_vec = Vector{Float64}()
-	for i in 1:size(H)[1]
-		for j in 1:i
-			push!(h_vec, H[i, j])
-		end
-	end
-	return h_vec
-end
-
-
-function getHessianSparseLowerTriangularPart(H)
-	H_ne = 0
-	H_val = Vector{Float64}()
-	H_row = Vector{Int32}()
-	H_col= Vector{Int32}()
-	H_ptr = Vector{Int32}()
-	temp = 0
-	if H[1, 1] != 0
-		push!(H_ptr, 0)
-	end
-	for i in 1:size(H)[1]
-		for j in 1:i
-			if H[i, j] != 0.0
-				if temp == 0
-					temp = H_ne
-				end
-				H_ne += 1
-				push!(H_val, H[i, j])
-				push!(H_row, i - 1)
-				push!(H_col, j - 1)
-			end
-		end
-		if temp != 0
-			push!(H_ptr, temp)
-		end
-		temp = 0
-	end
-	push!(H_ptr, H_ne)
-	return H_ne, H_val, H_row, H_col, H_ptr
-end
-
-
-function solveTrustRegionSubproblem(f::Float64, g::Vector{Float64}, H, x_k::Vector{Float64}, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, problem_name::String, subproblem_solver_method::String=subproblem_solver_methods.OPTIMIZATION_METHOD_DEFAULT, print_level::Int64=0)
-	if subproblem_solver_method == OPTIMIZATION_METHOD_DEFAULT
-		return optimizeSecondOrderModel(g, H, δ, γ_2, r, min_grad, print_level)
-	end
-
-	if subproblem_solver_method == OPTIMIZATION_METHOD_TRS
-		return trs(f, g, H, δ, γ_2, r, problem_name, min_grad, print_level)
-	end
-
-	if subproblem_solver_method == OPTIMIZATION_METHOD_GLTR
-		return gltr(f, g, H, r, min_grad, print_level)
-	end
-
+function solveTrustRegionSubproblem(
+	f::Float64, g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	x_k::Vector{Float64}, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	)
 	return optimizeSecondOrderModel(g, H, δ, γ_2, r, min_grad, print_level)
 end
 
-function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, problem_name::String, min_grad::Float64, print_level::Int64=0)
-    max_factorizations = 1000
-	H_type = "sparse_by_rows"
-	#H_type = "dense"
-	#H_type = "coordinate"
-	H_ne = 0
-	H_val = Nothing
-	H_row = Nothing
-	H_col = Nothing
-	H_ptr = Nothing
-	if H_type == "dense"
-		H_val = getHessianDenseLowerTriangularPart(H)
-		H_ne = length(H_val)
-		H_row = [Int32(0)]
-		H_col = [Int32(0)]
-		H_ptr = [Int32(0)]
-	else
-		start_time_temp = time()
-		H_ne, H_val, H_row, H_col, H_ptr = getHessianSparseLowerTriangularPart(H)
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		if print_level >= 2
-			@info "getHessianSparseLowerTriangularPart operation took $total_time_temp."
-			println("getHessianSparseLowerTriangularPart operation took $total_time_temp.")
-		end
-	end
-	d = zeros(length(g))
-	full_Path = string(@__DIR__ ,"/test")
-	use_initial_multiplier = true
-	initial_multiplier = δ
-	use_stop_args = true
-	stop_normal = 1e-5
-    stop_hard = 1e-5
-	if H_type == "sparse_by_rows" && length(H_ptr) != length(g) + 1
-		@warn "Weired case detected."
-		H_type = "coordinate"
-	end
-	# Convert the Julia string to a C-compatible representation (Cstring)
-	string_problem_name = string(@__DIR__ ,"/../DEBUG_TRS/$problem_name.csv")
-	if print_level >= 0
-		if_mkpath(string(@__DIR__ ,"/../DEBUG_TRS"))
-		if !isfile(string_problem_name)
-			open(string_problem_name,"a") do iteration_status_csv_file
-				write(iteration_status_csv_file, "status,hard_case,x_norm,radius,multiplier,lambda,len_history,factorizations\n");
-	    	end
-		end
-	end
-
-	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-	start_time_temp = time()
-	userdata = ccall((:trs, LIBRARY_PATH_TRS), userdata_type_trs, (Cint, Cint, Cstring, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Ref{Cint}, Ref{Cint}, Ref{Cint}, Cdouble, Cint, Cint, Cuchar, Cdouble, Cuchar, Cdouble, Cdouble, Cstring), length(g), H_ne, H_type, f, d, g, H_val, H_row, H_col, H_ptr, r, print_level, max_factorizations, use_initial_multiplier, initial_multiplier, use_stop_args, stop_normal, stop_hard, string_problem_name)
-	end_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-	end_time_temp = time()
-	total_time_temp = end_time_temp - start_time_temp
-	if print_level >= 2
-		@info "calling GALAHAD operation took $total_time_temp."
-		println("calling GALAHAD operation took $total_time_temp.")
-	end
-
-	tol = 1e-1
-	condition_success = norm(d, 2) - r <= tol || abs(norm(d, 2) - r) <= stop_normal * r + tol || abs(norm(d, 2) - r) <= stop_normal + tol
-	total_number_factorizations = userdata.factorizations
-	if userdata.status != 0 || !condition_success
-		if print_level >= 1
-			println("Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status).")
-		end
-		if userdata.status == 0
-			norm_d = norm(d, 2)
-			@warn "Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r."
-			if print_level >= 1
-				println("Solution isn't inside the trust-region. ||d_k|| = $norm_d but radius is $r.")
-			end
-		else
-			if print_level >= 0
-				@warn "Failed to solve trust region subproblem using TRS factorization method from GALAHAD. Status is $(userdata.status)."
-			end
-		end
-
-		try
-			start_time_temp = time()
-			success, δ, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, stop_normal, r, min_grad, print_level)
-			total_number_factorizations += temp_total_number_factorizations
-			end_time_temp = time()
-			total_time_temp = end_time_temp - start_time_temp
-			if print_level >= 2
-				@info "$success. optimizeSecondOrderModel operation took $total_time_temp."
-				println("optimizeSecondOrderModel operation took $total_time_temp.")
-			end
-			return success, δ, d_k, total_number_factorizations, hard_case
-		catch e
-			@error e
-			throw(e)
-		end
-	end
-
-    multiplier = userdata.multiplier
-	hard_case = Bool(userdata.hard_case != 0)
-    return true, multiplier, d, total_number_factorizations, hard_case
-end
-
-function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64, print_level::Int64=0)
-    iter = 100000
-	H_dense = getHessianDenseLowerTriangularPart(H)
-	d = zeros(length(g))
-	stop_relative = 1.5e-8
-	stop_relative = min(1e-6 * min_grad, 1e-6)
-	stop_absolute = 0.0
-	steihaug_toint = false
-	stop_absolute = 0.0
-	stop_relative = 0.0
-	userdata = ccall((:gltr, LIBRARY_PATH_GLTR), userdata_type_gltr, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cdouble, Cdouble, Cuchar), length(g), f, d, g, H_dense, r, print_level, iter, stop_relative, stop_absolute, steihaug_toint)
-	if userdata.status < 0
-		steihaug_toint = true
-		stop_relative = min(0.1 * min_grad, 0.1)
-		d = zeros(length(g))
-		userdata = ccall((:gltr, LIBRARY_PATH_GLTR), userdata_type_gltr, (Cint, Cdouble, Ref{Cdouble}, Ref{Cdouble}, Ref{Cdouble}, Cdouble, Cint, Cint, Cdouble, Cdouble, Cuchar), length(g), f, d, g, H_dense, r, print_level, iter, stop_relative, stop_absolute, steihaug_toint)
-	end
-	if userdata.status != 0
-		throw(error("Failed to solve trust region subproblem using GLTR iterative method from GALAHAD. Status is $(userdata.status)."))
-	end
-	return true, userdata.multiplier, d, userdata.iter, false
-end
-
-function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
+function computeSearchDirection(
+	g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	)
 	temp_total_number_factorizations_bisection = 0
 	temp_total_number_factorizations_findinterval = 0
 	temp_total_number_factorizations_compute_search_direction = 0
@@ -289,7 +83,11 @@ function computeSearchDirection(g::Vector{Float64}, H, δ::Float64, γ_2::Float6
 	return true, true, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 end
 
-function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
+function optimizeSecondOrderModel(
+	g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	)
     #When δ is 0 and the Hessian is positive semidefinite, we can directly compute the direction
 	total_number_factorizations = 0
 	temp_total_number_factorizations_findinterval = 0
@@ -367,7 +165,11 @@ function optimizeSecondOrderModel(g::Vector{Float64}, H, δ::Float64, γ_2::Floa
     end
 end
 
-function phi(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0)
+function phi(
+	g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0
+	)
     sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
     shifted_hessian = H + δ * sparse_identity
 	temp_d = zeros(length(g))
@@ -405,7 +207,11 @@ function phi(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, prin
     end
 end
 
-function findinterval(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0)
+function findinterval(
+	g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0
+	)
 	@assert δ >= 0
 	if print_level >= 1
 		println("STARTING WITH δ = $δ.")
@@ -500,7 +306,11 @@ function findinterval(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::Floa
     return true, δ, δ_prime, max_iterations + 2
 end
 
-function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0)
+function bisection(
+	g::Vector{Float64},
+	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	δ::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	)
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
 	initial_δ = δ
@@ -566,7 +376,11 @@ function bisection(g::Vector{Float64}, H, δ::Float64, γ_2::Float64, δ_prime::
     return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1
 end
 
-function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ::Float64, δ_prime::Float64, min_grad::Float64, print_level::Int64=0)
+function solveHardCaseLogic(
+	g::Vector{Float64},
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	γ_2::Float64, r::Float64, δ::Float64, δ_prime::Float64, min_grad::Float64, print_level::Int64=0
+	)
 	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
 	total_number_factorizations = 0
 	temp_total_number_factorizations_compute_search_direction = 0
@@ -624,7 +438,12 @@ function solveHardCaseLogic(g::Vector{Float64}, H, γ_2::Float64, r::Float64, δ
 	end
 end
 
-function inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2; max_iter=1000, ϵ=1e-3, print_level=2)
+function inverse_power_iteration(
+	g::Vector{Float64},
+	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	min_grad::Float64, δ::Float64, δ_prime::Float64, r::Float64, γ_2::Float64;
+	max_iter::Int64=1000, ϵ::Float64=1e-3, print_level::Int64=2
+	)
    sigma = δ_prime
    start_time_temp = time()
    n = size(H, 1)
