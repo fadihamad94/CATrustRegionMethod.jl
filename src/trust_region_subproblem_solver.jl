@@ -219,7 +219,7 @@ function trs(f::Float64, g::Vector{Float64}, H, δ::Float64, γ_2::Float64, r::F
 end
 
 function gltr(f::Float64, g::Vector{Float64}, H, r::Float64, min_grad::Float64, print_level::Int64=0)
-    iter = 10000
+    iter = 100000
 	H_dense = getHessianDenseLowerTriangularPart(H)
 	d = zeros(length(g))
 	stop_relative = 1.5e-8

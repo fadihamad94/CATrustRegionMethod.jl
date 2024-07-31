@@ -30,7 +30,7 @@ mutable struct TerminationConditions
 	MINIMUM_OBJECTIVE_FUNCTION::Float64
 
 	function TerminationConditions(MAX_ITERATIONS::Int64=100000, gradient_termination_tolerance::Float64=1e-5,
-		MAX_TIME::Float64=30 * 60.0, STEP_SIZE_LIMIT::Float64=2.0e-16, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
+		MAX_TIME::Float64=5 * 60 * 60.0, STEP_SIZE_LIMIT::Float64=2.0e-16, MINIMUM_OBJECTIVE_FUNCTION::Float64=-1e30)
 		@assert(MAX_ITERATIONS > 0)
 		@assert(gradient_termination_tolerance > 0)
         @assert(MAX_TIME > 0)

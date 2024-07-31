@@ -46,12 +46,12 @@ function parse_command_line()
     "--max_it"
     help = "The maximum number of iterations to run"
     arg_type = Int64
-    default = 10000
+    default = 100000
 
     "--max_time"
     help = "The maximum time to run in seconds"
     arg_type = Float64
-    default = 30 * 60.0
+    default = 5 * 60 * 60.0
 
     "--tol_opt"
     help = "The tolerance for optimality"

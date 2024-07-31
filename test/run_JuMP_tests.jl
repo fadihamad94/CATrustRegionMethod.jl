@@ -50,7 +50,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
 	default_print_level = 0
 	default_max_iterations = 100000
 	default_gradient_termination_tolerance = 1e-5
-	default_max_time =  30 * 60.0
+	default_max_time = 5 * 60 * 60.0
 	default_step_size_limit = 2.0e-16
 	options = Dict{String, Any}("initial_radius_struct!r_1"=>default_r_1,
     	"β_1"=>default_β_1,
