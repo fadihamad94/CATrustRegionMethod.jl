@@ -32,7 +32,7 @@ $ julia --project=scripts scripts/solve_cutest.jl --help
 Here is a simple example:
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --solver CAT
+$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
 ```
 
 ### Plots for CUTEst test set
@@ -45,11 +45,11 @@ $ julia --project=scripts scripts/plot_CUTEst_results.jl --output_dir ./scripts/
 ### CUTEst test set
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --solver CAT
+$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
 ```
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --solver CAT --θ 0.0
+$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --θ 0.0
 ```
 
 ```shell

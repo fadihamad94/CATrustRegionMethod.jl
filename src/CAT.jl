@@ -190,7 +190,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	ω_2 = problem.ω_2
 	γ_1 = problem.γ_1
 	γ_2 = problem.γ_2
-	γ_3 = problem.γ_3 #
+	γ_3 = problem.γ_3
 	θ = problem.θ
 	ξ = problem.ξ
 	seed = problem.seed
