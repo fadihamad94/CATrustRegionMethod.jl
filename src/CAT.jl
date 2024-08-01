@@ -1,5 +1,3 @@
-Random.seed!(1)
-
 function computeSecondOrderModel(
 	f::Float64, g::Vector{Float64},
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
@@ -192,9 +190,10 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	ω_2 = problem.ω_2
 	γ_1 = problem.γ_1
 	γ_2 = problem.γ_2
-	γ_3 = 1.0 # //TODO Make param
+	γ_3 = problem.γ_3 # //TODO Make param γ_3 = 1.0
 	θ = problem.θ
-	ξ = 0.1# //TODO Make param
+	ξ = problem.ξ# //TODO Make param 0.1
+	seed = problem.seed
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct
 	r_1 = initial_radius_struct.r_1
@@ -222,6 +221,8 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	total_number_factorizations_bisection = 0
 	total_number_factorizations_compute_search_direction = 0
 	total_number_factorizations_inverse_power_iteration = 0
+
+	Random.seed!(seed)
 
     k = 1
     try

@@ -88,6 +88,16 @@ function parse_command_line()
     arg_type = Float64
     default = 0.8
 
+	"--γ_3"
+	help = "γ_3 parameter for CAT"
+	arg_type = Float64
+	default = 1.0
+
+	"--ξ"
+	help = "ξ parameter for CAT"
+	arg_type = Float64
+	default = 0.1
+
     "--r_1"
     help = "Initial trust region radius. Negative values indicates using our default radius of value 10 * \frac{|g(x_1)||}{||H(x_1)||}"
     arg_type = Float64
@@ -113,6 +123,11 @@ function parse_command_line()
     arg_type = Int64
     default = 0
 
+	"--seed"
+	help = "Specify seed level for randomness."
+	arg_type = Int64
+	default = 0
+
     "--criteria"
     help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `initial_radius`, `radius_update_rule`."
     arg_type = String
@@ -133,11 +148,12 @@ function createProblemData(
 	ω_2::Float64,
 	γ_1::Float64,
 	γ_2::Float64,
+	γ_3::Float64,
+	ξ::Float64,
 	r_1::Float64)
 		problem_data_vec = []
-		solver = consistently_adaptive_trust_region_method.OPTIMIZATION_METHOD_DEFAULT
 		radius_update_rule_approach = "DEFAULT"
-		problem_data_original = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, radius_update_rule_approach)
+		problem_data_original = (β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, γ_3, ξ, radius_update_rule_approach)
 		for crt in criteria
 			if crt == "original"
 				problem_data = problem_data_original
@@ -162,7 +178,7 @@ function createProblemData(
 				index_to_override = 4
 				new_problem_data = (problem_data[1:index_to_override-1]..., ω_1, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
-				index_to_override = 12
+				index_to_override = 13
 				radius_update_rule_approach = "NOT DEFAULT"
 				new_problem_data = (problem_data[1:index_to_override-1]..., radius_update_rule_approach, problem_data[index_to_override+1:end]...)
 				problem_data = new_problem_data
@@ -197,11 +213,12 @@ function runModelFromProblem(
 	problem_data,
 	δ::Float64,
 	print_level::Int64,
+	seed::Int64,
 	total_results_output_file_path::String
 	)
 
 	global nlp = nothing
-	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, solver, radius_update_rule_approach = problem_data
+	β, θ, ω_1, ω_2, r_1, max_it, tol_opt, max_time, γ_1, γ_2, γ_3, ξ, radius_update_rule_approach = problem_data
 	start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
 	try
 		dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -210,12 +227,12 @@ function runModelFromProblem(
 		nlp = CUTEstModel(cutest_problem)
 		termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(max_it, tol_opt, max_time)
 		initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
-		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2,print_level, radius_update_rule_approach)
+		problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, β, θ, ω_1, ω_2, γ_1, γ_2, γ_3, ξ, seed, print_level, radius_update_rule_approach)
 		x_1 = problem.nlp.meta.x0
 		x = x_1
 		status = Nothing
 		iteration_stats = Nothing
-		x, status, iteration_stats, computation_stats, total_iterations_count, total_execution_time = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ, solver)
+		x, status, iteration_stats, computation_stats, total_iterations_count, total_execution_time = consistently_adaptive_trust_region_method.CAT(problem, x_1, δ)
 		function_value = NaN
 		gradient_value = NaN
 		if size(last(iteration_stats, 1))[1] > 0
@@ -291,7 +308,9 @@ function runProblems(
 	default_problems::Bool,
 	min_nvar::Int64,
 	max_nvar::Int64,
-	print_level::Int64)
+	print_level::Int64,
+	seed::Int64
+	)
 
 	cutest_problems = []
     if default_problems
@@ -331,7 +350,7 @@ function runProblems(
 				@info "$dates_format Skipping Problem $cutest_problem."
 				continue
 			else
-				runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, total_results_output_file_path)
+				runModelFromProblem(cutest_problem, crt, problem_data_vec[index], δ, print_level, seed, total_results_output_file_path)
 			end
 		end
 
@@ -373,10 +392,12 @@ function main()
   	ω_2 = parsed_args["ω_2"]
 	γ_1 = parsed_args["γ_1"]
   	γ_2 = parsed_args["γ_2"]
+	γ_3 = parsed_args["γ_3"]
+    ξ = parsed_args["ξ"]
   	δ = parsed_args["δ"]
 	print_level = parsed_args["print_level"]
+	seed = parsed_args["seed"]
 
-  	# default_criteria = ["ρ_hat_rule", "GALAHAD_TRS", "initial_radius", "radius_update_rule"]
 	default_criteria = ["ρ_hat_rule", "initial_radius", "radius_update_rule"]
   	criteria = split(parsed_args["criteria"], ",")
   	for val in criteria
@@ -386,11 +407,11 @@ function main()
   	end
 	criteria = vcat("original", criteria)
 	criteria = String.(criteria)
-	#criteria = criteria[2:2]
-	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, r_1)
+
+	problem_data_vec = createProblemData(criteria, max_it, max_time, tol_opt, θ, β, ω_1, ω_2, γ_1, γ_2, γ_3, ξ, r_1)
 	@info criteria
 	@info problem_data_vec
-	runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level)
+	runProblems(criteria, problem_data_vec, δ, folder_name, default_problems, min_nvar, max_nvar, print_level, seed)
 end
 
 function convertStatusCodeToStatusString(status)
