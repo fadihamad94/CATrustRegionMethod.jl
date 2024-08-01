@@ -126,7 +126,7 @@ function parse_command_line()
 	"--seed"
 	help = "Specify seed level for randomness."
 	arg_type = Int64
-	default = 0
+	default = 1
 
     "--criteria"
     help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `initial_radius`, `radius_update_rule`."

@@ -110,7 +110,7 @@ function parse_command_line()
 	"--seed"
 	help = "Specify seed level for randomness."
 	arg_type = Int64
-	default = 0
+	default = 1
   end
 
   return ArgParse.parse_args(arg_parse)
