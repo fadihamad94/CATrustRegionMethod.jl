@@ -190,9 +190,9 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	ω_2 = problem.ω_2
 	γ_1 = problem.γ_1
 	γ_2 = problem.γ_2
-	γ_3 = problem.γ_3 # //TODO Make param γ_3 = 1.0
+	γ_3 = problem.γ_3 #
 	θ = problem.θ
-	ξ = problem.ξ# //TODO Make param 0.1
+	ξ = problem.ξ
 	seed = problem.seed
 	#Initial radius
 	initial_radius_struct = problem.initial_radius_struct

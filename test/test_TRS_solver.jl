@@ -580,7 +580,6 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     @test abs(δ_k - 1e-5) <= γ_2 && abs(norm(d_k, 2) - r) <= γ_2
 end
 
-#TODO check this later
 function test_optimize_second_order_model_bisection_failure_non_hard_case()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem3()
     x = [3.0, 2.0]
