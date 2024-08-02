@@ -394,7 +394,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 			total_function_evaluation += temp_total_function_evaluation
 			gval_next = gval_current
 			# When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
-			# candidate solution has a reduction in the function value so that we accept the step by
+			# candidate solution has a reduction in the function value so that we accept the step
 			if success_subproblem_solve
 				if fval_next <= fval_current + ξ * min_gval_norm * norm(d_k) + (1 + abs(fval_current)) * 1e-8
 					total_gradient_evaluation += 1
