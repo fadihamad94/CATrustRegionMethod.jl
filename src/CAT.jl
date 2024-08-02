@@ -50,7 +50,7 @@ function sub_routine_trust_region_sub_problem_solver(
 	temp_total_function_evaluation = 0
 
 	# Solve the trust-region subproblem to generate the search direction d_k
-	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_2, r_k, min_gval_norm, print_level)
+	success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, print_level)
 	if success_subproblem_solve
 		q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
 		q_2 = γ_1 * min_gval_norm
@@ -415,7 +415,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 			if r_k <= STEP_SIZE_LIMIT || 0 < norm(d_k) <= STEP_SIZE_LIMIT
 				computation_stats = Dict("total_function_evaluation" => total_function_evaluation, "total_gradient_evaluation" => total_gradient_evaluation, "total_hessian_evaluation" => total_hessian_evaluation, "total_number_factorizations" => total_number_factorizations, "total_number_factorizations_findinterval" => total_number_factorizations_findinterval, "total_number_factorizations_bisection" => total_number_factorizations_bisection, "total_number_factorizations_compute_search_direction" => total_number_factorizations_compute_search_direction, "total_number_factorizations_inverse_power_iteration" => total_number_factorizations_inverse_power_iteration)
 				if print_level >= 0
-					println("$k. Trust region radius $r_k is too small.")
+					println("$k. Step size is too small.")
 				end
 				end_time_ = time()
 				total_execution_time = end_time_ - start_time_
@@ -510,7 +510,6 @@ function evalHessian(nlp::Union{AbstractNLPModel, MathOptNLPModel, MathOptInterf
 	            hessian[hessian_sparsity[i][1], hessian_sparsity[i][2]]+= H_vec[i]
 	        end
 	    end
-		matrix_hessian = Matrix(hessian)
 		return restoreFullMatrix(hessian)
 	end
 end

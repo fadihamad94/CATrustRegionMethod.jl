@@ -2,34 +2,55 @@ export phi, findinterval, bisection
 using LinearAlgebra
 using Dates
 
-#=
-The big picture idea here is to optimize the trust region subproblem using a factorization method based
-on the optimality conditions:
-H d_k + g + δ d_k = 0
-H + δ I ≥ 0
-δ(r -  ||d_k ||) = 0
-
-That is why we defined the below phi to solve that using bisection logic.
-=#
-
-function if_mkpath(dir::String)
-  if !isdir(dir)
-     mkpath(dir)
-  end
-end
-
+"""
+solveTrustRegionSubproblem(f, g, H, x, δ, γ_1, γ_2, r, min_grad, print_level)
+See optimizeSecondOrderModel
+"""
 function solveTrustRegionSubproblem(
 	f::Float64, g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	x_k::Vector{Float64}, δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	x_k::Vector{Float64}, δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
 	)
-	return optimizeSecondOrderModel(g, H, δ, γ_2, r, min_grad, print_level)
+	return optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
 end
 
+"""
+  computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+  Find solution to (1).
+
+  This is done by definying a univariate function ϕ (See (3)) in δ. First we construct an interval [δ, δ_prime]
+	  such that ϕ(δ) * ϕ(δ_prime) <= 0 and then using bisection, we find a root δ_m for the ϕ function. Using δ_m
+	  we compute d_k as d_k = (H + δ_m * I) ^ {-1} (-g)
+
+  # Inputs:
+	- `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+	See (1). The Hessian at the current iterate x.
+	- `δ::Float64`. See (1). A warm start value for solving the above system (2).
+	- `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+	- `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+	- `r::Float64`. See (1). The trsut-region radius.
+	- `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+	- `print_level::Float64`. The verbosity level of logs.
+
+  # Outputs:
+	'success_find_interval::Bool'. See (3). It specifies if we found an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0.
+	'success_bisection::Bool'. See (3). It specifies if we found δ_m ∈ [δ, δ_prime] such that ϕ(δ_m) = 0.
+	'δ_m::Float64'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
+	'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+	'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+	'd_k:Vector{Float64}`. See (1). The search direction which is the solution of (1).
+	'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
+	'hard_case::Bool'. See (2). It specifies if δ_m = -λ_1(H) where λ_1 is the minimum eigenvalue of the matrix H.
+	'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+	'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
+	'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
+	temp_total_number_factorizations = temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
+"""
 function computeSearchDirection(
 	g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
 	)
 	temp_total_number_factorizations_bisection = 0
 	temp_total_number_factorizations_findinterval = 0
@@ -53,7 +74,7 @@ function computeSearchDirection(
 	end
 
 	start_time_temp = time()
-	success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection = bisection(g, H, δ, γ_2, δ_prime, r, min_grad, print_level)
+	success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection = bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
 	temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
@@ -83,10 +104,56 @@ function computeSearchDirection(
 	return true, true, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 end
 
+"""
+optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+This function finds a solution to the quadratic problem
+
+	argmin_d 1/2 d ^ T * H * d + g ^ T  * d
+	s.t. || d || <= r                  (1)
+	where || . || is the l2 norm of a vector.
+
+This problem (1) is solved approximately by solving the follwoing system of equations:
+
+||H d_k + g + δ d_k|| <= γ_1 * min_grad           (2)
+γ_2 * ||d_k||) <=  γ_2 * r
+||d_k|| <= r
+H + δ I ≥ 0
+
+The logic to find the solution either by defining a univariate function ϕ (See (3)) in δ. Then, we construct an interval [δ, δ_prime]
+	such that ϕ(δ) * ϕ(δ_prime) <= 0 and then using bisection, we find a root δ_m for the ϕ function. Using δ_m
+	we compute d_k as d_k = (H + δ_m * I) ^ {-1} (-g). If for a reason, we failed to construct the interval or the bisection failed,
+	then we mark the problem as a hard case and we use inverse power iteration to find an approximate minimum eigen value
+	of the Hessian and then compute the search direction using the minimum eigen value.
+
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+  - `δ::Float64`. See (1). A warm start value for solving the above system (2)
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
+# Outputs:
+  'success_subproblem_solve::Bool'
+  'δ_k::Float64'.  See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_k) = 0.
+  This is used to compute d_k.
+  'd_k::Vector{Float64}`. See (1). The search direction which is the solution of (1).
+  'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
+  'hard_case::Bool'. See (2). It specifies if δ_k = -λ_1(H) where λ_1 is the minimum eigenvalue of the matrix H.
+  'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+  'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
+  'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
+  temp_total_number_factorizations = temp_total_number_factorizations_findinterval
+  + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
+  + temp_total_number_factorizations_inverse_power_iteration
+"""
 function optimizeSecondOrderModel(
 	g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
 	)
     #When δ is 0 and the Hessian is positive semidefinite, we can directly compute the direction
 	total_number_factorizations = 0
@@ -110,7 +177,7 @@ function optimizeSecondOrderModel(
 	δ_m = δ
 	δ_prime = δ
     try
-		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, total_number_factorizations_compute_search_direction = computeSearchDirection(g, H, δ, γ_2, r, min_grad, print_level)
+		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, total_number_factorizations_compute_search_direction = computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
 		@assert temp_total_number_factorizations == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
 		temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction # TO ACCOUNT FOR THE FIRST ATTEMP WITH d_k = cholesky(H) \ (-g)
 		temp_total_number_factorizations_ += temp_total_number_factorizations
@@ -165,6 +232,25 @@ function optimizeSecondOrderModel(
     end
 end
 
+"""
+phi(g, H, δ, γ_2, r, print_level)                     (3)
+
+The function is a decreasing univariate function in δ. It is equal to -1 when H + δ I >= 0 and ||d_k|| < γ_2 r.
+	It is equal to 0 when H + δ I >= 0 and γ_2 r <= ||d_k|| <= r. It is equal to 1 when H + δ I < 0 or ||d_k|| > r.
+	With d_k = (H + δ * I) ^ {-1} (-g)
+
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - `δ::Float64`. See (1). The variable in the function.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `print_level::Float64`. The verbosity level of logs.
+
+# Outputs:
+  An integer values that takes the values -1, 0, or 1.
+"""
 function phi(
 	g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
@@ -207,6 +293,25 @@ function phi(
     end
 end
 
+"""
+findinterval(g, H, δ, γ_2, r, print_level)
+
+Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (3)) such that ϕ(δ) >= 0 and ϕ(δ_prime) <=0.
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - `δ::Float64`. See (1). A warm start value for solving the above system (2).
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `print_level::Float64`. The verbosity level of logs.
+
+# Outputs:
+  'success_find_interval::Bool'. See (3). It specifies if we found an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0.
+  'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+"""
 function findinterval(
 	g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
@@ -306,10 +411,34 @@ function findinterval(
     return true, δ, δ_prime, max_iterations + 2
 end
 
+
+"""
+bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
+
+Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (3)) such that ϕ(δ) >= 0 and ϕ(δ_prime) <=0.
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
+
+# Outputs:
+  'success_bisectionl::Bool'. See (3). It specifies if we found δ_m ∈ the interval [δ, δ_prime] such that ϕ(δ_m) = 0.
+  'δ_m::Float64'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
+  'δ::Float64'. See (3). The new lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  'δ_prime::Float64'. See (3). The new upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
+"""
 function bisection(
 	g::Vector{Float64},
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
+	δ::Float64, γ_1::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
 	)
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
@@ -336,12 +465,11 @@ function bisection(
 		δ_m = (δ + δ_prime) / 2
         Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
         k = k + 1
-        γ_1 = 100
 		if Φ_δ_m != 0
 			ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime = phi(g, H, δ_prime, γ_2, r)
 			ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
 			q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
-			q_2 = min_grad / γ_1
+			q_2 = γ_1 * min_grad
 			if print_level >= 2
 				println("$k===============Bisection entered here=================")
 			end
@@ -375,6 +503,35 @@ function bisection(
 	end
     return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1
 end
+
+"""
+solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+
+Find a solution to (2) if for a reason, we failed to construct the interval or the bisection failed. In this case,
+ we mark the problem as a hard case and we use inverse power iteration to find an approximate minimum eigen value
+ of the Hessian and then compute the search direction using the minimum eigen value.
+
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
+
+# Outputs:
+  'success::Bool'. See (3). It specifies if we found the solution of (1).
+  'δ::Float64'. See (1), (2), and (3). The solution of the above system of equations (2) such that ϕ(δ) = 0.
+   It has the minimum eigenvalue of H.
+  'd_k::Vector{Float64}'. See (1). The search direction which is the solution of (1).
+   d_k = cholesky(H + (δ + 1e-1) * I) ^ {-1} (-g)
+  'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
+  'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = cholesky(H + (δ + 1e-1) * I) ^ {-1} (-g)
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
+"""
 
 function solveHardCaseLogic(
 	g::Vector{Float64},
@@ -438,6 +595,31 @@ function solveHardCaseLogic(
 	end
 end
 
+"""
+inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2, max_iter, ϵ, print_level)
+
+Compute iteratively an approximate value to the minimum eigenvalue of H.
+
+# Inputs:
+  - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+  See (1). The Hessian at the current iterate x.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `max_iter::Int64`. The maximum number of iterations to run.
+  - `ϵ::Float64`. The tolerance to specify how close the solution should be from the minimum eigenvalue.
+  - `print_level::Float64`. The verbosity level of logs.
+
+# Outputs:
+  'success::Bool'. See (3). It specifies if we found the minimum eigenvalue of H or not.
+  'eigenvalue::Float64'. The minimum eigenvalue of H.
+  'eigenvector::::Vector{Float64}'. The eigenvector for the minimum eigenvalue of H.
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
+  'temp_d_k::Vector{Float64}'. temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * I) ^ {-1} (-g)
+"""
 function inverse_power_iteration(
 	g::Vector{Float64},
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},

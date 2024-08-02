@@ -133,21 +133,22 @@ function test_bisection_with_starting_on_root_δ_zero()
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     δ = 64.0
-    ϵ = 0.8
+    γ_1 = 0.01
+    γ_2 = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, ϵ, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
     @test success
     # @test δ_m == δ == δ_prime == 0
     @test δ_m == δ == δ_prime
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
-    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, ϵ, r)
+    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -159,11 +160,12 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     δ = 0.0
+    γ_1 = 0.01
     γ_2 = 0.2
     r = 0.2
     success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
     @test success
     # @test δ_m == δ == δ_prime == 8.0
     @test δ_m == 34.0
@@ -188,11 +190,12 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     δ = 250.0
+    γ_1 = 0.01
     γ_2 = 0.2
     r = 0.3
     success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
     @test success
     @test abs(δ_m - 500.0) <= 1e-3
     Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
