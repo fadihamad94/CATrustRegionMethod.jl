@@ -44,7 +44,6 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     δ = 0.0
     problem.initial_radius_struct.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
-    # @test norm(x - [0.4, 0.6], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
@@ -56,7 +55,6 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     δ = 0.0
     problem.initial_radius_struct.r_1 = -1.0
     x, status, iteration_stats = consistently_adaptive_trust_region_method.CAT(problem, x, δ)
-    # @test norm(x - [19.01, -18.01], 2) <= tol
     @test norm(obj(problem.nlp, x) - 0.0, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
 end
@@ -131,69 +129,49 @@ function solveNLPSinCosModel2()
 end
 
 function optimize_models()
-    # println("--------------------------------------------------------------")
-    # println("-----TESTING SOLVING NLP STARTING AT THE GLOBAL MINIMIZER-----")
-    # println("--------------------------------------------------------------")
-    # println()
+    #--------------------------------------------------------------
+    #-----TESTING SOLVING NLP STARTING AT THE GLOBAL MINIMIZER-----
+    #--------------------------------------------------------------
     solve_NLP1_starting_at_global_optimum()
-    # println()
-    # println("---------------------------------------------------------------")
-    # println("------------TESTING SOLVING SIMPLE CONVEX NLP MODEL------------")
-    # println("---------------------------------------------------------------")
-    # println()
+    #---------------------------------------------------------------
+    #------------TESTING SOLVING SIMPLE CONVEX NLP MODEL------------
+    #---------------------------------------------------------------
     solveSimpleConvexNLPModel()
-    # println()
-    # println("----------------------------------------------------------------")
-    # println("------------TESTING SOLVING COMPLEX CONVEX NLP MODEL------------")
-    # println("----------------------------------------------------------------")
-    # println()
+    #----------------------------------------------------------------
+    #------------TESTING SOLVING COMPLEX CONVEX NLP MODEL------------
+    #----------------------------------------------------------------
     solveComplexConvexNLPModel()
-    # println()
-    # println("-------------------------------------------------------------------")
-    # println("-TESTING SOLVING COMPLEX CONVEX NLP MODEL DIFFERENT STARTING POINT-")
-    # println("-------------------------------------------------------------------")
-    # println()
+    #-------------------------------------------------------------------
+    #-TESTING SOLVING COMPLEX CONVEX NLP MODEL DIFFERENT STARTING POINT-
+    #-------------------------------------------------------------------
     solveSimpleConvexNLPModelDifferentStartingPoint()
-    # println()
-    # println("-------------------------------------------------------------------")
-    # println("--TESTING SOLVING COMPLEX CONVEX NLP MODEL ANOTHER STARTING POINT--")
-    # println("-------------------------------------------------------------------")
-    # println()
+    #-------------------------------------------------------------------
+    #--TESTING SOLVING COMPLEX CONVEX NLP MODEL ANOTHER STARTING POINT--
+    #-------------------------------------------------------------------
     solveSimpleConvexNLPModelAnotherStartingPoint()
-    # println()
-    # println("----------------------------------------------------------------")
-    # println("------------TESTING SOLVING COMPLEX CONVEX NLP MODEL------------")
-    # println("----------------------------------------------------------------")
-    # println()
+    #----------------------------------------------------------------
+    #------------TESTING SOLVING COMPLEX CONVEX NLP MODEL------------
+    #----------------------------------------------------------------
     solveComplexConvexNLP1()
-    # println()
-    # println("---------------------------------------------------------")
-    # println("------------TESTING SOLVING COMPLEX NLP MODEL------------")
-    # println("---------------------------------------------------------")
-    # println()
+    #---------------------------------------------------------
+    #------------TESTING SOLVING COMPLEX NLP MODEL------------
+    #---------------------------------------------------------
     solveComplexNLPModeL1()
-    # println()
-    # println("---------------------------------------------------------")
-    # println("------------TESTING SOLVING SIN COS NLP MODEL------------")
-    # println("---------------------------------------------------------")
-    # println()
+    #---------------------------------------------------------
+    #------------TESTING SOLVING SIN COS NLP MODEL------------
+    #---------------------------------------------------------
     solveNLPSinCosModel1()
-    # println("-------------------------------------------------------------")
-    # println("-TESTING SOLVING SIN COS NLP MODEL  DIFFERENT STARTING POINT-")
-    # println("-------------------------------------------------------------")
-    # println()
+    #-------------------------------------------------------------
+    #-TESTING SOLVING SIN COS NLP MODEL  DIFFERENT STARTING POINT-
+    #-------------------------------------------------------------
     solveNLPSinCosModel1DifferentStartingPoint()
-    # println()
-    # println("----------------------------------------------------------")
-    # println("-----TESTING SOLVING SIN COS NLP MODEL DELTA NOT ZERO-----")
-    # println("----------------------------------------------------------")
-    # println()
+    #----------------------------------------------------------
+    #-----TESTING SOLVING SIN COS NLP MODEL DELTA NOT ZERO-----
+    #----------------------------------------------------------
     solveNLPSinCosModel1DeltaNotZero()
-    # println()
-    # println("---------------------------------------------------------")
-    # println("------------TESTING SOLVING SIN COS NLP MODEL------------")
-    # println("---------------------------------------------------------")
-    # println()
+    #---------------------------------------------------------
+    #------------TESTING SOLVING SIN COS NLP MODEL------------
+    #---------------------------------------------------------
     solveNLPSinCosModel2()
 end
 

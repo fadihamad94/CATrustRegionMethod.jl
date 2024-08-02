@@ -375,9 +375,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    # @test norm((x_k + d_k) - [0.5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
-    # @test norm(obj(nlp, x_k + d_k) - 0.25, 2) <= tol
 end
 
 function test_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
@@ -425,7 +423,6 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm((H + δ_k * I) \ g, 2) - r) <= γ_2
-    # @test norm((x_k + d_k) - [0.333, 0.333], 2) <= tol
     @test δ_k == 2.5
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -434,12 +431,10 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     tol = 1e-3
     problem = test_create_hard_case_using_simple_univariate_convex_model()
     nlp = problem.nlp
-    # x_k = [0.01]
     x_k = [1e-5]
     δ = 0.0
     γ_1 = 0.01
     γ_2 = 1 - 1e-5
-    # r = 2.0
     r = 0.0002
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -679,15 +674,12 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     ϵ = 0.8
     r = 0.2
     success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
-    # @test δ == δ_prime == 8.0
     @test δ == 4.0
     @test δ_prime == 64.0
     Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
-    # @test Φ_δ == 0
     @test Φ_δ == 1
     @test positive_definite
     Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
-    # @test Φ_δ_prime == 0
     @test Φ_δ_prime == -1
     @test positive_definite
 end
@@ -744,7 +736,6 @@ function test_bisection_with_starting_on_root_δ_zero()
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
     @test success
-    # @test δ_m == δ == δ_prime == 0
     @test δ_m == δ == δ_prime
     Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 0
@@ -771,7 +762,6 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
     @test success
-    # @test δ_m == δ == δ_prime == 8.0
     @test δ_m == 34.0
     @test δ == 4.0
     @test δ_prime == 64.0
@@ -779,7 +769,6 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     @test Φ_δ == 1
     @test positive_definite
     Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
-    # @test Φ_δ_prime == 0
     @test Φ_δ_prime == -1
     @test positive_definite
     Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
@@ -904,6 +893,66 @@ function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     @test norm(ρ - 1.126954013438328, 2) <= tol
 end
 
+function test_compute_l_2_norm_diagonal_matrix()
+    tol = 1e-3
+
+    # Create a diagonal sparse matrix
+    i = [1, 2, 3]
+    j = [1, 2, 3]
+    v = [10.0, 20.0, 30.0]
+    diagonal_sparse_matrix = sparse(i, j, v)
+
+    # Create a symmetric sparse matrix
+    symmetric_diagonal_matrix = Symmetric(diagonal_sparse_matrix)
+
+    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_diagonal_matrix)
+
+    l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_diagonal_matrix), 2)
+
+    @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
+end
+
+function test_compute_l_2_norm_symmetric_matrix_2_by_2()
+    tol = 1e-3
+
+    # Define the indices and values for a sparse matrix
+    i = [1, 1, 2, 2]
+    j = [1, 2, 1, 2]
+    v = [10.0, 20.0, 20.0, 10.0]
+    sparse_matrix = sparse(i, j, v)
+
+    # Create a symmetric sparse matrix
+    symmetric_matrix = Symmetric(sparse_matrix)
+
+    # Create a symmetric sparse matrix
+    symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
+
+    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
+
+    l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
+
+    @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
+end
+
+function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
+    tol = 1e-3
+
+    # Create a sparse matrix
+    i = [1, 2, 3, 1]
+    j = [1, 2, 3, 2]
+    v = [10.0, 20.0, 30.0, 40.0]
+    sparse_matrix = sparse(i, j, v)
+
+    # Create a symmetric sparse matrix
+    symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
+
+    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
+
+    l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
+
+    @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
+end
+
 function unit_tests()
     #Unit test for the ϕ function
     test_phi_negative_one()
@@ -930,6 +979,11 @@ function unit_tests()
     test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     test_compute_ρ_hat_phi_zero()
     test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
+
+    #Unit test for the matrix l2 norm function
+    test_compute_l_2_norm_diagonal_matrix()
+    test_compute_l_2_norm_symmetric_matrix_2_by_2()
+    test_compute_l_2_norms_ymmetric_matrix_3_by_3()
 end
 
 function optimize_models()
@@ -948,7 +1002,7 @@ function optimize_models()
     test_optimize_second_order_model_bisection_failure_non_hard_case()
 end
 
-@testset "basic_CAT_tests" begin
+@testset "basic_unit_tests" begin
     unit_tests()
 end
 

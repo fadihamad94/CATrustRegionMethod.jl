@@ -60,6 +60,8 @@ function computeSearchDirection(
 	if print_level >= 2
 		println("Starting Find Interval")
 	end
+
+	# Construct an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
 	success, δ, δ_prime, temp_total_number_factorizations_findinterval = findinterval(g, H, δ, γ_2, r, print_level)
 	temp_total_number_factorizations_ += temp_total_number_factorizations_findinterval
 	end_time_temp = time()
@@ -68,12 +70,17 @@ function computeSearchDirection(
 		println("findinterval operation finished with (δ, δ_prime) = ($δ, $δ_prime) and took $total_time_temp.")
 	end
 
+	# If we fail to construct the interval [δ, δ_prime], we return failure and the problem will be solved using the
+	# hard case logic.
 	if !success
 		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
 		return false, false, δ, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
 	end
 
 	start_time_temp = time()
+
+	# Find a root δ_m ∈ [δ, δ_prime] for the ϕ function using bisection.
+	# we compute d_k as d_k = (H + δ_m * I) \ (-g)
 	success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection = bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
 	temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
 	end_time_temp = time()
@@ -82,6 +89,8 @@ function computeSearchDirection(
 		println("$success. bisection operation took $total_time_temp.")
 	end
 
+	# If we fail to find δ_m using bisection, we return failure and the problem will be solved using the
+	# hard case logic.
 	if !success
 		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
 		return true, false, δ_m, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
@@ -93,6 +102,8 @@ function computeSearchDirection(
 	temp_total_number_factorizations_compute_search_direction += 1
 	temp_total_number_factorizations_ += temp_total_number_factorizations_compute_search_direction
 
+	# Using δ_m, we compute d_k = (H + δ_m * I) \ (-g)
+	# Cholesky factorization is done as an extra validation that H + δ_m * I is positive definite.
 	start_time_temp = time()
 	d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
 	end_time_temp = time()
@@ -155,7 +166,7 @@ function optimizeSecondOrderModel(
 	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
 	δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
 	)
-    #When δ is 0 and the Hessian is positive semidefinite, we can directly compute the direction
+    # When δ is 0 and the Hessian is positive semidefinite, we can directly compute the search direction
 	total_number_factorizations = 0
 	temp_total_number_factorizations_findinterval = 0
 	temp_total_number_factorizations_bisection = 0
@@ -177,6 +188,9 @@ function optimizeSecondOrderModel(
 	δ_m = δ
 	δ_prime = δ
     try
+		# Try to compute the search direction by constructing an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
+		# and then using bisection, we find a root δ_m ∈ [δ, δ_prime] for the ϕ function.
+		# Using δ_m we compute d_k = (H + δ_m * I) ^ {-1} (-g)
 		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, total_number_factorizations_compute_search_direction = computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
 		@assert temp_total_number_factorizations == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
 		temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction # TO ACCOUNT FOR THE FIRST ATTEMP WITH d_k = cholesky(H) \ (-g)
@@ -187,6 +201,8 @@ function optimizeSecondOrderModel(
 			total_number_factorizations += temp_total_number_factorizations_
 			return true, δ_m, d_k, total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 		end
+		# If we failed to construct the interval [δ, δ_prime] or the bisection to find a root δ_m ∈ [δ, δ_prime] for
+		# the ϕ function, then we solve the trust-region subproblem using the hard-case logic.
 		if success_find_interval
 			throw(error("Bisection logic failed to find a root for the phi function"))
 		else
@@ -196,6 +212,8 @@ function optimizeSecondOrderModel(
 		println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
 			start_time_temp = time()
+			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
+			# eigenvalue of the Hessian matrix.
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
@@ -212,6 +230,8 @@ function optimizeSecondOrderModel(
         elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
 			@error e
 			start_time_temp = time()
+			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
+			# eigenvalue of the Hessian matrix.
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
@@ -546,6 +566,8 @@ function solveHardCaseLogic(
 	temp_eigenvalue = 0
 	try
 		start_time_temp = time()
+		# Compute the minimum eigenvalue of the Hessian matrix using inverse power iteration
+		# temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
 		success, eigenvalue, eigenvector, temp_total_number_factorizations_inverse_power_iteration, temp_d_k = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2)
 		temp_eigenvalue = eigenvalue
 		end_time_temp = time()
@@ -557,6 +579,7 @@ function solveHardCaseLogic(
 		temp_total_number_factorizations_ += temp_total_number_factorizations_inverse_power_iteration
 		norm_temp_d_k = norm(temp_d_k)
 
+		# We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
 		if norm_temp_d_k == 0
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
@@ -566,11 +589,14 @@ function solveHardCaseLogic(
 		if print_level >= 2
 			@info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
 		end
+		# Validate that the search direction satisfies the trust-region subproblem termination critera
+		# The search direction in the hard case should be approximately on the trust-region boundary
 		if γ_2 * r <= norm(temp_d_k) <= r
 			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			total_number_factorizations += temp_total_number_factorizations_
 			return true, eigenvalue, temp_d_k, total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 		end
+		# The computed search direction is outside the trust-region boundary.
 		if norm(temp_d_k) > r
 			if print_level >= 1
 				println("This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2")
@@ -582,6 +608,7 @@ function solveHardCaseLogic(
 		total_number_factorizations += temp_total_number_factorizations_
 		return false, eigenvalue, zeros(length(g)), total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 	catch e
+		# We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
 		@error e
 		if print_level >= 2
 			matrix_H = Matrix(H)
@@ -641,6 +668,7 @@ function inverse_power_iteration(
 	   if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10 ^ 2 * r))
 		   try
 			   temp_factorization += 1
+			   # Validate that H + eigenvalue is positive definite
 			   temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
        		   return true, eigenvalue, y, temp_factorization, temp_d_k
 		   catch
