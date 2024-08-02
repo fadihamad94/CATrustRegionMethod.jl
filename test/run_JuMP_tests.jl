@@ -40,7 +40,7 @@ function attachSolverWithAttributesToJuMPModel(model:: Model, options::Dict{Stri
 end
 
 function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
-	default_β_1 = 0.1
+	default_β = 0.1
 	default_θ = 0.1
 	default_ω_1 = 8.0
 	default_ω_2 = 20.0
@@ -53,7 +53,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
 	default_max_time = 5 * 60 * 60.0
 	default_step_size_limit = 2.0e-16
 	options = Dict{String, Any}("initial_radius_struct!r_1"=>default_r_1,
-    	"β_1"=>default_β_1,
+    	"β"=>default_β,
 		"ω_2"=>default_ω_2,
         "print_level"=>default_print_level,
         "termination_conditions_struct!MAX_ITERATIONS"=>default_max_iterations,
@@ -83,7 +83,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     @test iteration_stats == optimizer.inner.iteration_stats
     @test computation_stats == optimizer.inner.computation_stats
 
-	@test optimizer.inner.pars.β_1 == default_β_1
+	@test optimizer.inner.pars.β == default_β
 	@test optimizer.inner.pars.θ == default_θ
 	@test optimizer.inner.pars.ω_1 == default_ω_1
 	@test optimizer.inner.pars.ω_2 == default_ω_2
@@ -98,14 +98,14 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
 end
 
 function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments()
-	β_1 = 0.2
+	β = 0.2
 	ω_2 = 8.0
 	r_1 = 100.0
 	print_level = -1
 	MAX_ITERATIONS = 10
 	gradient_termination_tolerance = 1e-3
     options = Dict{String, Any}("initial_radius_struct!r_1"=>r_1,
-    	"β_1"=>β_1,
+    	"β"=>β,
 		"ω_2"=>ω_2,
         "print_level"=>print_level,
         "termination_conditions_struct!MAX_ITERATIONS"=>MAX_ITERATIONS,
@@ -127,7 +127,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     termination_conditions_struct_default = consistently_adaptive_trust_region_method.TerminationConditions()
     initial_radius_struct_default = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT()
     problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct_default, initial_radius_struct_default)
-	problem.β_1 = β_1
+	problem.β = β
 	problem.ω_2 = ω_2
 	problem.initial_radius_struct.r_1 = r_1
 	problem.print_level = print_level
@@ -142,7 +142,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     @test iteration_stats == optimizer.inner.iteration_stats
     @test computation_stats == optimizer.inner.computation_stats
 
-	@test optimizer.inner.pars.β_1 == β_1
+	@test optimizer.inner.pars.β == β
 	@test optimizer.inner.pars.ω_2 == ω_2
 	@test optimizer.inner.pars.initial_radius_struct.r_1 == r_1
 	@test optimizer.inner.pars.print_level == print_level

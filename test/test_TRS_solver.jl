@@ -607,6 +607,331 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     @test hard_case == true
 end
 
+
+function test_phi_positive_one()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = [0.0, 0.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 0.0
+    ϵ = 0.8
+    r = 0.2
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    @test Φ_δ == 1
+    @test positive_definite
+end
+
+function test_phi_zero()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = nlp.meta.x0
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 0.0
+    ϵ = 0.8
+    r = 0.4
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    @test Φ_δ == 0
+    @test positive_definite
+end
+
+function test_phi_negative_one()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = nlp.meta.x0
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 3.0
+    γ_2 = 1.0
+    r = 1.0
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    @test Φ_δ == -1
+    @test positive_definite
+end
+
+function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = nlp.meta.x0
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 0.0
+    ϵ = 0.8
+    r = 0.2
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    @test δ == δ_prime == 64.0
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    @test Φ_δ == 0
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+end
+
+function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = [0.0, 0.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 0.0
+    ϵ = 0.8
+    r = 0.2
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    # @test δ == δ_prime == 8.0
+    @test δ == 4.0
+    @test δ_prime == 64.0
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    # @test Φ_δ == 0
+    @test Φ_δ == 1
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    # @test Φ_δ_prime == 0
+    @test Φ_δ_prime == -1
+    @test positive_definite
+end
+
+function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
+    problem = test_create_dummy_problem2()
+    nlp = problem.nlp
+    x_k = [0.0, 0.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 9.0
+    ϵ = 0.8
+    r = 0.2
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    @test δ == δ_prime == 9.0
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    @test Φ_δ == 0
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+end
+
+function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
+    problem = test_create_dummy_problem2()
+    nlp = problem.nlp
+    x_k = [0.0, 1.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 250.0
+    γ_2 = 0.2
+    r = 0.3
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    @test (δ, δ_prime) == (500.0, 500.0)
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    @test Φ_δ == 0
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+end
+
+function test_bisection_with_starting_on_root_δ_zero()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = nlp.meta.x0
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 64.0
+    γ_1 = 0.01
+    γ_2 = 0.8
+    r = 0.2
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    min_grad = norm(g, 2)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    @test success
+    # @test δ_m == δ == δ_prime == 0
+    @test δ_m == δ == δ_prime
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    @test Φ_δ == 0
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+end
+
+function test_bisection_with_starting_on_root_δ_not_zero()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = [0.0, 0.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 0.0
+    γ_1 = 0.01
+    γ_2 = 0.2
+    r = 0.2
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    min_grad = norm(g, 2)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    @test success
+    # @test δ_m == δ == δ_prime == 8.0
+    @test δ_m == 34.0
+    @test δ == 4.0
+    @test δ_prime == 64.0
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    @test Φ_δ == 1
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    # @test Φ_δ_prime == 0
+    @test Φ_δ_prime == -1
+    @test positive_definite
+    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    @test Φ_δ_m == 0
+    @test positive_definite
+end
+
+function test_bisection_with_starting_from_negative_one_and_positive_one()
+    problem = test_create_dummy_problem2()
+    nlp = problem.nlp
+    x_k = [0.0, 1.0]
+    g = grad(nlp, x_k)
+    H = hess(nlp, x_k)
+    δ = 250.0
+    γ_1 = 0.01
+    γ_2 = 0.2
+    r = 0.3
+    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    min_grad = norm(g, 2)
+    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    @test success
+    @test abs(δ_m - 500.0) <= 1e-3
+    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    @test Φ_δ == 0
+    @test positive_definite
+    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    @test Φ_δ_prime == 0
+    @test positive_definite
+end
+
+function test_compute_second_order_model_negative_direction()
+    problem = test_create_dummy_problem()
+    x_k = [0.0, 0.0]
+    d_k = [-1.0, -1.0]
+    nlp = problem.nlp
+    function_value = obj(nlp, x_k)
+    gradient_value = grad(nlp, x_k)
+    hessian_value = hess(nlp, x_k)
+    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    @test second_order_model_value == 104.0 - function_value
+end
+
+function test_compute_second_order_model_zero_direction()
+    problem = test_create_dummy_problem()
+    x_k = [0.0, 0.0]
+    d_k = [0.0, 0.0]
+    nlp = problem.nlp
+    function_value = obj(nlp, x_k)
+    gradient_value = grad(nlp, x_k)
+    hessian_value = hess(nlp, x_k)
+    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    @test second_order_model_value == 1.0 - function_value
+end
+
+function test_compute_second_order_model_positive_direction()
+    problem = test_create_dummy_problem()
+    x_k = [0.0, 0.0]
+    d_k = [1.0, 1.0]
+    nlp = problem.nlp
+    function_value = obj(nlp, x_k)
+    gradient_value = grad(nlp, x_k)
+    hessian_value = hess(nlp, x_k)
+    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    @test second_order_model_value == 100.0 - function_value
+end
+
+function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = [1.0, 1.0]
+    δ = 0.0
+    ϵ = 0.2
+    r = 0.2
+    d_k = [-0.0, -0.0]
+    θ = problem.θ
+    fval_current = obj(nlp, x_k)
+    fval_next = obj(nlp, x_k + d_k)
+    gval_current = grad(nlp, x_k)
+    gval_next = grad(nlp, x_k + d_k)
+    H = hess(nlp, x_k)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)
+end
+
+function test_compute_ρ_hat_phi_zero()
+    tol = 1e-3
+    problem = test_create_dummy_problem()
+    nlp = problem.nlp
+    x_k = nlp.meta.x0
+    δ = 0.0
+    ϵ = 1.2
+    r = 0.2
+    d_k = [0.02471910112359557, 0.3806741573033706]
+    θ = problem.θ
+    fval_current = obj(nlp, x_k)
+    fval_next = obj(nlp, x_k + d_k)
+    gval_current = grad(nlp, x_k)
+    gval_next = grad(nlp, x_k + d_k)
+    H = hess(nlp, x_k)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    @test norm(ρ - 0.980423689675886, 2) <= tol
+end
+
+function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
+    tol = 1e-3
+    problem = test_create_dummy_problem2()
+    nlp = problem.nlp
+    x_k = [0.0, 1.0]
+    δ = 250.0
+    ϵ = 1.2
+    r = 0.2
+    d_k = [-0.005830328471736362, 0.34323592199917485]
+    θ = problem.θ
+    fval_current = obj(nlp, x_k)
+    fval_next = obj(nlp, x_k + d_k)
+    gval_current = grad(nlp, x_k)
+    gval_next = grad(nlp, x_k + d_k)
+    H = hess(nlp, x_k)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    @test norm(ρ - 1.126954013438328, 2) <= tol
+end
+
+function unit_tests()
+    #Unit test for the ϕ function
+    test_phi_negative_one()
+    test_phi_zero()
+    test_phi_positive_one()
+
+    #Unit test for the find interval function
+    test_find_interval_with_both_phi_zero_starting_from_phi_zero()
+    test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
+    test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
+    test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
+
+    #Unit test for the bisection function
+    test_bisection_with_starting_on_root_δ_zero()
+    test_bisection_with_starting_on_root_δ_not_zero()
+    test_bisection_with_starting_from_negative_one_and_positive_one()
+
+    #Unit test compute second order model function
+    test_compute_second_order_model_negative_direction()
+    test_compute_second_order_model_zero_direction()
+    test_compute_second_order_model_positive_direction()
+
+    #Unit test compute ρ function
+    test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+    test_compute_ρ_hat_phi_zero()
+    test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
+end
+
 function optimize_models()
     test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     test_optimize_second_order_model_phi_zero()
@@ -623,69 +948,10 @@ function optimize_models()
     test_optimize_second_order_model_bisection_failure_non_hard_case()
 end
 
-function test_findMinimumEigenValue_example_1()
-    H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
-    δ = 3.0
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
-    @test success
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-function test_findMinimumEigenValue_example_2()
-    H = sparse([10.0 6.0 2.0; 6.0 4.0 2.0; 2.0 2.0 0.0])
-    δ = 4.0
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
-    @test success
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-function test_findMinimumEigenValue_example_3()
-    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
-    δ = 0.0
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
-    @test success
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-function test_findMinimumEigenValue_example_4()
-    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
-    δ = -1.0
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ)
-    @test success
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-function test_findMinimumEigenValue_example_5()
-    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
-    δ = 3.4
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ, ϵ = 1e-4)
-    @test success
-    @show eigenvalue
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-function test_findMinimumEigenValue_example_6()
-    H = sparse([2.0 0.0 0.0; 0.0 3.0 0.0; 0.0 0.0 4.0])
-    δ = 5.0
-    success, eigenvalue, eigenvector, itr = consistently_adaptive_trust_region_method.findMinimumEigenValue(H, δ, ϵ = 1e-5)
-    @test success
-    @test abs(eigenvalue - eigmin(Matrix(H))) <= 1e-1
-end
-
-
-function findMinimumEigenValue()
-    test_findMinimumEigenValue_example_1()
-    test_findMinimumEigenValue_example_2()
-    test_findMinimumEigenValue_example_3()
-    test_findMinimumEigenValue_example_4()
-    test_findMinimumEigenValue_example_5()
-    test_findMinimumEigenValue_example_6()
+@testset "basic_CAT_tests" begin
+    unit_tests()
 end
 
 @testset "TRS_Solver_Tests" begin
     optimize_models()
 end
-#
-# @testset "findMinimumEigenValue" begin
-#     findMinimumEigenValue()
-# end

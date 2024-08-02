@@ -532,7 +532,6 @@ Find a solution to (2) if for a reason, we failed to construct the interval or t
   'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = cholesky(H + (δ + 1e-1) * I) ^ {-1} (-g)
   'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
 """
-
 function solveHardCaseLogic(
 	g::Vector{Float64},
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},

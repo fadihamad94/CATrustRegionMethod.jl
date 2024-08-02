@@ -1,17 +1,52 @@
+"""
+  computeSecondOrderModel(g, hessian_current,d)
+  Computes the second-order Taylor series expansion around the current iterate:
+  	1/2 d ^ T * H * d + g ^ T  * d (1)
+
+  # Inputs:
+	- `g::Vector{Float64}`. The gradient at the current iterate x.
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+		The Hessian at the current iterate x.
+	- `d::Vector{Float64}`. The serach direction.
+  # Output:
+   Scalar that represents the value of the second-order Taylor series expansion around the current iterate.
+"""
 function computeSecondOrderModel(
-	f::Float64, g::Vector{Float64},
+	g::Vector{Float64},
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	d_k::Vector{Float64}
+	d::Vector{Float64}
 	)
-    return transpose(g) * d_k + 0.5 * transpose(d_k) * H * d_k
+    return transpose(g) * d + 0.5 * transpose(d) * H * d
 end
 
+"""
+  compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, θ, print_level)
+
+  Computes ρ_hat based on our approach: the ratio of the actual reduction in the objective function to the predicted reduction based
+  on the second-order Taylor series expansion.
+  ρ_hat = (fval_next - fval_current) / (-M_k + 0.5 * θ * min(||gval_current||, ||gval_next||) * ||d_k||)
+  where M_k = 1/2 d ^ T * H * d + g ^ T  * d
+
+  # Inputs:
+    - `fval_current::Float64`. The function value at the current iterate x_k.
+    - `fval_next::Float64`. The function value at the next candidate iterate x_k + d_k.
+	- `gval_current::Vector{Float64}`. The gradient at the current iterate x_k.
+	- `gval_next::Vector{Float64}`. The gradient at the next candidate iterate x_k + d_k.
+	- `hessian_current::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+		The Hessian at the current iterate x_k.
+	- `d_k::Vector{Float64}`. The serach direction.
+	- `θ::Float64`. Param used for the preducted reduction.
+	- `print_level::Float64`. The verbosity level of logs.
+  # Output:
+   Scalar that represents the value of the ratio of the actual reduction in the objective function to the predicted
+   reduction based on the second-order Taylor series expansion.
+"""
 function compute_ρ_hat(
 	fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64}, gval_next::Vector{Float64},
-	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	hessian_current::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
 	d_k::Vector{Float64}, θ::Float64, print_level::Int64=0
 	)
-    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
+    second_order_model_value_current_iterate = computeSecondOrderModel(gval_current, hessian_current, d_k)
 	guarantee_factor = θ * 0.5 * min(norm(gval_current, 2), norm(gval_next, 2)) * norm(d_k, 2)
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
@@ -22,12 +57,34 @@ function compute_ρ_hat(
     return ρ_hat, actual_fct_decrease, predicted_fct_decrease, guarantee_factor
 end
 
+
+"""
+  compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, print_level)
+
+  Computes ρ based on standard trust-region methods: the ratio of the actual reduction in the objective function to the
+  predicted reduction based on the second-order Taylor series expansion.
+  ρ_hat = (fval_next - fval_current) / (-M_k)
+  where M_k = 1/2 d ^ T * H * d + g ^ T  * d
+
+  # Inputs:
+    - `fval_current::Float64`. The function value at the current iterate x_k.
+    - `fval_next::Float64`. The function value at the next candidate iterate x_k + d_k.
+	- `gval_current::Vector{Float64}`. The gradient at the current iterate x_k.
+	- `gval_next::Vector{Float64}`. The gradient at the next candidate iterate x_k + d_k.
+	- `hessian_current::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+		The Hessian at the current iterate x_k.
+	- `d_k::Vector{Float64}`. The serach direction.
+	- `print_level::Float64`. The verbosity level of logs.
+  # Output:
+   Scalar that represents the value of the ratio of the actual reduction in the objective function to the predicted
+   reduction based on the second-order Taylor series expansion.
+"""
 function compute_ρ_standard_trust_region_method(
 	fval_current::Float64, fval_next::Float64, gval_current::Vector{Float64},
-	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
+	hessian_current::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
 	d_k::Vector{Float64}, print_level::Int64=0
 	)
-    second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, H, d_k)
+    second_order_model_value_current_iterate = computeSecondOrderModel(gval_current, hessian_current, d_k)
 	actual_fct_decrease = fval_current - fval_next
 	predicted_fct_decrease = - second_order_model_value_current_iterate
 	ρ = actual_fct_decrease / predicted_fct_decrease
@@ -37,6 +94,15 @@ function compute_ρ_standard_trust_region_method(
     return ρ, actual_fct_decrease, predicted_fct_decrease
 end
 
+"""
+  sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, print_level)
+  The method computes a search direction that solves the trust-region subproblem. The method checks for numerical erros to
+  validate that the trust-region subproblem was solved correctly. If the second order model (1) is positive, then we
+  failed to solve the trusrt-region subproblem.
+
+  See optimizeSecondOrderModel in ./trust_region_subproblem_solver.jl for more details on the implementation, on the
+  inputs description, and the outputs description.
+"""
 function sub_routine_trust_region_sub_problem_solver(
 	fval_current::Float64, gval_current::Vector{Float64},
 	hessian_current::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
@@ -66,7 +132,7 @@ function sub_routine_trust_region_sub_problem_solver(
 	end
 
 	start_time_temp = time()
-	second_order_model_value_current_iterate = computeSecondOrderModel(fval_current, gval_current, hessian_current, d_k)
+	second_order_model_value_current_iterate = computeSecondOrderModel(gval_current, hessian_current, d_k)
 	end_time_temp = time()
 	total_time_temp = end_time_temp - start_time_temp
 	if print_level >= 2
@@ -91,7 +157,18 @@ function sub_routine_trust_region_sub_problem_solver(
 	return fval_next, success_subproblem_solve, δ_k, d_k, temp_total_number_factorizations, temp_total_function_evaluation, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 end
 
+"""
+  power_iteration(H, num_iter, tol)
+  Computes the maximum eigenvalue iteratively for the matrix H.
 
+  # Inputs:
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+		The Hessian at the current iterate x_k.
+	- `num_iter::Int64`. Maximum number of iterations to run the power method.
+	- `print_level::Float64`. The tolerance for the accuracy of the power method.
+  # Output:
+   Scalar that has the value of the l2 norm of the matrix H.
+"""
 function power_iteration(
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}};
 	num_iter::Int64=20, tol::Float64=1e-6
@@ -117,6 +194,21 @@ function power_iteration(
     return λ, v
 end
 
+"""
+  matrix_l2_norm(H, num_iter, tol)
+  Computes the l2 norm (the spectral norm) of a matrix.
+  The spectral norm of a matrix H is the largest singular value of H (i.e., the square root of the largest eigenvalue of
+  the matrix H ^ T * H. However, since the matrix H is symmetrix. We can compute the maximum eigenvalue of H and this
+  will be the l2 norm. The computation of the maximum eigenvalue is done iteratively using power iteration method.
+
+  # Inputs:
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
+		The Hessian at the current iterate x_k.
+	- `num_iter::Int64`. Maximum number of iterations to run the power method.
+	- `print_level::Float64`. The tolerance for the accuracy of the power method.
+  # Output:
+   Scalar that has the value of the l2 norm of the matrix H.
+"""
 function matrix_l2_norm(
 	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}};
 	num_iter::Int64=20, tol::Float64=1e-6
@@ -173,6 +265,25 @@ function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel, pars::Problem_Data)
 	return CAT(pars, x, δ)
 end
 
+"""
+  CAT(problem, x, δ)
+  This is the main algorithm code.
+
+  # Inputs:
+    - `problem::Problem_Data`. This contains all the necessary algorithm params, the termination conditions, and the
+	utility to compute function, gradient, and Hessian. See Problem_Data struct in ./common.jl for more details.
+	- `x::Vector{Float64}`. The initial iterate.
+	- `δ::Float64`. The initial warm start value for δ. See optimizeSecondOrderModel in ./trust_region_subproblem_solver.jl for more details.
+
+  # Outputs:
+    - `x_k::Vector{Float64}`. The final iterate.
+	- `status::TerminationStatusCode`. The algorithm termination status. Check TerminationStatusCode struct in ./common.jl for more details.
+	- `iteration_stats::DataFrame`. It constains the algorithm history for the function and gradient value at each iteration.
+	- `computation_stats::Dict`. It contains the total number of function evaluations, gradient evaluations , Hessian evaluations,
+	and total number of factorizations.
+	- `k::Int64`. The total number of iterations.
+	- `total_execution_time::Float64.` The total Wall clock time (seconds).
+"""
 function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	start_time_ = time()
 	@assert(δ >= 0)
@@ -185,7 +296,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	MINIMUM_OBJECTIVE_FUNCTION = termination_conditions_struct.MINIMUM_OBJECTIVE_FUNCTION
 
 	#Algorithm parameters
-    β_1 = problem.β_1
+    β = problem.β
     ω_1 = problem.ω_1
 	ω_2 = problem.ω_2
 	γ_1 = problem.γ_1
@@ -222,6 +333,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 	total_number_factorizations_compute_search_direction = 0
 	total_number_factorizations_inverse_power_iteration = 0
 
+	#Specify the seed for reproducibility of results
 	Random.seed!(seed)
 
     k = 1
@@ -234,7 +346,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 		total_hessian_evaluation += 1
 
 		#If user doesn't change the starting radius, we select the radius as described in the paper:
-		#Initial radius heuristic selection rule : r_1 = 10 * ||gval_current|| / ||hessian_current||
+		#Initial radius heuristic selection rule : r_1 = INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||gval_current|| / ||hessian_current||
 		if r_k <= 0.0
 			r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) / matrix_l2_norm(hessian_current, num_iter=20)
 		end
@@ -307,7 +419,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 					println("compute_ρ_standard_trust_region_method operation took $total_time_temp.")
 				end
 			else
-				# In case we failt to solve the trust-region subproblem, we mark that as a failure
+				# In case we fail to solve the trust-region subproblem, we mark that as a failure
 				# by setting ρ_k to a negative default value (-1.0) and  the search direction d_k to 0 vector
 				ρ_k = -1.0
 				actual_fct_decrease = 0.0
@@ -366,7 +478,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 
 			# Radius update
 			if radius_update_rule_approach == "DEFAULT"
-				if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β_1
+				if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β
 					r_k = r_k / ω_1
 				else
 					r_k = max(ω_2 * norm(d_k, 2), r_k)
@@ -376,7 +488,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 				if !success_subproblem_solve
 					r_k = r_k / ω_1
 				else
-					if isnan(ρ_hat_k) || ρ_hat_k < β_1
+					if isnan(ρ_hat_k) || ρ_hat_k < β
 						r_k = norm(d_k, 2) / ω_1
 					else
 						r_k = ω_1 * norm(d_k, 2)
