@@ -18,7 +18,7 @@ end
   computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
   Find solution to (1).
 
-  This is done by definying a univariate function ϕ (See (3)) in δ. First we construct an interval [δ, δ_prime]
+  This is done by defining a univariate function ϕ (See (3)) in δ. First we construct an interval [δ, δ_prime]
 	  such that ϕ(δ) * ϕ(δ_prime) <= 0 and then using bisection, we find a root δ_m for the ϕ function. Using δ_m
 	  we compute d_k as d_k = (H + δ_m * I) ^ {-1} (-g)
 
@@ -202,7 +202,7 @@ function optimizeSecondOrderModel(
 			return true, δ_m, d_k, total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
 		end
 		# If we failed to construct the interval [δ, δ_prime] or the bisection to find a root δ_m ∈ [δ, δ_prime] for
-		# the ϕ function, then we solve the trust-region subproblem using the hard-case logic.
+		# the ϕ function failed, then we solve the trust-region subproblem using the hard-case logic.
 		if success_find_interval
 			throw(error("Bisection logic failed to find a root for the phi function"))
 		else
@@ -213,7 +213,7 @@ function optimizeSecondOrderModel(
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
 			start_time_temp = time()
 			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
-			# eigenvalue of the Hessian matrix.
+			# eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
@@ -231,7 +231,7 @@ function optimizeSecondOrderModel(
 			@error e
 			start_time_temp = time()
 			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
-			# eigenvalue of the Hessian matrix.
+			# eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
 			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
 			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
 			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction

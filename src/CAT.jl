@@ -57,7 +57,6 @@ function compute_ρ_hat(
     return ρ_hat, actual_fct_decrease, predicted_fct_decrease, guarantee_factor
 end
 
-
 """
   compute_ρ_standard_trust_region_method(fval_current, fval_next, gval_current, gval_next, hessian_current, d_k, print_level)
 
