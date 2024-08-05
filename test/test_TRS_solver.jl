@@ -594,9 +594,10 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     H = hess(nlp, x)
     r = 1e-8
     δ = 1e-10
+    γ_1 = 0.01
     γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, γ_2, r, norm(g),print_level)
+    status, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g), print_level)
     @test status == false
     @test norm(d_k) == 0.0
     @test hard_case == true
