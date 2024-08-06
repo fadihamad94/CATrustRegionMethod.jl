@@ -40,7 +40,7 @@ function run_cutest_with_CAT(
     else
 		cutest_problems = get_problem_list(min_nvar, max_nvar)
     end
-
+	optimization_method = optimization_method_CAT
 	if θ == 0.0
 		optimization_method = optimization_method_CAT_theta_0
 	end
