@@ -193,7 +193,7 @@ function plotFigureComparisonCAT(df::DataFrame, criteria::String, dirrectoryName
     criteria_keyrword = criteria == "Functions" ? "function evaluations" : "gradient evaluations"
     plot(df[!, criteria],
         data,
-        label=["our method (θ = 0.1)" "our method (θ = 0.0)"],
+        label=["Our method (θ = 0.1)" "Our method (θ = 0.0)"],
         color = [CAT_II_FACTORIZATION_COLOR CAT_II_THETA_ZERO_FACTORIZATION_COLOR],
         ylabel="Fraction of problems solved",
         xlabel=string("Total number of ", criteria_keyrword),
@@ -232,7 +232,7 @@ function plotFiguresComparisonFinal(df::DataFrame, criteria::String, dirrectoryN
     LIMIT = criteria == "Time" ? TIME_LIMIT : ITR_LIMIT
     plot(df[!, criteria],
         data,
-        label=["conference version of our method" "our method" "ARC" "TRU"],
+        label=["Conference version of our method" "Our method" "ARC" "TRU"],
         color = [CAT_I_FACTORIZATION_COLOR CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR TRU_FACTORIZATION_COLOR],
         ylabel="Fraction of problems solved",
         xlabel=criteria == "Time" ? "Wall clock time (secs)" : "Total number of $criteria_keyrword",
@@ -308,7 +308,7 @@ function plotFiguresComparisonObjFinal(df::DataFrame, criteria::String, dirrecto
     data = Matrix(df[!, Not(criteria)])
     plot(df[!, criteria],
         data,
-        label=["conference version of our method" "our method" "ARC" "TRU"],
+        label=["Conference version of our method" "Our method" "ARC" "TRU"],
         color = [CAT_I_FACTORIZATION_COLOR CAT_II_FACTORIZATION_COLOR ARC_FACTORIZATION_COLOR TRU_FACTORIZATION_COLOR],
         ylabel="Fraction of problems",
         xlabel="Objective difference from best",
