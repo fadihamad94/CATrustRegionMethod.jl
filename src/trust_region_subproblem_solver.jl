@@ -7,11 +7,22 @@ solveTrustRegionSubproblem(f, g, H, x, δ, γ_1, γ_2, r, min_grad, print_level)
 See optimizeSecondOrderModel
 """
 function solveTrustRegionSubproblem(
-	f::Float64, g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	x_k::Vector{Float64}, δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
-	)
-	return optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+    f::Float64,
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    x_k::Vector{Float64},
+    δ::Float64,
+    γ_1::Float64,
+    γ_2::Float64,
+    r::Float64,
+    min_grad::Float64,
+    print_level::Int64 = 0,
+)
+    return optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
 end
 
 """
@@ -48,71 +59,124 @@ end
 	temp_total_number_factorizations = temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
 """
 function computeSearchDirection(
-	g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
-	)
-	temp_total_number_factorizations_bisection = 0
-	temp_total_number_factorizations_findinterval = 0
-	temp_total_number_factorizations_compute_search_direction = 0
-	temp_total_number_factorizations_ = 0
-	start_time_temp = time()
-	if print_level >= 2
-		println("Starting Find Interval")
-	end
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    δ::Float64,
+    γ_1::Float64,
+    γ_2::Float64,
+    r::Float64,
+    min_grad::Float64,
+    print_level::Int64 = 0,
+)
+    temp_total_number_factorizations_bisection = 0
+    temp_total_number_factorizations_findinterval = 0
+    temp_total_number_factorizations_compute_search_direction = 0
+    temp_total_number_factorizations_ = 0
+    start_time_temp = time()
+    if print_level >= 2
+        println("Starting Find Interval")
+    end
 
-	# Construct an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
-	success, δ, δ_prime, temp_total_number_factorizations_findinterval = findinterval(g, H, δ, γ_2, r, print_level)
-	temp_total_number_factorizations_ += temp_total_number_factorizations_findinterval
-	end_time_temp = time()
-	total_time_temp = end_time_temp - start_time_temp
-	if print_level >= 2
-		println("findinterval operation finished with (δ, δ_prime) = ($δ, $δ_prime) and took $total_time_temp.")
-	end
+    # Construct an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
+    success, δ, δ_prime, temp_total_number_factorizations_findinterval =
+        findinterval(g, H, δ, γ_2, r, print_level)
+    temp_total_number_factorizations_ += temp_total_number_factorizations_findinterval
+    end_time_temp = time()
+    total_time_temp = end_time_temp - start_time_temp
+    if print_level >= 2
+        println(
+            "findinterval operation finished with (δ, δ_prime) = ($δ, $δ_prime) and took $total_time_temp.",
+        )
+    end
 
-	# If we fail to construct the interval [δ, δ_prime], we return failure and the problem will be solved using the
-	# hard case logic.
-	if !success
-		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
-		return false, false, δ, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
-	end
+    # If we fail to construct the interval [δ, δ_prime], we return failure and the problem will be solved using the
+    # hard case logic.
+    if !success
+        @assert temp_total_number_factorizations_ ==
+                temp_total_number_factorizations_findinterval +
+                temp_total_number_factorizations_bisection +
+                temp_total_number_factorizations_compute_search_direction
+        return false,
+        false,
+        δ,
+        δ,
+        δ_prime,
+        zeros(length(g)),
+        temp_total_number_factorizations_,
+        false,
+        temp_total_number_factorizations_findinterval,
+        temp_total_number_factorizations_bisection,
+        temp_total_number_factorizations_compute_search_direction
+    end
 
-	start_time_temp = time()
+    start_time_temp = time()
 
-	# Find a root δ_m ∈ [δ, δ_prime] for the ϕ function using bisection.
-	# we compute d_k as d_k = (H + δ_m * I) \ (-g)
-	success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection = bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
-	temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
-	end_time_temp = time()
-	total_time_temp = end_time_temp - start_time_temp
-	if print_level >= 2
-		println("$success. bisection operation took $total_time_temp.")
-	end
+    # Find a root δ_m ∈ [δ, δ_prime] for the ϕ function using bisection.
+    # we compute d_k as d_k = (H + δ_m * I) \ (-g)
+    success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection =
+        bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
+    temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
+    end_time_temp = time()
+    total_time_temp = end_time_temp - start_time_temp
+    if print_level >= 2
+        println("$success. bisection operation took $total_time_temp.")
+    end
 
-	# If we fail to find δ_m using bisection, we return failure and the problem will be solved using the
-	# hard case logic.
-	if !success
-		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
-		return true, false, δ_m, δ, δ_prime, zeros(length(g)), temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
-	end
+    # If we fail to find δ_m using bisection, we return failure and the problem will be solved using the
+    # hard case logic.
+    if !success
+        @assert temp_total_number_factorizations_ ==
+                temp_total_number_factorizations_findinterval +
+                temp_total_number_factorizations_bisection +
+                temp_total_number_factorizations_compute_search_direction
+        return true,
+        false,
+        δ_m,
+        δ,
+        δ_prime,
+        zeros(length(g)),
+        temp_total_number_factorizations_,
+        false,
+        temp_total_number_factorizations_findinterval,
+        temp_total_number_factorizations_bisection,
+        temp_total_number_factorizations_compute_search_direction
+    end
 
-	@assert δ <= δ_m <= δ_prime
+    @assert δ <= δ_m <= δ_prime
 
-	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-	temp_total_number_factorizations_compute_search_direction += 1
-	temp_total_number_factorizations_ += temp_total_number_factorizations_compute_search_direction
+    sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+    temp_total_number_factorizations_compute_search_direction += 1
+    temp_total_number_factorizations_ +=
+        temp_total_number_factorizations_compute_search_direction
 
-	# Using δ_m, we compute d_k = (H + δ_m * I) \ (-g)
-	# Cholesky factorization is done as an extra validation that H + δ_m * I is positive definite.
-	start_time_temp = time()
-	d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
-	end_time_temp = time()
-	total_time_temp = end_time_temp - start_time_temp
-	if print_level >= 2
-		println("d_k operation took $total_time_temp.")
-	end
-	@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction
-	return true, true, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations_, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction
+    # Using δ_m, we compute d_k = (H + δ_m * I) \ (-g)
+    # Cholesky factorization is done as an extra validation that H + δ_m * I is positive definite.
+    start_time_temp = time()
+    d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
+    end_time_temp = time()
+    total_time_temp = end_time_temp - start_time_temp
+    if print_level >= 2
+        println("d_k operation took $total_time_temp.")
+    end
+    @assert temp_total_number_factorizations_ ==
+            temp_total_number_factorizations_findinterval +
+            temp_total_number_factorizations_bisection +
+            temp_total_number_factorizations_compute_search_direction
+    return true,
+    true,
+    δ_m,
+    δ,
+    δ_prime,
+    d_k,
+    temp_total_number_factorizations_,
+    false,
+    temp_total_number_factorizations_findinterval,
+    temp_total_number_factorizations_bisection,
+    temp_total_number_factorizations_compute_search_direction
 end
 
 """
@@ -162,91 +226,188 @@ The logic to find the solution either by defining a univariate function ϕ (See 
   + temp_total_number_factorizations_inverse_power_iteration
 """
 function optimizeSecondOrderModel(
-	g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_1::Float64, γ_2::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
-	)
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    δ::Float64,
+    γ_1::Float64,
+    γ_2::Float64,
+    r::Float64,
+    min_grad::Float64,
+    print_level::Int64 = 0,
+)
     # When δ is 0 and the Hessian is positive semidefinite, we can directly compute the search direction
-	total_number_factorizations = 0
-	temp_total_number_factorizations_findinterval = 0
-	temp_total_number_factorizations_bisection = 0
-	temp_total_number_factorizations_compute_search_direction = 0
-	temp_total_number_factorizations_inverse_power_iteration = 0
-	temp_total_number_factorizations_ = 0
+    total_number_factorizations = 0
+    temp_total_number_factorizations_findinterval = 0
+    temp_total_number_factorizations_bisection = 0
+    temp_total_number_factorizations_compute_search_direction = 0
+    temp_total_number_factorizations_inverse_power_iteration = 0
+    temp_total_number_factorizations_ = 0
     try
-		temp_total_number_factorizations_compute_search_direction += 1
-		temp_total_number_factorizations_ += temp_total_number_factorizations_compute_search_direction
+        temp_total_number_factorizations_compute_search_direction += 1
+        temp_total_number_factorizations_ +=
+            temp_total_number_factorizations_compute_search_direction
         d_k = cholesky(H) \ (-g)
-		if norm(d_k, 2) <= r
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-			return true, 0.0, d_k, total_number_factorizations, false, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
+        if norm(d_k, 2) <= r
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_findinterval +
+                    temp_total_number_factorizations_bisection +
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return true,
+            0.0,
+            d_k,
+            total_number_factorizations,
+            false,
+            temp_total_number_factorizations_findinterval,
+            temp_total_number_factorizations_bisection,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
         end
     catch e
-		#Do nothing
+        #Do nothing
     end
-	δ_m = δ
-	δ_prime = δ
+    δ_m = δ
+    δ_prime = δ
     try
-		# Try to compute the search direction by constructing an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
-		# and then using bisection, we find a root δ_m ∈ [δ, δ_prime] for the ϕ function.
-		# Using δ_m we compute d_k = (H + δ_m * I) ^ {-1} (-g)
-		success_find_interval, success_bisection, δ_m, δ, δ_prime, d_k, temp_total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, total_number_factorizations_compute_search_direction = computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
-		@assert temp_total_number_factorizations == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
-		temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction # TO ACCOUNT FOR THE FIRST ATTEMP WITH d_k = cholesky(H) \ (-g)
-		temp_total_number_factorizations_ += temp_total_number_factorizations
-		success = success_find_interval && success_bisection
-		if success
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-			return true, δ_m, d_k, total_number_factorizations, hard_case, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-		end
-		# If we failed to construct the interval [δ, δ_prime] or the bisection to find a root δ_m ∈ [δ, δ_prime] for
-		# the ϕ function failed, then we solve the trust-region subproblem using the hard-case logic.
-		if success_find_interval
-			throw(error("Bisection logic failed to find a root for the phi function"))
-		else
-			throw(error("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0."))
-		end
-    catch e
-		println("Error: ", e)
-        if e == ErrorException("Bisection logic failed to find a root for the phi function")
-			start_time_temp = time()
-			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
-			# eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
-			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
-			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
-			temp_total_number_factorizations_ += temp_total_number_factorizations
-			end_time_temp = time()
-			total_time_temp = end_time_temp - start_time_temp
-			if print_level >= 2
-				@info "$success. solveHardCaseLogic operation took $total_time_temp."
-				println("$success. solveHardCaseLogic operation took $total_time_temp.")
-			end
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-            return success, δ, d_k, total_number_factorizations, true, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-        elseif e == ErrorException("Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.")
-			@error e
-			start_time_temp = time()
-			# Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
-			# eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
-			success, δ, d_k, temp_total_number_factorizations, total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration = solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
-			@assert temp_total_number_factorizations == total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			temp_total_number_factorizations_compute_search_direction += total_number_factorizations_compute_search_direction
-			temp_total_number_factorizations_ += temp_total_number_factorizations
-			end_time_temp = time()
-			total_time_temp = end_time_temp - start_time_temp
-			if print_level >= 2
-				@info "$success. solveHardCaseLogic operation took $total_time_temp."
-				println("$success. solveHardCaseLogic operation took $total_time_temp.")
-			end
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-	    	return success, δ, d_k, total_number_factorizations, true, temp_total_number_factorizations_findinterval, temp_total_number_factorizations_bisection, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
+        # Try to compute the search direction by constructing an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
+        # and then using bisection, we find a root δ_m ∈ [δ, δ_prime] for the ϕ function.
+        # Using δ_m we compute d_k = (H + δ_m * I) ^ {-1} (-g)
+        success_find_interval,
+        success_bisection,
+        δ_m,
+        δ,
+        δ_prime,
+        d_k,
+        temp_total_number_factorizations,
+        hard_case,
+        temp_total_number_factorizations_findinterval,
+        temp_total_number_factorizations_bisection,
+        total_number_factorizations_compute_search_direction =
+            computeSearchDirection(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+        @assert temp_total_number_factorizations ==
+                temp_total_number_factorizations_findinterval +
+                temp_total_number_factorizations_bisection +
+                total_number_factorizations_compute_search_direction
+        temp_total_number_factorizations_compute_search_direction +=
+            total_number_factorizations_compute_search_direction # TO ACCOUNT FOR THE FIRST ATTEMP WITH d_k = cholesky(H) \ (-g)
+        temp_total_number_factorizations_ += temp_total_number_factorizations
+        success = success_find_interval && success_bisection
+        if success
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_findinterval +
+                    temp_total_number_factorizations_bisection +
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return true,
+            δ_m,
+            d_k,
+            total_number_factorizations,
+            hard_case,
+            temp_total_number_factorizations_findinterval,
+            temp_total_number_factorizations_bisection,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
+        end
+        # If we failed to construct the interval [δ, δ_prime] or the bisection to find a root δ_m ∈ [δ, δ_prime] for
+        # the ϕ function failed, then we solve the trust-region subproblem using the hard-case logic.
+        if success_find_interval
+            throw(error("Bisection logic failed to find a root for the phi function"))
         else
-			@error e
+            throw(
+                error(
+                    "Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.",
+                ),
+            )
+        end
+    catch e
+        println("Error: ", e)
+        if e == ErrorException("Bisection logic failed to find a root for the phi function")
+            start_time_temp = time()
+            # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
+            # eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
+            success,
+            δ,
+            d_k,
+            temp_total_number_factorizations,
+            total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration =
+                solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+            @assert temp_total_number_factorizations ==
+                    total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            temp_total_number_factorizations_compute_search_direction +=
+                total_number_factorizations_compute_search_direction
+            temp_total_number_factorizations_ += temp_total_number_factorizations
+            end_time_temp = time()
+            total_time_temp = end_time_temp - start_time_temp
+            if print_level >= 2
+                @info "$success. solveHardCaseLogic operation took $total_time_temp."
+                println("$success. solveHardCaseLogic operation took $total_time_temp.")
+            end
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_findinterval +
+                    temp_total_number_factorizations_bisection +
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return success,
+            δ,
+            d_k,
+            total_number_factorizations,
+            true,
+            temp_total_number_factorizations_findinterval,
+            temp_total_number_factorizations_bisection,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
+        elseif e == ErrorException(
+            "Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.",
+        )
+            @error e
+            start_time_temp = time()
+            # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
+            # eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
+            success,
+            δ,
+            d_k,
+            temp_total_number_factorizations,
+            total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration =
+                solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+            @assert temp_total_number_factorizations ==
+                    total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            temp_total_number_factorizations_compute_search_direction +=
+                total_number_factorizations_compute_search_direction
+            temp_total_number_factorizations_ += temp_total_number_factorizations
+            end_time_temp = time()
+            total_time_temp = end_time_temp - start_time_temp
+            if print_level >= 2
+                @info "$success. solveHardCaseLogic operation took $total_time_temp."
+                println("$success. solveHardCaseLogic operation took $total_time_temp.")
+            end
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_findinterval +
+                    temp_total_number_factorizations_bisection +
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return success,
+            δ,
+            d_k,
+            total_number_factorizations,
+            true,
+            temp_total_number_factorizations_findinterval,
+            temp_total_number_factorizations_bisection,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
+        else
+            @error e
             throw(e)
         end
     end
@@ -272,43 +433,50 @@ The function is a decreasing univariate function in δ. It is equal to -1 when H
   An integer values that takes the values -1, 0, or 1.
 """
 function phi(
-	g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0
-	)
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    δ::Float64,
+    γ_2::Float64,
+    r::Float64,
+    print_level::Int64 = 0,
+)
     sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
     shifted_hessian = H + δ * sparse_identity
-	temp_d = zeros(length(g))
-	positive_definite = true
+    temp_d = zeros(length(g))
+    positive_definite = true
     try
-		start_time_temp = time()
+        start_time_temp = time()
         shifted_hessian_fact = cholesky(shifted_hessian)
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		if print_level >= 2
-			println("cholesky inside phi function took $total_time_temp.")
-		end
+        end_time_temp = time()
+        total_time_temp = end_time_temp - start_time_temp
+        if print_level >= 2
+            println("cholesky inside phi function took $total_time_temp.")
+        end
 
-		start_time_temp = time()
-		temp_d = shifted_hessian_fact \ (-g)
-		computed_norm = norm(temp_d, 2)
-		end_time_temp = time()
-		total_time_temp = end_time_temp - start_time_temp
-		if print_level >= 2
-			println("computed_norm opertion took $total_time_temp.")
-		end
+        start_time_temp = time()
+        temp_d = shifted_hessian_fact \ (-g)
+        computed_norm = norm(temp_d, 2)
+        end_time_temp = time()
+        total_time_temp = end_time_temp - start_time_temp
+        if print_level >= 2
+            println("computed_norm opertion took $total_time_temp.")
+        end
 
-		if (δ <= 1e-6 && computed_norm <= r)
-			return 0, temp_d, positive_definite
-		elseif computed_norm < γ_2 * r
-	        return -1, temp_d, positive_definite
-		elseif computed_norm <= r
-	        return 0, temp_d, positive_definite
-	    else
-	        return 1, temp_d, positive_definite
-	    end
+        if (δ <= 1e-6 && computed_norm <= r)
+            return 0, temp_d, positive_definite
+        elseif computed_norm < γ_2 * r
+            return -1, temp_d, positive_definite
+        elseif computed_norm <= r
+            return 0, temp_d, positive_definite
+        else
+            return 1, temp_d, positive_definite
+        end
     catch e
-		positive_definite = false
+        positive_definite = false
         return 1, temp_d, positive_definite
     end
 end
@@ -333,14 +501,21 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
   'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
 """
 function findinterval(
-	g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_2::Float64, r::Float64, print_level::Int64=0
-	)
-	@assert δ >= 0
-	if print_level >= 1
-		println("STARTING WITH δ = $δ.")
-	end
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    δ::Float64,
+    γ_2::Float64,
+    r::Float64,
+    print_level::Int64 = 0,
+)
+    @assert δ >= 0
+    if print_level >= 1
+        println("STARTING WITH δ = $δ.")
+    end
     Φ_δ, temp_d, positive_definite = phi(g, H, 0.0, γ_2, r)
 
     if Φ_δ == 0
@@ -349,7 +524,7 @@ function findinterval(
         return true, δ, δ_prime, 1
     end
 
-	δ_original = δ
+    δ_original = δ
 
     Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
 
@@ -358,76 +533,80 @@ function findinterval(
         return true, δ, δ_prime, 2
     end
 
-	δ_prime = δ
-	Φ_δ_prime = Φ_δ
-	search_δ_prime = true
+    δ_prime = δ
+    Φ_δ_prime = Φ_δ
+    search_δ_prime = true
 
-	if Φ_δ > 0
-		δ_prime = δ == 0.0 ? 1.0 : δ * 2
-		search_δ_prime = true
-	else
-		# Here ϕ(δ) < 0 and we need to find new δ' >= 0 such that ϕ(δ') >= 0 and δ' < δ which is not possible
-		# in case δ == 0
-		@assert δ > 0
-		search_δ_prime = false
-		# The aim is to find [δ, δ'] such that ϕ(δ) ∈ {0, 1}, ϕ(δ') ∈ {0, -1}, and  ϕ(δ) * ϕ(δ') <= ∈ {0, -1}
-		# since here ϕ(δ) < 0, we set δ' = δ and we search for δ < δ'such that ϕ(δ) ∈ {0, 1}
-		δ_prime = δ
-		Φ_δ_prime = -1
-		δ = δ / 2
-	end
+    if Φ_δ > 0
+        δ_prime = δ == 0.0 ? 1.0 : δ * 2
+        search_δ_prime = true
+    else
+        # Here ϕ(δ) < 0 and we need to find new δ' >= 0 such that ϕ(δ') >= 0 and δ' < δ which is not possible
+        # in case δ == 0
+        @assert δ > 0
+        search_δ_prime = false
+        # The aim is to find [δ, δ'] such that ϕ(δ) ∈ {0, 1}, ϕ(δ') ∈ {0, -1}, and  ϕ(δ) * ϕ(δ') <= ∈ {0, -1}
+        # since here ϕ(δ) < 0, we set δ' = δ and we search for δ < δ'such that ϕ(δ) ∈ {0, 1}
+        δ_prime = δ
+        Φ_δ_prime = -1
+        δ = δ / 2
+    end
 
-	max_iterations = 50
+    max_iterations = 50
     k = 1
-	while k < max_iterations
-		if search_δ_prime
-        	Φ_δ_prime, temp_d, positive_definite = phi(g, H, δ_prime, γ_2, r)
-	        if Φ_δ_prime == 0
-	            δ = δ_prime
-	            return true, δ, δ_prime, k + 2
-	        end
-		else
-			Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
-			if Φ_δ == 0
-	            δ_prime = δ
-	            return true, δ, δ_prime, k + 2
-	        end
-		end
+    while k < max_iterations
+        if search_δ_prime
+            Φ_δ_prime, temp_d, positive_definite = phi(g, H, δ_prime, γ_2, r)
+            if Φ_δ_prime == 0
+                δ = δ_prime
+                return true, δ, δ_prime, k + 2
+            end
+        else
+            Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
+            if Φ_δ == 0
+                δ_prime = δ
+                return true, δ, δ_prime, k + 2
+            end
+        end
 
         if ((Φ_δ * Φ_δ_prime) < 0)
-			if print_level >= 1
-				println("ENDING WITH ϕ(δ) = $Φ_δ and Φ_δ_prime = $Φ_δ_prime.")
-				println("ENDING WITH δ = $δ and δ_prime = $δ_prime.")
-			end
-			@assert δ_prime > δ
-			@assert ((δ == 0.0) & (δ_prime == 1.0)) || ((δ_prime / δ) == 2 ^ (2 ^ (k - 1))) || ((δ_prime / δ) - 2 ^ (2 ^ (k - 1)) <= 1e-3)
-			factor = δ_prime / δ
-			return true, δ, δ_prime, k + 2
+            if print_level >= 1
+                println("ENDING WITH ϕ(δ) = $Φ_δ and Φ_δ_prime = $Φ_δ_prime.")
+                println("ENDING WITH δ = $δ and δ_prime = $δ_prime.")
+            end
+            @assert δ_prime > δ
+            @assert ((δ == 0.0) & (δ_prime == 1.0)) ||
+                    ((δ_prime / δ) == 2^(2^(k - 1))) ||
+                    ((δ_prime / δ) - 2^(2^(k - 1)) <= 1e-3)
+            factor = δ_prime / δ
+            return true, δ, δ_prime, k + 2
         end
-		if search_δ_prime
-			# Here Φ_δ_prime is still 1 and we are continue searching for δ',
-			# but we can update δ to give it larger values which is the current value of δ'
-			@assert Φ_δ_prime > 0
-			δ = δ_prime
-			δ_prime = δ_prime * (2 ^ (2 ^ k))
-		else
-			# Here Φ_δ is still -1 and we are continue searching for δ,
-			# but we can update δ' to give it smaller value which is the current value of δ
-			@assert Φ_δ < 0
-			δ_prime = δ
-			δ = δ / (2 ^ (2 ^ k))
-		end
+        if search_δ_prime
+            # Here Φ_δ_prime is still 1 and we are continue searching for δ',
+            # but we can update δ to give it larger values which is the current value of δ'
+            @assert Φ_δ_prime > 0
+            δ = δ_prime
+            δ_prime = δ_prime * (2^(2^k))
+        else
+            # Here Φ_δ is still -1 and we are continue searching for δ,
+            # but we can update δ' to give it smaller value which is the current value of δ
+            @assert Φ_δ < 0
+            δ_prime = δ
+            δ = δ / (2^(2^k))
+        end
 
         k = k + 1
     end
 
-    if (Φ_δ  * Φ_δ_prime > 0)
-		if print_level >= 1
-			println("Φ_δ is $Φ_δ and Φ_δ_prime is $Φ_δ_prime. δ is $δ and δ_prime is $δ_prime.")
-		end
-		return false, δ, δ_prime, max_iterations + 2
+    if (Φ_δ * Φ_δ_prime > 0)
+        if print_level >= 1
+            println(
+                "Φ_δ is $Φ_δ and Φ_δ_prime is $Φ_δ_prime. δ is $δ and δ_prime is $δ_prime.",
+            )
+        end
+        return false, δ, δ_prime, max_iterations + 2
     end
-	factor = δ_prime / δ
+    factor = δ_prime / δ
     return true, δ, δ_prime, max_iterations + 2
 end
 
@@ -456,71 +635,92 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
   'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
 """
 function bisection(
-	g::Vector{Float64},
-	H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	δ::Float64, γ_1::Float64, γ_2::Float64, δ_prime::Float64, r::Float64, min_grad::Float64, print_level::Int64=0
-	)
+    g::Vector{Float64},
+    H::Union{
+        Matrix{Float64},
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    δ::Float64,
+    γ_1::Float64,
+    γ_2::Float64,
+    δ_prime::Float64,
+    r::Float64,
+    min_grad::Float64,
+    print_level::Int64 = 0,
+)
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
-	initial_δ = δ
-	initial_δ_prime = δ_prime
-	if print_level >= 1
-		println("****************************STARTING BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************")
-	end
+    initial_δ = δ
+    initial_δ_prime = δ_prime
+    if print_level >= 1
+        println(
+            "****************************STARTING BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************",
+        )
+    end
     #Bisection logic
     k = 1
     δ_m = (δ + δ_prime) / 2
     Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
-	max_iterations = 100
+    max_iterations = 100
     while (Φ_δ_m != 0) && k <= max_iterations
-		start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-		if print_level >= 2
-			println("$start_time_str. Bisection iteration $k.")
-		end
+        start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+        if print_level >= 2
+            println("$start_time_str. Bisection iteration $k.")
+        end
         if Φ_δ_m > 0
             δ = δ_m
         else
             δ_prime = δ_m
         end
-		δ_m = (δ + δ_prime) / 2
+        δ_m = (δ + δ_prime) / 2
         Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
         k = k + 1
-		if Φ_δ_m != 0
-			ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime = phi(g, H, δ_prime, γ_2, r)
-			ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
-			q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
-			q_2 = γ_1 * min_grad
-			if print_level >= 2
-				println("$k===============Bisection entered here=================")
-			end
+        if Φ_δ_m != 0
+            ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime =
+                phi(g, H, δ_prime, γ_2, r)
+            ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
+            q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
+            q_2 = γ_1 * min_grad
+            if print_level >= 2
+                println("$k===============Bisection entered here=================")
+            end
 
-			if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) && q_1 <= q_2 && !positive_definite_δ
-				if print_level >= 2
-					println("$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============")
-					println("$k===================min_grad / (100 r) is $q_2.============")
-					println("$k===================ϕ_δ_prime is $ϕ_δ_prime.============")
+            if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) &&
+               q_1 <= q_2 &&
+               !positive_definite_δ
+                if print_level >= 2
+                    println(
+                        "$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============",
+                    )
+                    println("$k===================min_grad / (100 r) is $q_2.============")
+                    println("$k===================ϕ_δ_prime is $ϕ_δ_prime.============")
 
-					println("$k===============Bisection entered here=================")
-					mimimum_eigenvalue = eigmin(Matrix(H))
-					mimimum_eigenvalue_abs = abs(mimimum_eigenvalue)
-					@info "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
-					println("$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.")
-				end
-				break
-			end
-		end
+                    println("$k===============Bisection entered here=================")
+                    mimimum_eigenvalue = eigmin(Matrix(H))
+                    mimimum_eigenvalue_abs = abs(mimimum_eigenvalue)
+                    @info "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
+                    println(
+                        "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.",
+                    )
+                end
+                break
+            end
+        end
     end
 
     if (Φ_δ_m != 0)
-		if print_level >= 1
-			println("Φ_δ_m is $Φ_δ_m.")
-			println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. γ_2 is $γ_2.")
-		end
-		return false, δ_m, δ, δ_prime, min(k, max_iterations) + 1
+        if print_level >= 1
+            println("Φ_δ_m is $Φ_δ_m.")
+            println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. γ_2 is $γ_2.")
+        end
+        return false, δ_m, δ, δ_prime, min(k, max_iterations) + 1
     end
-	if print_level >= 1
-		println("****************************ENDING BISECTION with δ_m = $δ_m**************")
-	end
+    if print_level >= 1
+        println(
+            "****************************ENDING BISECTION with δ_m = $δ_m**************",
+        )
+    end
     return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1
 end
 
@@ -553,72 +753,117 @@ Find a solution to (2) if for a reason, we failed to construct the interval or t
   'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
 """
 function solveHardCaseLogic(
-	g::Vector{Float64},
-	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	γ_2::Float64, r::Float64, δ::Float64, δ_prime::Float64, min_grad::Float64, print_level::Int64=0
-	)
-	sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-	total_number_factorizations = 0
-	temp_total_number_factorizations_compute_search_direction = 0
-	temp_total_number_factorizations_inverse_power_iteration = 0
-	temp_total_number_factorizations_ = 0
+    g::Vector{Float64},
+    H::Union{
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    γ_2::Float64,
+    r::Float64,
+    δ::Float64,
+    δ_prime::Float64,
+    min_grad::Float64,
+    print_level::Int64 = 0,
+)
+    sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+    total_number_factorizations = 0
+    temp_total_number_factorizations_compute_search_direction = 0
+    temp_total_number_factorizations_inverse_power_iteration = 0
+    temp_total_number_factorizations_ = 0
 
-	temp_eigenvalue = 0
-	try
-		start_time_temp = time()
-		# Compute the minimum eigenvalue of the Hessian matrix using inverse power iteration
-		# temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
-		success, eigenvalue, eigenvector, temp_total_number_factorizations_inverse_power_iteration, temp_d_k = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2)
-		temp_eigenvalue = eigenvalue
-		end_time_temp = time()
-	    total_time_temp = end_time_temp - start_time_temp
-		if print_level >= 2
-	    	@info "inverse_power_iteration operation took $total_time_temp."
-		end
-		eigenvalue = abs(eigenvalue)
-		temp_total_number_factorizations_ += temp_total_number_factorizations_inverse_power_iteration
-		norm_temp_d_k = norm(temp_d_k)
+    temp_eigenvalue = 0
+    try
+        start_time_temp = time()
+        # Compute the minimum eigenvalue of the Hessian matrix using inverse power iteration
+        # temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
+        success,
+        eigenvalue,
+        eigenvector,
+        temp_total_number_factorizations_inverse_power_iteration,
+        temp_d_k = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2)
+        temp_eigenvalue = eigenvalue
+        end_time_temp = time()
+        total_time_temp = end_time_temp - start_time_temp
+        if print_level >= 2
+            @info "inverse_power_iteration operation took $total_time_temp."
+        end
+        eigenvalue = abs(eigenvalue)
+        temp_total_number_factorizations_ +=
+            temp_total_number_factorizations_inverse_power_iteration
+        norm_temp_d_k = norm(temp_d_k)
 
-		# We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
-		if norm_temp_d_k == 0
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-			return false, eigenvalue, zeros(length(g)), total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-		end
+        # We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
+        if norm_temp_d_k == 0
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return false,
+            eigenvalue,
+            zeros(length(g)),
+            total_number_factorizations,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
+        end
 
-		if print_level >= 2
-			@info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
-		end
-		# Validate that the search direction satisfies the trust-region subproblem termination critera
-		# The search direction in the hard case should be approximately on the trust-region boundary
-		if γ_2 * r <= norm(temp_d_k) <= r
-			@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-			total_number_factorizations += temp_total_number_factorizations_
-			return true, eigenvalue, temp_d_k, total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-		end
-		# The computed search direction is outside the trust-region boundary.
-		if norm(temp_d_k) > r
-			if print_level >= 1
-				println("This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2")
-				@warn "This is noit a hard case. candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
-			end
-		end
+        if print_level >= 2
+            @info "candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
+        end
+        # Validate that the search direction satisfies the trust-region subproblem termination critera
+        # The search direction in the hard case should be approximately on the trust-region boundary
+        if γ_2 * r <= norm(temp_d_k) <= r
+            @assert temp_total_number_factorizations_ ==
+                    temp_total_number_factorizations_compute_search_direction +
+                    temp_total_number_factorizations_inverse_power_iteration
+            total_number_factorizations += temp_total_number_factorizations_
+            return true,
+            eigenvalue,
+            temp_d_k,
+            total_number_factorizations,
+            temp_total_number_factorizations_compute_search_direction,
+            temp_total_number_factorizations_inverse_power_iteration
+        end
+        # The computed search direction is outside the trust-region boundary.
+        if norm(temp_d_k) > r
+            if print_level >= 1
+                println(
+                    "This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2",
+                )
+                @warn "This is noit a hard case. candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2"
+            end
+        end
 
-		@assert temp_total_number_factorizations_ == temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-		total_number_factorizations += temp_total_number_factorizations_
-		return false, eigenvalue, zeros(length(g)), total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-	catch e
-		# We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
-		@error e
-		if print_level >= 2
-			matrix_H = Matrix(H)
-			mimimum_eigenvalue = eigmin(Matrix(H))
-			println("FAILURE+++++++inverse_power_iteration operation returned non positive matrix. retunred_eigen_value is $temp_eigenvalue and mimimum_eigenvalue is $mimimum_eigenvalue.")
-		end
-		@assert temp_total_number_factorizations_ ==  temp_total_number_factorizations_compute_search_direction + temp_total_number_factorizations_inverse_power_iteration
-		total_number_factorizations += temp_total_number_factorizations_
-		return false, δ_prime, zeros(length(g)), total_number_factorizations, temp_total_number_factorizations_compute_search_direction, temp_total_number_factorizations_inverse_power_iteration
-	end
+        @assert temp_total_number_factorizations_ ==
+                temp_total_number_factorizations_compute_search_direction +
+                temp_total_number_factorizations_inverse_power_iteration
+        total_number_factorizations += temp_total_number_factorizations_
+        return false,
+        eigenvalue,
+        zeros(length(g)),
+        total_number_factorizations,
+        temp_total_number_factorizations_compute_search_direction,
+        temp_total_number_factorizations_inverse_power_iteration
+    catch e
+        # We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
+        @error e
+        if print_level >= 2
+            matrix_H = Matrix(H)
+            mimimum_eigenvalue = eigmin(Matrix(H))
+            println(
+                "FAILURE+++++++inverse_power_iteration operation returned non positive matrix. retunred_eigen_value is $temp_eigenvalue and mimimum_eigenvalue is $mimimum_eigenvalue.",
+            )
+        end
+        @assert temp_total_number_factorizations_ ==
+                temp_total_number_factorizations_compute_search_direction +
+                temp_total_number_factorizations_inverse_power_iteration
+        total_number_factorizations += temp_total_number_factorizations_
+        return false,
+        δ_prime,
+        zeros(length(g)),
+        total_number_factorizations,
+        temp_total_number_factorizations_compute_search_direction,
+        temp_total_number_factorizations_inverse_power_iteration
+    end
 end
 
 """
@@ -647,62 +892,71 @@ Compute iteratively an approximate value to the minimum eigenvalue of H.
   'temp_d_k::Vector{Float64}'. temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * I) ^ {-1} (-g)
 """
 function inverse_power_iteration(
-	g::Vector{Float64},
-	H::Union{SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}},
-	min_grad::Float64, δ::Float64, δ_prime::Float64, r::Float64, γ_2::Float64;
-	max_iter::Int64=1000, ϵ::Float64=1e-3, print_level::Int64=2
-	)
-   sigma = δ_prime
-   start_time_temp = time()
-   n = size(H, 1)
-   x = ones(n)
-   y = ones(n)
-   sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
-   y_original_fact = cholesky(H + sigma * sparse_identity)
-   temp_factorization = 1
-   for k in 1:max_iter
-       y = y_original_fact \ x
-       y /= norm(y)
-	   eigenvalue = dot(y, H * y)
+    g::Vector{Float64},
+    H::Union{
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+    min_grad::Float64,
+    δ::Float64,
+    δ_prime::Float64,
+    r::Float64,
+    γ_2::Float64;
+    max_iter::Int64 = 1000,
+    ϵ::Float64 = 1e-3,
+    print_level::Int64 = 2,
+)
+    sigma = δ_prime
+    start_time_temp = time()
+    n = size(H, 1)
+    x = ones(n)
+    y = ones(n)
+    sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
+    y_original_fact = cholesky(H + sigma * sparse_identity)
+    temp_factorization = 1
+    for k = 1:max_iter
+        y = y_original_fact \ x
+        y /= norm(y)
+        eigenvalue = dot(y, H * y)
 
-	   if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10 ^ 2 * r))
-		   try
-			   temp_factorization += 1
-			   # Validate that H + eigenvalue is positive definite
-			   temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
-       		   return true, eigenvalue, y, temp_factorization, temp_d_k
-		   catch
-			   #DO NOTHING
-		   end
-	   end
+        if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10^2 * r))
+            try
+                temp_factorization += 1
+                # Validate that H + eigenvalue is positive definite
+                temp_d_k = cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
+                return true, eigenvalue, y, temp_factorization, temp_d_k
+            catch
+                #DO NOTHING
+            end
+        end
 
-	   #Keep as a safety check. This a sign that we can't solve the trust region subprobelm
-       if norm(x + y) <= ϵ || norm(x - y) <= ϵ
-		   eigenvalue = dot(y, H * y)
-		   try
-			   temp_factorization += 1
-			   temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
-			   return true, eigenvalue, y, temp_factorization, temp_d_k
-		   catch
-			   #DO NOTHING
-		   end
-       end
+        #Keep as a safety check. This a sign that we can't solve the trust region subprobelm
+        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
+            eigenvalue = dot(y, H * y)
+            try
+                temp_factorization += 1
+                temp_d_k = cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
+                return true, eigenvalue, y, temp_factorization, temp_d_k
+            catch
+                #DO NOTHING
+            end
+        end
 
-       x = y
-   end
-   temp_ = dot(y, H * y)
+        x = y
+    end
+    temp_ = dot(y, H * y)
 
-   if print_level >= 2
-	   @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
-   end
+    if print_level >= 2
+        @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
+    end
 
-   if print_level >= 2
-	   end_time_temp = time()
-	   total_time_temp = end_time_temp - start_time_temp
-	   @info "inverse_power_iteration operation took $total_time_temp."
-	   println("inverse_power_iteration operation took $total_time_temp.")
-   end
+    if print_level >= 2
+        end_time_temp = time()
+        total_time_temp = end_time_temp - start_time_temp
+        @info "inverse_power_iteration operation took $total_time_temp."
+        println("inverse_power_iteration operation took $total_time_temp.")
+    end
 
-   temp_d_k = zeros(length(g))
-   return false, temp_, y, temp_factorization, temp_d_k
+    temp_d_k = zeros(length(g))
+    return false, temp_, y, temp_factorization, temp_d_k
 end

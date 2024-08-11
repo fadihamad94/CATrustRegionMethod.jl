@@ -7,7 +7,7 @@ include("../src/trust_region_subproblem_solver.jl")
 function createDummyNLPModel()
     x0 = [-1.2; 1.0]
     model = Model()
-    @variable(model, x[i=1:2], start=x0[i])
+    @variable(model, x[i = 1:2], start = x0[i])
     @NLobjective(model, Min, (x[1] - 1)^2 + 100 * (x[2] - x[1]^2)^2)
     nlp = MathOptNLPModel(model)
     return nlp
@@ -17,7 +17,7 @@ function createDummyNLPModel2()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, (2 * x + y - 1) ^ 2 + x + y + (x ^ 2 - 2 * y ^ 2) ^ 3)
+    @NLobjective(model, Min, (2 * x + y - 1)^2 + x + y + (x^2 - 2 * y^2)^3)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -25,7 +25,7 @@ end
 function createSimpleUnivariateConvexProblem()
     model = Model()
     @variable(model, x)
-    @NLobjective(model, Min, (x - 1) ^ 2)
+    @NLobjective(model, Min, (x - 1)^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -34,7 +34,7 @@ function createSimpleConvexNLPModeL()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, (x + y - 1) ^ 2)
+    @NLobjective(model, Min, (x + y - 1)^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -43,7 +43,7 @@ function createComplexConvexNLPModeL1()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, (x + y - 1) ^ 2 + x + y + (x - 2 * y) ^ 2)
+    @NLobjective(model, Min, (x + y - 1)^2 + x + y + (x - 2 * y)^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -52,7 +52,7 @@ function createComplexNLPModeL1()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, (2 * x + y - 1) ^ 2 + x + y + (x ^ 2 - 2 * y ^ 2) ^ 2)
+    @NLobjective(model, Min, (2 * x + y - 1)^2 + x + y + (x^2 - 2 * y^2)^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -78,7 +78,7 @@ end
 function createHardCaseUsingSimpleUnivariateConvexProblem()
     model = Model()
     @variable(model, x)
-    @NLobjective(model, Min, -x ^ 2)
+    @NLobjective(model, Min, -x^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -87,7 +87,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, -x ^ 2 - y ^ 2)
+    @NLobjective(model, Min, -x^2 - y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -96,7 +96,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem1()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, -x ^ 2 - 2 * y ^ 2)
+    @NLobjective(model, Min, -x^2 - 2 * y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -105,7 +105,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem2()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, x ^ 2 + 0.01 * x - y ^ 2)
+    @NLobjective(model, Min, x^2 + 0.01 * x - y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -114,7 +114,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem3()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, x ^ 2 - 10 * x * y + y ^ 2)
+    @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -123,7 +123,7 @@ end
 function createSimpleUnivariateConvexProblem()
     model = Model()
     @variable(model, x)
-    @NLobjective(model, Min, (x - 1) ^ 2)
+    @NLobjective(model, Min, (x - 1)^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -131,7 +131,7 @@ end
 function createHardCaseUsingSimpleUnivariateConvexProblem()
     model = Model()
     @variable(model, x)
-    @NLobjective(model, Min, -x ^ 2)
+    @NLobjective(model, Min, -x^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -140,7 +140,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, -x ^ 2 - y ^ 2)
+    @NLobjective(model, Min, -x^2 - y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -149,7 +149,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem1()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, -x ^ 2 - 2 * y ^ 2)
+    @NLobjective(model, Min, -x^2 - 2 * y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -158,7 +158,7 @@ function createHardCaseUsingSimpleBivariateConvexProblem2()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, x ^ 2 + 0.01 * x - y ^ 2)
+    @NLobjective(model, Min, x^2 + 0.01 * x - y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
@@ -167,120 +167,260 @@ function createHardCaseUsingSimpleBivariateConvexProblem3()
     model = Model()
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, x ^ 2 - 10 * x * y + y ^ 2)
+    @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
 
 function test_create_dummy_problem()
     nlp = createDummyNLPModel()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_dummy_problem2()
     nlp = createDummyNLPModel2()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_simple_convex_nlp_model()
     nlp = createSimpleConvexNLPModeL()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_complex_convex_nlp1_model()
     nlp = createComplexConvexNLPModeL1()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_complex_nlp_modeL1()
     nlp = createComplexNLPModeL1()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_problem_sin_cos_mode_nlp1()
     nlp = createSinCosNLPModeL1()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_problem_sin_cos_mode_nlp2()
     nlp = createSinCosNLPModeL2()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_simple_univariate_convex_model()
     nlp = createSimpleUnivariateConvexProblem()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_simple_univariate_convex_model_solved_same_as_Newton()
     nlp = createSimpleUnivariateConvexProblem()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(2.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(2.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_hard_case_using_simple_univariate_convex_model()
     nlp = createHardCaseUsingSimpleUnivariateConvexProblem()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_hard_case_using_bivariate_convex_model_1()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem1()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_hard_case_using_bivariate_convex_model_2()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem2()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
 function test_create_hard_case_using_bivariate_convex_model_3()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem3()
-    termination_conditions_struct = consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct = consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(5.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(nlp, termination_conditions_struct, initial_radius_struct, 0.25, 0.5, 2.0, 2.0)
+    termination_conditions_struct =
+        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
+    initial_radius_struct =
+        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(5.0)
+    problem = consistently_adaptive_trust_region_method.Problem_Data(
+        nlp,
+        termination_conditions_struct,
+        initial_radius_struct,
+        0.25,
+        0.5,
+        2.0,
+        2.0,
+    )
     return problem
 end
 
@@ -295,7 +435,15 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -317,7 +465,15 @@ function test_optimize_second_order_model_phi_zero()
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -342,7 +498,15 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -367,7 +531,15 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -389,7 +561,15 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -414,7 +594,15 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -427,7 +615,7 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function  test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
+function test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
     tol = 1e-3
     problem = test_create_hard_case_using_simple_univariate_convex_model()
     nlp = problem.nlp
@@ -439,7 +627,15 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     temp_ = norm(g)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -453,7 +649,7 @@ function  test_optimize_second_order_model_hard_case_using_simple_univariate_con
     @test abs(obj(nlp, x_k + d_k) - (-4.00004e-8)) <= tol
 end
 
-function  test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
+function test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
     tol = 1e-3
     problem = test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = problem.nlp
@@ -464,7 +660,15 @@ function  test_optimize_second_order_model_hard_case_using_simple_bivariate_conv
     r = 0.00029
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -489,7 +693,15 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 4.0e-4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -515,7 +727,15 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00245
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -541,7 +761,15 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00114
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -558,24 +786,56 @@ end
 function test_optimize_second_order_model_bisection_logic_bug_fix()
     tol = 1e-3
     r = 0.08343452704764227
-    g = [3.4679032978601754e-9, 7.39587593251434e-9, 2.7183407851072428e-8, -0.003000483357027406, 0.008419134290306829]
-    H = [66.0 65.0743102550725 65.67263629092243 -1.2900082661017744e7 3.6178787247129455e7; 65.0743102550725 64.1661603269859 64.75315415279051 -1.265594646809823e7 3.549303722643331e7; 65.67263629092243 64.75315415279051 65.34746955501134 -1.2813679600892197e7 3.59360895721625e7; -1.2900082661017744e7 -1.265594646809823e7 -1.2813679600892197e7 3.3981511777610044e12 -9.544912385973707e12; 3.6178787247129455e7 3.549303722643331e7 3.59360895721625e7 -9.544912385973707e12 2.6810622545473246e13]
+    g = [
+        3.4679032978601754e-9,
+        7.39587593251434e-9,
+        2.7183407851072428e-8,
+        -0.003000483357027406,
+        0.008419134290306829,
+    ]
+    H = [
+        66.0 65.0743102550725 65.67263629092243 -1.2900082661017744e7 3.6178787247129455e7
+        65.0743102550725 64.1661603269859 64.75315415279051 -1.265594646809823e7 3.549303722643331e7
+        65.67263629092243 64.75315415279051 65.34746955501134 -1.2813679600892197e7 3.59360895721625e7
+        -1.2900082661017744e7 -1.265594646809823e7 -1.2813679600892197e7 3.3981511777610044e12 -9.544912385973707e12
+        3.6178787247129455e7 3.549303722643331e7 3.59360895721625e7 -9.544912385973707e12 2.6810622545473246e13
+    ]
     γ_1 = 0.01
     γ_2 = 1 - 1e-8
     δ = 6.205227748467783e-12
 
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     @test success
     @test abs(δ - 2.5e-8) <= tol
     @test abs(δ_prime - 0.0133096) <= tol
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.bisection(
+            g,
+            H,
+            δ,
+            γ_1,
+            γ_2,
+            δ_prime,
+            r,
+            min_grad,
+            0,
+        )
     @test success
     @test abs(δ_m - 5.173e-7) <= tol
 
     r = 0.0018
     γ_2 = 1 - 1e-5
-    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, d_k = consistently_adaptive_trust_region_method.optimizeSecondOrderModel(
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        r,
+        norm(g),
+    )
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -597,7 +857,8 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     γ_1 = 0.01
     γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g), print_level)
+    status, δ_k, d_k, temp_total_number_factorizations, hard_case =
+        optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g), print_level)
     @test status == false
     @test norm(d_k) == 0.0
     @test hard_case == true
@@ -613,7 +874,8 @@ function test_phi_positive_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
     @test Φ_δ == 1
     @test positive_definite
 end
@@ -627,7 +889,8 @@ function test_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.4
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
     @test Φ_δ == 0
     @test positive_definite
 end
@@ -641,7 +904,8 @@ function test_phi_negative_one()
     δ = 3.0
     γ_2 = 1.0
     r = 1.0
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == -1
     @test positive_definite
 end
@@ -655,12 +919,15 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == δ_prime == 64.0
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -674,13 +941,16 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == 4.0
     @test δ_prime == 64.0
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
     @test Φ_δ == 1
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == -1
     @test positive_definite
 end
@@ -694,12 +964,15 @@ function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
     δ = 9.0
     ϵ = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, ϵ, r)
     @test δ == δ_prime == 9.0
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, ϵ, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -713,12 +986,15 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     δ = 250.0
     γ_2 = 0.2
     r = 0.3
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     @test (δ, δ_prime) == (500.0, 500.0)
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -733,18 +1009,33 @@ function test_bisection_with_starting_on_root_δ_zero()
     γ_1 = 0.01
     γ_2 = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.bisection(
+            g,
+            H,
+            δ,
+            γ_1,
+            γ_2,
+            δ_prime,
+            r,
+            min_grad,
+            0,
+        )
     @test success
     @test δ_m == δ == δ_prime
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
-    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    Φ_δ_m, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -759,20 +1050,35 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.bisection(
+            g,
+            H,
+            δ,
+            γ_1,
+            γ_2,
+            δ_prime,
+            r,
+            min_grad,
+            0,
+        )
     @test success
     @test δ_m == 34.0
     @test δ == 4.0
     @test δ_prime == 64.0
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 1
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == -1
     @test positive_definite
-    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    Φ_δ_m, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
     @test Φ_δ_m == 0
     @test positive_definite
 end
@@ -787,18 +1093,33 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.3
-    success, δ, δ_prime, temp_total_number_factorizations = consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
+    success, δ, δ_prime, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations = consistently_adaptive_trust_region_method.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations =
+        consistently_adaptive_trust_region_method.bisection(
+            g,
+            H,
+            δ,
+            γ_1,
+            γ_2,
+            δ_prime,
+            r,
+            min_grad,
+            0,
+        )
     @test success
     @test abs(δ_m - 500.0) <= 1e-3
-    Φ_δ, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
+    Φ_δ, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ, γ_2, r)
     @test Φ_δ == 0
     @test positive_definite
-    Φ_δ_prime, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
-    Φ_δ_m, temp_d, positive_definite = consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
+    Φ_δ_m, temp_d, positive_definite =
+        consistently_adaptive_trust_region_method.phi(g, H, δ_m, γ_2, r)
     @test Φ_δ_prime == 0
     @test positive_definite
 end
@@ -811,7 +1132,12 @@ function test_compute_second_order_model_negative_direction()
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
-    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    second_order_model_value =
+        consistently_adaptive_trust_region_method.computeSecondOrderModel(
+            gradient_value,
+            hessian_value,
+            d_k,
+        )
     @test second_order_model_value == 104.0 - function_value
 end
 
@@ -823,7 +1149,12 @@ function test_compute_second_order_model_zero_direction()
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
-    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    second_order_model_value =
+        consistently_adaptive_trust_region_method.computeSecondOrderModel(
+            gradient_value,
+            hessian_value,
+            d_k,
+        )
     @test second_order_model_value == 1.0 - function_value
 end
 
@@ -835,7 +1166,12 @@ function test_compute_second_order_model_positive_direction()
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
-    second_order_model_value = consistently_adaptive_trust_region_method.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+    second_order_model_value =
+        consistently_adaptive_trust_region_method.computeSecondOrderModel(
+            gradient_value,
+            hessian_value,
+            d_k,
+        )
     @test second_order_model_value == 100.0 - function_value
 end
 
@@ -853,7 +1189,15 @@ function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_min
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(
+        fval_current,
+        fval_next,
+        gval_current,
+        gval_next,
+        H,
+        d_k,
+        θ,
+    )
 end
 
 function test_compute_ρ_hat_phi_zero()
@@ -871,7 +1215,15 @@ function test_compute_ρ_hat_phi_zero()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(
+        fval_current,
+        fval_next,
+        gval_current,
+        gval_next,
+        H,
+        d_k,
+        θ,
+    )[1]
     @test norm(ρ - 0.980423689675886, 2) <= tol
 end
 
@@ -890,7 +1242,15 @@ function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    ρ = consistently_adaptive_trust_region_method.compute_ρ_hat(
+        fval_current,
+        fval_next,
+        gval_current,
+        gval_next,
+        H,
+        d_k,
+        θ,
+    )[1]
     @test norm(ρ - 1.126954013438328, 2) <= tol
 end
 
@@ -906,7 +1266,8 @@ function test_compute_l_2_norm_diagonal_matrix()
     # Create a symmetric sparse matrix
     symmetric_diagonal_matrix = Symmetric(diagonal_sparse_matrix)
 
-    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_diagonal_matrix)
+    l2_norm_our_approach =
+        consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_diagonal_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_diagonal_matrix), 2)
 
@@ -928,7 +1289,8 @@ function test_compute_l_2_norm_symmetric_matrix_2_by_2()
     # Create a symmetric sparse matrix
     symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
 
-    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
+    l2_norm_our_approach =
+        consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
 
@@ -947,7 +1309,8 @@ function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
     # Create a symmetric sparse matrix
     symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
 
-    l2_norm_our_approach = consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
+    l2_norm_our_approach =
+        consistently_adaptive_trust_region_method.matrix_l2_norm(symmetric_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
 

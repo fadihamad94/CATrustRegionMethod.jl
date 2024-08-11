@@ -1,10 +1,26 @@
 __precompile__()
 
 module consistently_adaptive_trust_region_method
-using NLPModels, LinearAlgebra, DataFrames, SparseArrays, EnumX, JuMP, NLPModelsJuMP, MathOptInterface, Random, CUTEst
+using NLPModels,
+    LinearAlgebra,
+    DataFrames,
+    SparseArrays,
+    EnumX,
+    JuMP,
+    NLPModelsJuMP,
+    MathOptInterface,
+    Random,
+    CUTEst
 
 export TerminationConditions, INITIAL_RADIUS_STRUCT, Problem_Data
-export phi, findinterval, bisection, computeSecondOrderModel, optimizeSecondOrderModel, compute_ρ_hat, CAT, CAT_solve
+export phi,
+    findinterval,
+    bisection,
+    computeSecondOrderModel,
+    optimizeSecondOrderModel,
+    compute_ρ_hat,
+    CAT,
+    CAT_solve
 
 include("./trust_region_subproblem_solver.jl")
 include("./common.jl")
