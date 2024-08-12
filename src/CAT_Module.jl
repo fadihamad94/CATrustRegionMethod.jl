@@ -12,7 +12,7 @@ using NLPModels,
     Random,
     CUTEst
 
-export TerminationConditions, INITIAL_RADIUS_STRUCT, Problem_Data
+export TerminationCriteria, AlgorithmicParameters
 export phi,
     findinterval,
     bisection,
@@ -24,6 +24,7 @@ export phi,
 
 include("./trust_region_subproblem_solver.jl")
 include("./common.jl")
+include("./utils.jl")
 include("./JuMPInterface.jl")
 include("./CAT.jl")
 

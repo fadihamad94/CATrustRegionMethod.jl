@@ -169,6 +169,7 @@ function run_cutest_with_CAT(
     γ_3::Float64,
     ξ::Float64,
     r_1::Float64,
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64,
     δ::Float64,
     min_nvar::Int64,
     max_nvar::Int64,
@@ -204,6 +205,7 @@ function run_cutest_with_CAT(
         γ_3,
         ξ,
         r_1,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE,
         print_level,
         seed,
         δ,
@@ -226,6 +228,7 @@ function runModelFromProblem(
     γ_3::Float64,
     ξ::Float64,
     r_1::Float64,
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64,
     δ::Float64,
     print_level::Int64,
     seed::Int64,
@@ -237,18 +240,13 @@ function runModelFromProblem(
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 
-        termination_conditions_struct =
-            consistently_adaptive_trust_region_method.TerminationConditions(
+        termination_criteria =
+            consistently_adaptive_trust_region_method.TerminationCriteria(
                 max_it,
                 tol_opt,
                 max_time,
             )
-        initial_radius_struct =
-            consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
-        problem = consistently_adaptive_trust_region_method.Problem_Data(
-            nlp,
-            termination_conditions_struct,
-            initial_radius_struct,
+        algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters(
             β,
             θ,
             ω_1,
@@ -257,17 +255,25 @@ function runModelFromProblem(
             γ_2,
             γ_3,
             ξ,
+            r_1,
+            INITIAL_RADIUS_MULTIPLICATIVE_RULE,
             seed,
             print_level,
+            radius_update_rule_approach,
         )
-        x_1 = problem.nlp.meta.x0
+        x_1 = nlp.meta.x0
         x,
         status,
         iteration_stats,
         computation_stats,
         total_iterations_count,
-        total_execution_time =
-            consistently_adaptive_trust_region_method.CAT(problem, x_1, δ)
+        total_execution_time = consistently_adaptive_trust_region_method.CAT(
+            nlp,
+            algorithm_params,
+            termination_criteria,
+            x_1,
+            δ,
+        )
         status_string = convertStatusCodeToStatusString(status)
         function_value = NaN
         gradient_value = NaN
@@ -340,6 +346,7 @@ function executeCUTEST_Models_benchmark(
     γ_3::Float64 = 1.0,
     ξ::Float64 = 0.1,
     r_1::Float64 = 0.0,
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64 = 10.0,
     print_level::Int64 = 0,
     seed::Int64 = 1,
     δ::Float64 = 0.0,
@@ -397,6 +404,7 @@ function executeCUTEST_Models_benchmark(
                 γ_3,
                 ξ,
                 r_1,
+                INITIAL_RADIUS_MULTIPLICATIVE_RULE,
                 δ,
                 print_level,
                 seed,

@@ -51,7 +51,8 @@ mutable struct CATProblem
     # Custom attributes of the CATSolver
     iteration_stats::DataFrame
     computation_stats::Dict{String,Int64}
-    pars::Problem_Data
+    termination_criteria::TerminationCriteria
+    algorithm_params::AlgorithmicParameters
 
     function CATProblem()
         return new()
@@ -291,21 +292,23 @@ end
 ############################
 
 function create_pars_JuMP(options)
-    pars = Problem_Data()
+    termination_criteria = TerminationCriteria()
+    algorithm_params = AlgorithmicParameters()
     for (param, value) in options
-        what = split(String(param), "!") # we represent a parameter such as termination_conditions.MAX_ITERATIONS as termination_conditions!MAX_ITERATIONS because we cannot pass termination_conditions.MAX_ITERATIONS as a parameter
-        node = pars # root
-        for i = 1:length(what)
-            field = what[i]
-            if i < length(what)
-                node = getfield(node, Symbol(field))
-            else # at the leaf
-                setfield!(node, Symbol(field), value)
-            end
+        what = split(String(param), "!") # we represent a parameter such as termination_criteria.MAX_ITERATIONS as termination_criteria!MAX_ITERATIONS because we cannot pass termination_criteria.MAX_ITERATIONS as a parameter
+        node = nothing
+        if what[1] == "termination_criteria"
+            node = termination_criteria
+        elseif what[1] == "algorithm_params"
+            node = algorithm_params
+        else
+            error("Unkown argument.")
         end
+        field = what[2]
+        setfield!(node, Symbol(field), value)
     end
 
-    return pars
+    return termination_criteria, algorithm_params
 end
 
 MOI.get(model::CATSolver, ::MOI.RawSolver) = model
@@ -337,8 +340,9 @@ function MOI.optimize!(solver::CATSolver)
         MOI.initialize(solver.nlp_data.evaluator, init_feat)
     end
 
-    pars = create_pars_JuMP(solver.options)
-    x, status, iteration_stats, computation_stats, k = CAT_solve(solver, pars)
+    termination_criteria, algorithm_params = create_pars_JuMP(solver.options)
+    x, status, iteration_stats, computation_stats, k =
+        CAT_solve(solver, termination_criteria, algorithm_params)
 
     status_str = convertStatusCodeToStatusString(status)
 
@@ -359,7 +363,8 @@ function MOI.optimize!(solver::CATSolver)
     solver.inner.solve_time = time() - t
 
     # custom CAT features
-    solver.inner.pars = pars
+    solver.inner.termination_criteria = termination_criteria
+    solver.inner.algorithm_params = algorithm_params
     solver.inner.iteration_stats = iteration_stats
     solver.inner.computation_stats = computation_stats
 end
@@ -404,8 +409,11 @@ end
 function MOI.optimize!(solver::CATSolver, jumpModel::Model)
     t = time()
     nlp = MathOptNLPModel(jumpModel)
-
-    x, status, iteration_stats, computation_stats, k = CAT_solve(solver, pars)
+    solver.nlp_data = nlp
+    termination_criteria = TerminationCriteria()
+    algorithm_params = AlgorithmicParameters()
+    x, status, iteration_stats, computation_stats, k =
+        CAT_solve(solver, termination_criteria, algorithm_params)
 
     status_str = convertStatusCodeToStatusString(status)
 
@@ -426,7 +434,8 @@ function MOI.optimize!(solver::CATSolver, jumpModel::Model)
     solver.inner.solve_time = time() - t
 
     # custom CAT features
-    solver.inner.pars = pars
+    solver.inner.termination_criteria = termination_criteria
+    solver.inner.algorithm_params = algorithm_params
     solver.inner.iteration_stats = iteration_stats
     solver.inner.computation_stats = computation_stats
 end

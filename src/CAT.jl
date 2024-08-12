@@ -219,87 +219,24 @@ function sub_routine_trust_region_sub_problem_solver(
     temp_total_number_factorizations_inverse_power_iteration
 end
 
-"""
-  power_iteration(H, num_iter, tol)
-  Computes the maximum eigenvalue iteratively for the matrix H.
-
-  # Inputs:
-	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
-		The Hessian at the current iterate x_k.
-	- `num_iter::Int64`. Maximum number of iterations to run the power method.
-	- `print_level::Float64`. The tolerance for the accuracy of the power method.
-  # Output:
-   Scalar that has the value of the l2 norm of the matrix H.
-"""
-function power_iteration(
-    H::Union{
-        SparseMatrixCSC{Float64,Int64},
-        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
-    };
-    num_iter::Int64 = 20,
-    tol::Float64 = 1e-6,
-)
-    n = size(H, 1)
-    v = rand(n)  # Initialize a random vector
-    v /= norm(v)  # Normalize the vector
-
-    λ = 0.0  # Initialize the largest eigenvalue
-    for i = 1:num_iter
-        Hv = H * v
-        v_new = Hv / norm(Hv)  # Normalize the new vector
-        λ_new = dot(v_new, H * v_new)  # Rayleigh quotient
-
-        # Check for convergence
-        if abs(λ_new - λ) < tol
-            break
-        end
-
-        v = v_new
-        λ = λ_new
-    end
-    return λ, v
-end
-
-"""
-  matrix_l2_norm(H, num_iter, tol)
-  Computes the l2 norm (the spectral norm) of a matrix.
-  The spectral norm of a matrix H is the largest singular value of H (i.e., the square root of the largest eigenvalue of
-  the matrix H ^ T * H. However, since the matrix H is symmetrix. We can compute the maximum eigenvalue of H and this
-  will be the l2 norm. The computation of the maximum eigenvalue is done iteratively using power iteration method.
-
-  # Inputs:
-	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
-		The Hessian at the current iterate x_k.
-	- `num_iter::Int64`. Maximum number of iterations to run the power method.
-	- `print_level::Float64`. The tolerance for the accuracy of the power method.
-  # Output:
-   Scalar that has the value of the l2 norm of the matrix H.
-"""
-function matrix_l2_norm(
-    H::Union{
-        SparseMatrixCSC{Float64,Int64},
-        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
-    };
-    num_iter::Int64 = 20,
-    tol::Float64 = 1e-6,
-)
-    λ_max, _ = power_iteration(H; num_iter = num_iter, tol = tol)  # Largest eigenvalue of A^T A
-    return abs(λ_max)  # Largest singular value (spectral norm)
-end
-
 function CAT_solve(m::JuMP.Model)
     nlp_raw = MathOptNLPModel(m)
     return CAT_solve(nlp_raw)
 end
 
-function CAT_solve(m::JuMP.Model, pars::Problem_Data)
-    nlp_raw = MathOptNLPModel(m)
-    return CAT_solve(nlp_raw, pars)
+function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel)
+    termination_criteria = TerminationCriteria()
+    algorithm_params = AlgorithmicParameters()
+    return CAT_solve(nlp_raw, termination_criteria, algorithm_params)
 end
 
-function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel)
-    pars = Problem_Data()
-    return CAT_solve(nlp_raw, pars)
+function CAT_solve(
+    m::JuMP.Model,
+    termination_criteria::TerminationCriteria,
+    algorithm_params::AlgorithmicParameters,
+)
+    nlp_raw = MathOptNLPModel(m)
+    return CAT_solve(nlp_raw, termination_criteria, algorithm_params)
 end
 
 function _i_not_fixed(variable_info::Vector{VariableInfo})
@@ -312,7 +249,11 @@ function _i_not_fixed(variable_info::Vector{VariableInfo})
     return vector_indixes
 end
 
-function CAT_solve(solver::CATSolver, pars::Problem_Data)
+function CAT_solve(
+    solver::CATSolver,
+    termination_criteria::TerminationCriteria,
+    algorithm_params::AlgorithmicParameters,
+)
     ind = _i_not_fixed(solver.variable_info)
     non_fixed_variables = solver.variable_info[ind]
     starting_points_vector = zeros(0)
@@ -321,28 +262,31 @@ function CAT_solve(solver::CATSolver, pars::Problem_Data)
     end
     x = deepcopy(starting_points_vector)
     δ = 0.0
-    pars.nlp = solver.nlp_data
-    return CAT(pars, x, δ)
+    return CAT(solver.nlp_data, termination_criteria, algorithm_params, x, δ)
 end
 
-function CAT_solve(nlp_raw::NLPModels.AbstractNLPModel, pars::Problem_Data)
+function CAT_solve(
+    nlp_raw::NLPModels.AbstractNLPModel,
+    termination_criteria::TerminationCriteria,
+    algorithm_params::AlgorithmicParameters,
+)
     if ncon(nlp_raw) > 0
         throw(ErrorException("Constrained minimization problems are unsupported"))
     end
-    pars.nlp = nlp_raw
     δ = 0.0
     x = nlp_raw.meta.x0
-    return CAT(pars, x, δ)
+    return CAT(nlp_raw, termination_criteria, algorithm_params, x, δ)
 end
 
 """
-  CAT(problem, x, δ)
+  CAT(uconstrainedMinimizationProblem, termination_criteria, algorithm_params, x, δ)
   This is the main algorithm code.
 
   # Inputs:
-    - `problem::Problem_Data`. This contains all the necessary algorithm params, the termination conditions, and the
-	utility to compute function, gradient, and Hessian. See Problem_Data struct in ./common.jl for more details.
-	- `x::Vector{Float64}`. The initial iterate.
+    - `problem::Union{AbstractNLPModel,MathOptNLPModel, MathOptInterface.NLPBlockData,CUTEstModel}`. The utility to compute function, gradient, and Hessian. See Problem_Data struct in ./common.jl for more details.
+    - `termination_criteria::TerminationCriteria. This contains all the termination conditions such as tolerance for gradient norm. See TerminationCriteria struct in ./common.jl for more details.``
+    - `algorithm_params::AlgorithmicParameters. This contains all the necessary algorithm params such as initial radius, the θ param that is used for computing ρ_hat and so forth. See AlgorithmicParameters struct in ./common.jl for more details.`
+    - `x::Vector{Float64}`. The initial iterate.
 	- `δ::Float64`. The initial warm start value for δ. See optimizeSecondOrderModel in ./trust_region_subproblem_solver.jl for more details.
 
   # Outputs:
@@ -354,43 +298,47 @@ end
 	- `k::Int64`. The total number of iterations.
 	- `total_execution_time::Float64.` The total Wall clock time (seconds).
 """
-function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
+function CAT(
+    nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
+    termination_criteria::TerminationCriteria,
+    algorithm_params::AlgorithmicParameters,
+    x::Vector{Float64},
+    δ::Float64,
+)
     start_time_ = time()
     @assert(δ >= 0)
+    @assert nlp != nothing
+
     #Termination conditions
-    termination_conditions_struct = problem.termination_conditions_struct
-    MAX_ITERATIONS = termination_conditions_struct.MAX_ITERATIONS
-    MAX_TIME = termination_conditions_struct.MAX_TIME
-    gradient_termination_tolerance =
-        termination_conditions_struct.gradient_termination_tolerance
-    STEP_SIZE_LIMIT = termination_conditions_struct.STEP_SIZE_LIMIT
-    MINIMUM_OBJECTIVE_FUNCTION = termination_conditions_struct.MINIMUM_OBJECTIVE_FUNCTION
+    MAX_ITERATIONS = termination_criteria.MAX_ITERATIONS
+    MAX_TIME = termination_criteria.MAX_TIME
+    gradient_termination_tolerance = termination_criteria.gradient_termination_tolerance
+    STEP_SIZE_LIMIT = termination_criteria.STEP_SIZE_LIMIT
+    MINIMUM_OBJECTIVE_FUNCTION = termination_criteria.MINIMUM_OBJECTIVE_FUNCTION
 
     #Algorithm parameters
-    β = problem.β
-    ω_1 = problem.ω_1
-    ω_2 = problem.ω_2
-    γ_1 = problem.γ_1
-    γ_2 = problem.γ_2
-    γ_3 = problem.γ_3
-    θ = problem.θ
-    ξ = problem.ξ
-    seed = problem.seed
+    β = algorithm_params.β
+    ω_1 = algorithm_params.ω_1
+    ω_2 = algorithm_params.ω_2
+    γ_1 = algorithm_params.γ_1
+    γ_2 = algorithm_params.γ_2
+    γ_3 = algorithm_params.γ_3
+    θ = algorithm_params.θ
+    ξ = algorithm_params.ξ
+    eval_offset = algorithm_params.eval_offset
+    seed = algorithm_params.seed
+
     #Initial radius
-    initial_radius_struct = problem.initial_radius_struct
-    r_1 = initial_radius_struct.r_1
-    INITIAL_RADIUS_MULTIPLICATIVE_RULE =
-        initial_radius_struct.INITIAL_RADIUS_MULTIPLICATIVE_RULE
+    r_1 = algorithm_params.r_1
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE = algorithm_params.INITIAL_RADIUS_MULTIPLICATIVE_RULE
 
     #Initial conditions
     x_k = x
     δ_k = δ
     r_k = r_1
 
-    nlp = problem.nlp
-    @assert nlp != nothing
-    print_level = problem.print_level
-    radius_update_rule_approach = problem.radius_update_rule_approach
+    print_level = algorithm_params.print_level
+    radius_update_rule_approach = algorithm_params.radius_update_rule_approach
 
     #Algorithm history
     iteration_stats = DataFrame(k = [], fval = [], gradval = [])
@@ -525,7 +473,7 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
                 if fval_next <=
                    fval_current +
                    ξ * min_gval_norm * norm(d_k) +
-                   (1 + abs(fval_current)) * 1e-8
+                   (1 + abs(fval_current)) * eval_offset
                     total_gradient_evaluation += 1
                     temp_grad = evalGradient(nlp, x_k + d_k)
                     temp_norm = norm(temp_grad, 2)
@@ -828,7 +776,13 @@ function CAT(problem::Problem_Data, x::Vector{Float64}, δ::Float64)
 end
 
 function evalFunction(
-    nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
+    nlp::Union{
+        AbstractNLPModel,
+        MathOptNLPModel,
+        MathOptInterface.NLPBlockData,
+        CUTEstModel,
+        Nothing,
+    },
     x::Vector{Float64},
 )
     if typeof(nlp) == AbstractNLPModel ||

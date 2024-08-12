@@ -23,7 +23,7 @@ An Enum of possible values for the `TerminationStatus` attribute.
 end
 
 "A description of solver termination criteria."
-mutable struct TerminationConditions
+mutable struct TerminationCriteria
     """
      	If termination_reason = ITERATION_LIMIT then the solver has
      	taken at least MAX_ITERATIONS iterations.
@@ -49,7 +49,7 @@ mutable struct TerminationConditions
     	"""
     MINIMUM_OBJECTIVE_FUNCTION::Float64
 
-    function TerminationConditions(
+    function TerminationCriteria(
         MAX_ITERATIONS::Int64 = 100000,
         gradient_termination_tolerance::Float64 = 1e-5,
         MAX_TIME::Float64 = 5 * 60 * 60.0,
@@ -70,34 +70,10 @@ mutable struct TerminationConditions
     end
 end
 
-mutable struct INITIAL_RADIUS_STRUCT
-    """
-    The required initial value of the trust-region radius.
-    """
-    r_1::Float64
-    """
-    If r_1 ≤ 0, then the radius will be choosen automatically based on a heursitic appraoch.
-    The default is INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||g_1|| / ||H_1|| where ||g_1|| is the
-    l2 norm for gradient at the initial iterate and ||H_1|| is the spectral norm for the hessian
-    at the initial iterate.
-    """
-    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64
-    function INITIAL_RADIUS_STRUCT(
-        r_1::Float64 = 0.0,
-        INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64 = 10,
-    )
-        @assert(INITIAL_RADIUS_MULTIPLICATIVE_RULE > 0)
-        return new(r_1, INITIAL_RADIUS_MULTIPLICATIVE_RULE)
-    end
-end
+# termination_conditions_struct_default = TerminationCriteria()
+# initial_radius_struct_default = INITIAL_RADIUS_STRUCT()
 
-termination_conditions_struct_default = TerminationConditions()
-initial_radius_struct_default = INITIAL_RADIUS_STRUCT()
-
-mutable struct Problem_Data
-    nlp::Union{AbstractNLPModel,MathOptInterface.NLPBlockData,Nothing}
-    termination_conditions_struct::TerminationConditions
-    initial_radius_struct::INITIAL_RADIUS_STRUCT
+mutable struct AlgorithmicParameters
     """
     β param for the algorithm. It is a threshold for ρ_hat when updating the trust-region radius.
     """
@@ -132,6 +108,17 @@ mutable struct Problem_Data
     """
     ξ::Float64
     """
+    The required initial value of the trust-region radius.
+    """
+    r_1::Float64
+    """
+    If r_1 ≤ 0, then the radius will be choosen automatically based on a heursitic appraoch.
+    The default is INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||g_1|| / ||H_1|| where ||g_1|| is the
+    l2 norm for gradient at the initial iterate and ||H_1|| is the spectral norm for the hessian
+    at the initial iterate.
+    """
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64
+    """
     Specify seed level for randomness.
     """
     seed::Int64
@@ -144,11 +131,12 @@ mutable struct Problem_Data
     when comparing versus the conference version of the paper.
     """
     radius_update_rule_approach::String
+    """
+    eval_offset param for the algorithm. It is used for the trust-region subproblem termination criteria.
+    """
+    eval_offset::Float64
     # initialize parameters
-    function Problem_Data(
-        nlp::Union{AbstractNLPModel,MathOptInterface.NLPBlockData,Nothing} = nothing,
-        termination_conditions_struct::TerminationConditions = termination_conditions_struct_default,
-        initial_radius_struct::INITIAL_RADIUS_STRUCT = initial_radius_struct_default,
+    function AlgorithmicParameters(
         β::Float64 = 0.1,
         θ::Float64 = 0.1,
         ω_1::Float64 = 8.0,
@@ -157,9 +145,12 @@ mutable struct Problem_Data
         γ_2::Float64 = 0.8,
         γ_3::Float64 = 1.0,
         ξ::Float64 = 0.1,
+        r_1::Float64 = 0.0,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64 = 10,
         seed::Int64 = 1,
         print_level::Int64 = 0,
         radius_update_rule_approach::String = "DEFAULT",
+        eval_offset::Float64 = 1e-8,
     )
         @assert(β > 0 && β < 1)
         @assert(θ >= 0 && θ < 1)
@@ -168,12 +159,11 @@ mutable struct Problem_Data
         @assert(ω_2 >= ω_1)
         @assert(γ_3 > 0 && γ_3 <= 1)
         @assert(ξ > 0)
+        @assert(eval_offset > 0)
+        @assert(INITIAL_RADIUS_MULTIPLICATIVE_RULE > 0)
         @assert(0 <= γ_1 < 0.5 * (1 - ((β * θ) / (γ_3 * (1 - β)))))
         @assert(1 / ω_1 < γ_2 <= 1)
         return new(
-            nlp,
-            termination_conditions_struct,
-            initial_radius_struct,
             β,
             θ,
             ω_1,
@@ -182,9 +172,12 @@ mutable struct Problem_Data
             γ_2,
             γ_3,
             ξ,
+            r_1,
+            INITIAL_RADIUS_MULTIPLICATIVE_RULE,
             seed,
             print_level,
             radius_update_rule_approach,
+            eval_offset,
         )
     end
 end

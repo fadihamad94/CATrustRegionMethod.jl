@@ -53,12 +53,12 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     default_max_time = 5 * 60 * 60.0
     default_step_size_limit = 2.0e-16
     options = Dict{String,Any}(
-        "initial_radius_struct!r_1" => default_r_1,
-        "β" => default_β,
-        "ω_2" => default_ω_2,
-        "print_level" => default_print_level,
-        "termination_conditions_struct!MAX_ITERATIONS" => default_max_iterations,
-        "termination_conditions_struct!gradient_termination_tolerance" =>
+        "algorithm_params!r_1" => default_r_1,
+        "algorithm_params!β" => default_β,
+        "algorithm_params!ω_2" => default_ω_2,
+        "algorithm_params!print_level" => default_print_level,
+        "termination_criteria!MAX_ITERATIONS" => default_max_iterations,
+        "termination_criteria!gradient_termination_tolerance" =>
             default_gradient_termination_tolerance,
     )
     model = rosenbrook1()
@@ -74,21 +74,21 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_conditions_struct_default =
-        consistently_adaptive_trust_region_method.TerminationConditions()
-    initial_radius_struct_default =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT()
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct_default,
-        initial_radius_struct_default,
-    )
-    x_k, status, iteration_stats, computation_stats, itr =
-        consistently_adaptive_trust_region_method.CAT(problem, nlp.meta.x0, 0.0)
+    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
+    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
 
-    @test computation_stats["total_function_evaluation"] == problem.nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == problem.nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == problem.nlp.counters.neval_hess
+    x_k, status, iteration_stats, computation_stats, itr =
+        consistently_adaptive_trust_region_method.CAT(
+            nlp,
+            termination_criteria,
+            algorithm_params,
+            nlp.meta.x0,
+            0.0,
+        )
+
+    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
+    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
+    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
     @test computation_stats == Dict(
         "total_number_factorizations_compute_search_direction" => 31,
         "total_hessian_evaluation" => 20,
@@ -107,21 +107,19 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     @test iteration_stats == optimizer.inner.iteration_stats
     @test computation_stats == optimizer.inner.computation_stats
 
-    @test optimizer.inner.pars.β == default_β
-    @test optimizer.inner.pars.θ == default_θ
-    @test optimizer.inner.pars.ω_1 == default_ω_1
-    @test optimizer.inner.pars.ω_2 == default_ω_2
-    @test optimizer.inner.pars.γ_1 == default_γ_1
-    @test optimizer.inner.pars.γ_2 == default_γ_2
-    @test optimizer.inner.pars.initial_radius_struct.r_1 == default_r_1
-    @test optimizer.inner.pars.print_level == default_print_level
-    @test optimizer.inner.pars.termination_conditions_struct.MAX_ITERATIONS ==
-          default_max_iterations
-    @test optimizer.inner.pars.termination_conditions_struct.gradient_termination_tolerance ==
+    @test optimizer.inner.algorithm_params.β == default_β
+    @test optimizer.inner.algorithm_params.θ == default_θ
+    @test optimizer.inner.algorithm_params.ω_1 == default_ω_1
+    @test optimizer.inner.algorithm_params.ω_2 == default_ω_2
+    @test optimizer.inner.algorithm_params.γ_1 == default_γ_1
+    @test optimizer.inner.algorithm_params.γ_2 == default_γ_2
+    @test optimizer.inner.algorithm_params.r_1 == default_r_1
+    @test optimizer.inner.algorithm_params.print_level == default_print_level
+    @test optimizer.inner.termination_criteria.MAX_ITERATIONS == default_max_iterations
+    @test optimizer.inner.termination_criteria.gradient_termination_tolerance ==
           default_gradient_termination_tolerance
-    @test optimizer.inner.pars.termination_conditions_struct.MAX_TIME == default_max_time
-    @test optimizer.inner.pars.termination_conditions_struct.STEP_SIZE_LIMIT ==
-          default_step_size_limit
+    @test optimizer.inner.termination_criteria.MAX_TIME == default_max_time
+    @test optimizer.inner.termination_criteria.STEP_SIZE_LIMIT == default_step_size_limit
 end
 
 function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments()
@@ -132,12 +130,12 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     MAX_ITERATIONS = 10
     gradient_termination_tolerance = 1e-3
     options = Dict{String,Any}(
-        "initial_radius_struct!r_1" => r_1,
-        "β" => β,
-        "ω_2" => ω_2,
-        "print_level" => print_level,
-        "termination_conditions_struct!MAX_ITERATIONS" => MAX_ITERATIONS,
-        "termination_conditions_struct!gradient_termination_tolerance" =>
+        "algorithm_params!r_1" => r_1,
+        "algorithm_params!β" => β,
+        "algorithm_params!ω_2" => ω_2,
+        "algorithm_params!print_level" => print_level,
+        "termination_criteria!MAX_ITERATIONS" => MAX_ITERATIONS,
+        "termination_criteria!gradient_termination_tolerance" =>
             gradient_termination_tolerance,
     )
     model = rosenbrook1()
@@ -154,28 +152,27 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_conditions_struct_default =
-        consistently_adaptive_trust_region_method.TerminationConditions()
-    initial_radius_struct_default =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT()
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct_default,
-        initial_radius_struct_default,
-    )
-    problem.β = β
-    problem.ω_2 = ω_2
-    problem.initial_radius_struct.r_1 = r_1
-    problem.print_level = print_level
-    problem.termination_conditions_struct.MAX_ITERATIONS = MAX_ITERATIONS
-    problem.termination_conditions_struct.gradient_termination_tolerance =
-        gradient_termination_tolerance
-    x_k, status, iteration_stats, computation_stats, itr =
-        consistently_adaptive_trust_region_method.CAT(problem, nlp.meta.x0, 0.0)
+    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
+    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
 
-    @test computation_stats["total_function_evaluation"] == problem.nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == problem.nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == problem.nlp.counters.neval_hess
+    algorithm_params.β = β
+    algorithm_params.ω_2 = ω_2
+    algorithm_params.r_1 = r_1
+    algorithm_params.print_level = print_level
+    termination_criteria.MAX_ITERATIONS = MAX_ITERATIONS
+    termination_criteria.gradient_termination_tolerance = gradient_termination_tolerance
+    x_k, status, iteration_stats, computation_stats, itr =
+        consistently_adaptive_trust_region_method.CAT(
+            nlp,
+            termination_criteria,
+            algorithm_params,
+            nlp.meta.x0,
+            0.0,
+        )
+
+    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
+    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
+    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
     @test computation_stats == Dict(
         "total_number_factorizations_compute_search_direction" => 13,
         "total_hessian_evaluation" => 6,
@@ -195,13 +192,12 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     @test iteration_stats == optimizer.inner.iteration_stats
     @test computation_stats == optimizer.inner.computation_stats
 
-    @test optimizer.inner.pars.β == β
-    @test optimizer.inner.pars.ω_2 == ω_2
-    @test optimizer.inner.pars.initial_radius_struct.r_1 == r_1
-    @test optimizer.inner.pars.print_level == print_level
-    @test optimizer.inner.pars.termination_conditions_struct.MAX_ITERATIONS ==
-          MAX_ITERATIONS
-    @test optimizer.inner.pars.termination_conditions_struct.gradient_termination_tolerance ==
+    @test optimizer.inner.algorithm_params.β == β
+    @test optimizer.inner.algorithm_params.ω_2 == ω_2
+    @test optimizer.inner.algorithm_params.r_1 == r_1
+    @test optimizer.inner.algorithm_params.print_level == print_level
+    @test optimizer.inner.termination_criteria.MAX_ITERATIONS == MAX_ITERATIONS
+    @test optimizer.inner.termination_criteria.gradient_termination_tolerance ==
           gradient_termination_tolerance
 end
 
@@ -233,21 +229,21 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_conditions_struct_default =
-        consistently_adaptive_trust_region_method.TerminationConditions()
-    initial_radius_struct_default =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT()
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct_default,
-        initial_radius_struct_default,
-    )
-    x_k, status, iteration_stats, computation_stats, itr =
-        consistently_adaptive_trust_region_method.CAT(problem, nlp.meta.x0, 0.0)
+    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
+    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
 
-    @test computation_stats["total_function_evaluation"] == problem.nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == problem.nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == problem.nlp.counters.neval_hess
+    x_k, status, iteration_stats, computation_stats, itr =
+        consistently_adaptive_trust_region_method.CAT(
+            nlp,
+            termination_criteria,
+            algorithm_params,
+            nlp.meta.x0,
+            0.0,
+        )
+
+    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
+    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
+    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
     @test computation_stats == Dict(
         "total_number_factorizations_compute_search_direction" => 0,
         "total_hessian_evaluation" => 1,

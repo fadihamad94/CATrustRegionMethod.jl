@@ -87,6 +87,14 @@ function parse_command_line()
         arg_type = Float64
         default = 0.0
 
+        "--INITIAL_RADIUS_MULTIPLICATIVE_RULE"
+        help = " If r_1 ≤ 0, then the radius will be choosen automatically based on a heursitic appraoch.
+        The default is INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||g_1|| / ||H_1|| where ||g_1|| is the
+        l2 norm for gradient at the initial iterate and ||H_1|| is the spectral norm for the hessian
+        at the initial iterate."
+        arg_type = Float64
+        default = 10.0
+
         "--min_nvar"
         help = "The minimum number of variables for CUTEst model"
         arg_type = Int64
@@ -132,6 +140,7 @@ function main()
     max_time = parsed_args["max_time"]
     tol_opt = parsed_args["tol_opt"]
     r_1 = parsed_args["r_1"]
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE = parsed_args["INITIAL_RADIUS_MULTIPLICATIVE_RULE"]
 
     print_level = parsed_args["print_level"]
     seed = parsed_args["seed"]
@@ -160,6 +169,7 @@ function main()
         γ_3,
         ξ,
         r_1,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE,
         δ,
         min_nvar,
         max_nvar,

@@ -234,6 +234,14 @@ function parse_command_line()
         arg_type = Float64
         default = 0.0
 
+        "--INITIAL_RADIUS_MULTIPLICATIVE_RULE"
+        help = " If r_1 ≤ 0, then the radius will be choosen automatically based on a heursitic appraoch.
+        The default is INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||g_1|| / ||H_1|| where ||g_1|| is the
+        l2 norm for gradient at the initial iterate and ||H_1|| is the spectral norm for the hessian
+        at the initial iterate."
+        arg_type = Float64
+        default = 10.0
+
         "--min_nvar"
         help = "The minimum number of variables for CUTEst model"
         arg_type = Int64
@@ -282,6 +290,7 @@ function createProblemData(
     γ_3::Float64,
     ξ::Float64,
     r_1::Float64,
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64,
 )
     problem_data_vec = []
     radius_update_rule_approach = "DEFAULT"
@@ -298,6 +307,7 @@ function createProblemData(
         γ_2,
         γ_3,
         ξ,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE,
         radius_update_rule_approach,
     )
     for crt in criteria
@@ -336,7 +346,7 @@ function createProblemData(
                 problem_data[index_to_override+1:end]...,
             )
             problem_data = new_problem_data
-            index_to_override = 13
+            index_to_override = 14
             radius_update_rule_approach = "NOT DEFAULT"
             new_problem_data = (
                 problem_data[1:index_to_override-1]...,
@@ -395,6 +405,7 @@ function runModelFromProblem(
     γ_2,
     γ_3,
     ξ,
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE,
     radius_update_rule_approach = problem_data
     start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
     try
@@ -402,18 +413,13 @@ function runModelFromProblem(
         println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
-        termination_conditions_struct =
-            consistently_adaptive_trust_region_method.TerminationConditions(
+        termination_criteria =
+            consistently_adaptive_trust_region_method.TerminationCriteria(
                 max_it,
                 tol_opt,
                 max_time,
             )
-        initial_radius_struct =
-            consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(r_1)
-        problem = consistently_adaptive_trust_region_method.Problem_Data(
-            nlp,
-            termination_conditions_struct,
-            initial_radius_struct,
+        algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters(
             β,
             θ,
             ω_1,
@@ -422,11 +428,13 @@ function runModelFromProblem(
             γ_2,
             γ_3,
             ξ,
+            r_1,
+            INITIAL_RADIUS_MULTIPLICATIVE_RULE,
             seed,
             print_level,
             radius_update_rule_approach,
         )
-        x_1 = problem.nlp.meta.x0
+        x_1 = nlp.meta.x0
         x = x_1
         status = Nothing
         iteration_stats = Nothing
@@ -435,8 +443,13 @@ function runModelFromProblem(
         iteration_stats,
         computation_stats,
         total_iterations_count,
-        total_execution_time =
-            consistently_adaptive_trust_region_method.CAT(problem, x_1, δ)
+        total_execution_time = consistently_adaptive_trust_region_method.CAT(
+            nlp,
+            algorithm_params,
+            termination_criteria,
+            x_1,
+            δ,
+        )
         function_value = NaN
         gradient_value = NaN
         if size(last(iteration_stats, 1))[1] > 0
@@ -638,7 +651,7 @@ function main()
     max_time = parsed_args["max_time"]
     tol_opt = parsed_args["tol_opt"]
     r_1 = parsed_args["r_1"]
-
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE = parsed_args["INITIAL_RADIUS_MULTIPLICATIVE_RULE"]
     θ = parsed_args["θ"]
     β = parsed_args["β"]
     ω_1 = parsed_args["ω_1"]
@@ -677,6 +690,7 @@ function main()
         γ_3,
         ξ,
         r_1,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE,
     )
     @info criteria
     @info problem_data_vec

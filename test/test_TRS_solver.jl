@@ -174,260 +174,148 @@ end
 
 function test_create_dummy_problem()
     nlp = createDummyNLPModel()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_dummy_problem2()
     nlp = createDummyNLPModel2()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_simple_convex_nlp_model()
     nlp = createSimpleConvexNLPModeL()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_complex_convex_nlp1_model()
     nlp = createComplexConvexNLPModeL1()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_complex_nlp_modeL1()
     nlp = createComplexNLPModeL1()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_problem_sin_cos_mode_nlp1()
     nlp = createSinCosNLPModeL1()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_problem_sin_cos_mode_nlp2()
     nlp = createSinCosNLPModeL2()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_simple_univariate_convex_model()
     nlp = createSimpleUnivariateConvexProblem()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(0.5)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 0.5
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_simple_univariate_convex_model_solved_same_as_Newton()
     nlp = createSimpleUnivariateConvexProblem()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(2.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 2.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_hard_case_using_simple_univariate_convex_model()
     nlp = createHardCaseUsingSimpleUnivariateConvexProblem()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 1.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_hard_case_using_simple_bivariate_convex_model()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 1.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_hard_case_using_bivariate_convex_model_1()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem1()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 1.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_hard_case_using_bivariate_convex_model_2()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem2()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(1.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 1.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 function test_create_hard_case_using_bivariate_convex_model_3()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem3()
-    termination_conditions_struct =
-        consistently_adaptive_trust_region_method.TerminationConditions(100, 1e-4)
-    initial_radius_struct =
-        consistently_adaptive_trust_region_method.INITIAL_RADIUS_STRUCT(5.0)
-    problem = consistently_adaptive_trust_region_method.Problem_Data(
-        nlp,
-        termination_conditions_struct,
-        initial_radius_struct,
-        0.25,
-        0.5,
-        2.0,
-        2.0,
-    )
-    return problem
+    termination_criteria =
+        consistently_adaptive_trust_region_method.TerminationCriteria(100, 1e-4)
+    algorithm_params =
+        consistently_adaptive_trust_region_method.AlgorithmicParameters(0.25, 0.5, 2.0, 2.0)
+    algorithm_params.r_1 = 5.0
+    return nlp, termination_criteria, algorithm_params
 end
 
 #Unit test optimize second order model function
 function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = [1.0, 1.0]
     δ = 0.0
     γ_1 = 0.01
@@ -456,8 +344,8 @@ end
 
 function test_optimize_second_order_model_phi_zero()
     tol = 1e-3
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     δ = 0.0
     γ_1 = 0.01
@@ -489,8 +377,8 @@ end
 
 function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
     tol = 1e-3
-    problem = test_create_dummy_problem2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
+
     x_k = [0.0, 1.0]
     δ = 250.0
     γ_1 = 0.01
@@ -522,8 +410,9 @@ end
 
 function test_optimize_second_order_model_for_simple_univariate_convex_model()
     tol = 1e-3
-    problem = test_create_simple_univariate_convex_model()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_simple_univariate_convex_model()
+
     x_k = [0.0]
     δ = 0.0
     γ_1 = 0.01
@@ -552,8 +441,9 @@ end
 
 function test_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
     tol = 1e-3
-    problem = test_create_simple_univariate_convex_model_solved_same_as_Newton()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_simple_univariate_convex_model_solved_same_as_Newton()
+
     x_k = [0.0]
     δ = 0.0
     γ_1 = 0.01
@@ -585,8 +475,8 @@ end
 
 function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     tol = 1e-3
-    problem = test_create_simple_convex_nlp_model()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_simple_convex_nlp_model()
+
     x_k = [0.0, 0.0]
     δ = 0.0
     γ_1 = 0.01
@@ -617,8 +507,9 @@ end
 
 function test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
     tol = 1e-3
-    problem = test_create_hard_case_using_simple_univariate_convex_model()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_hard_case_using_simple_univariate_convex_model()
+
     x_k = [1e-5]
     δ = 0.0
     γ_1 = 0.01
@@ -651,8 +542,9 @@ end
 
 function test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
     tol = 1e-3
-    problem = test_create_hard_case_using_simple_bivariate_convex_model()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_hard_case_using_simple_bivariate_convex_model()
+
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
@@ -684,8 +576,9 @@ end
 
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
     tol = 1e-3
-    problem = test_create_hard_case_using_bivariate_convex_model_1()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_hard_case_using_bivariate_convex_model_1()
+
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
@@ -718,8 +611,9 @@ end
 
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
     tol = 1e-2
-    problem = test_create_hard_case_using_bivariate_convex_model_2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_hard_case_using_bivariate_convex_model_2()
+
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
@@ -752,8 +646,9 @@ end
 
 function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
     tol = 1e-3
-    problem = test_create_hard_case_using_bivariate_convex_model_3()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params =
+        test_create_hard_case_using_bivariate_convex_model_3()
+
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
@@ -866,8 +761,8 @@ end
 
 
 function test_phi_positive_one()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = [0.0, 0.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -881,8 +776,8 @@ function test_phi_positive_one()
 end
 
 function test_phi_zero()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -896,8 +791,8 @@ function test_phi_zero()
 end
 
 function test_phi_negative_one()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -911,8 +806,8 @@ function test_phi_negative_one()
 end
 
 function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -933,8 +828,8 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
 end
 
 function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = [0.0, 0.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -956,8 +851,8 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
 end
 
 function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
-    problem = test_create_dummy_problem2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
+
     x_k = [0.0, 0.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -978,8 +873,8 @@ function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
 end
 
 function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
-    problem = test_create_dummy_problem2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
+
     x_k = [0.0, 1.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -1000,8 +895,8 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
 end
 
 function test_bisection_with_starting_on_root_δ_zero()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -1041,8 +936,8 @@ function test_bisection_with_starting_on_root_δ_zero()
 end
 
 function test_bisection_with_starting_on_root_δ_not_zero()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = [0.0, 0.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -1084,8 +979,8 @@ function test_bisection_with_starting_on_root_δ_not_zero()
 end
 
 function test_bisection_with_starting_from_negative_one_and_positive_one()
-    problem = test_create_dummy_problem2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
+
     x_k = [0.0, 1.0]
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -1125,10 +1020,10 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
 end
 
 function test_compute_second_order_model_negative_direction()
-    problem = test_create_dummy_problem()
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [-1.0, -1.0]
-    nlp = problem.nlp
+
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
@@ -1142,10 +1037,10 @@ function test_compute_second_order_model_negative_direction()
 end
 
 function test_compute_second_order_model_zero_direction()
-    problem = test_create_dummy_problem()
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [0.0, 0.0]
-    nlp = problem.nlp
+
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
@@ -1159,10 +1054,10 @@ function test_compute_second_order_model_zero_direction()
 end
 
 function test_compute_second_order_model_positive_direction()
-    problem = test_create_dummy_problem()
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [1.0, 1.0]
-    nlp = problem.nlp
+
     function_value = obj(nlp, x_k)
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
@@ -1176,14 +1071,14 @@ function test_compute_second_order_model_positive_direction()
 end
 
 function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = [1.0, 1.0]
     δ = 0.0
     ϵ = 0.2
     r = 0.2
     d_k = [-0.0, -0.0]
-    θ = problem.θ
+    θ = algorithm_params.θ
     fval_current = obj(nlp, x_k)
     fval_next = obj(nlp, x_k + d_k)
     gval_current = grad(nlp, x_k)
@@ -1202,14 +1097,14 @@ end
 
 function test_compute_ρ_hat_phi_zero()
     tol = 1e-3
-    problem = test_create_dummy_problem()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
+
     x_k = nlp.meta.x0
     δ = 0.0
     ϵ = 1.2
     r = 0.2
     d_k = [0.02471910112359557, 0.3806741573033706]
-    θ = problem.θ
+    θ = algorithm_params.θ
     fval_current = obj(nlp, x_k)
     fval_next = obj(nlp, x_k + d_k)
     gval_current = grad(nlp, x_k)
@@ -1229,14 +1124,14 @@ end
 
 function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     tol = 1e-3
-    problem = test_create_dummy_problem2()
-    nlp = problem.nlp
+    nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
+
     x_k = [0.0, 1.0]
     δ = 250.0
     ϵ = 1.2
     r = 0.2
     d_k = [-0.005830328471736362, 0.34323592199917485]
-    θ = problem.θ
+    θ = algorithm_params.θ
     fval_current = obj(nlp, x_k)
     fval_next = obj(nlp, x_k + d_k)
     gval_current = grad(nlp, x_k)
