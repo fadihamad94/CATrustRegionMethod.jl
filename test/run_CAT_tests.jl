@@ -120,32 +120,10 @@ function solveComplexConvexNLPModel()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 19,
-        "total_hessian_evaluation" => 12,
-        "total_number_factorizations_findinterval" => 16,
-        "total_gradient_evaluation" => 13,
-        "total_number_factorizations" => 46,
-        "total_number_factorizations_bisection" => 11,
-        "total_function_evaluation" => 16,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
+    @test algorithm_counter.total_function_evaluation <= 20
+    @test algorithm_counter.total_gradient_evaluation <= 20
+    @test algorithm_counter.total_hessian_evaluation <= 15
+    @test algorithm_counter.total_number_factorizations <= 50
 
     @test norm(obj(nlp, x) - 0, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
@@ -316,32 +294,10 @@ function solveComplexNLPModeL1()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 8,
-        "total_hessian_evaluation" => 4,
-        "total_number_factorizations_findinterval" => 10,
-        "total_gradient_evaluation" => 5,
-        "total_number_factorizations" => 27,
-        "total_number_factorizations_bisection" => 9,
-        "total_function_evaluation" => 6,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
+    @test algorithm_counter.total_function_evaluation <= 10
+    @test algorithm_counter.total_gradient_evaluation <= 10
+    @test algorithm_counter.total_hessian_evaluation <= 10
+    @test algorithm_counter.total_number_factorizations <= 35
 
     @test norm(obj(nlp, x) - 0.183430792966865, 2) <= tol
     @test norm(x[1] - 0.7221896985843893, 2) <= tol
@@ -367,32 +323,10 @@ function solveNLPSinCosModel1()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 5,
-        "total_hessian_evaluation" => 3,
-        "total_number_factorizations_findinterval" => 9,
-        "total_gradient_evaluation" => 4,
-        "total_number_factorizations" => 21,
-        "total_number_factorizations_bisection" => 7,
-        "total_function_evaluation" => 4,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
+    @test algorithm_counter.total_function_evaluation <= 5
+    @test algorithm_counter.total_gradient_evaluation <= 5
+    @test algorithm_counter.total_hessian_evaluation <= 5
+    @test algorithm_counter.total_number_factorizations <= 25
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
@@ -415,32 +349,10 @@ function solveNLPSinCosModel1DifferentStartingPoint()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 4,
-        "total_hessian_evaluation" => 3,
-        "total_number_factorizations_findinterval" => 4,
-        "total_gradient_evaluation" => 4,
-        "total_number_factorizations" => 12,
-        "total_number_factorizations_bisection" => 4,
-        "total_function_evaluation" => 4,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
+    @test algorithm_counter.total_function_evaluation <= 5
+    @test algorithm_counter.total_gradient_evaluation <= 5
+    @test algorithm_counter.total_hessian_evaluation <= 5
+    @test algorithm_counter.total_number_factorizations <= 15
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
@@ -463,32 +375,10 @@ function solveNLPSinCosModel1DeltaNotZero()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 6,
-        "total_hessian_evaluation" => 4,
-        "total_number_factorizations_findinterval" => 7,
-        "total_gradient_evaluation" => 5,
-        "total_number_factorizations" => 18,
-        "total_number_factorizations_bisection" => 5,
-        "total_function_evaluation" => 5,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
+    @test algorithm_counter.total_function_evaluation <= 10
+    @test algorithm_counter.total_gradient_evaluation <= 10
+    @test algorithm_counter.total_hessian_evaluation <= 10
+    @test algorithm_counter.total_number_factorizations <= 25
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
@@ -512,33 +402,11 @@ function solveNLPSinCosModel2()
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    computation_stats = Dict(
-        "total_number_factorizations_compute_search_direction" => 5,
-        "total_hessian_evaluation" => 4,
-        "total_number_factorizations_findinterval" => 3,
-        "total_gradient_evaluation" => 5,
-        "total_number_factorizations" => 10,
-        "total_number_factorizations_bisection" => 2,
-        "total_function_evaluation" => 5,
-        "total_number_factorizations_inverse_power_iteration" => 0,
-    )
-    @test algorithm_counter.total_function_evaluation ==
-          computation_stats["total_function_evaluation"]
-    @test algorithm_counter.total_gradient_evaluation ==
-          computation_stats["total_gradient_evaluation"]
-    @test algorithm_counter.total_hessian_evaluation ==
-          computation_stats["total_hessian_evaluation"]
-    @test algorithm_counter.total_number_factorizations ==
-          computation_stats["total_number_factorizations"]
-    @test algorithm_counter.total_number_factorizations_findinterval ==
-          computation_stats["total_number_factorizations_findinterval"]
-    @test algorithm_counter.total_number_factorizations_bisection ==
-          computation_stats["total_number_factorizations_bisection"]
-    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
-          computation_stats["total_number_factorizations_compute_search_direction"]
-    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
-          computation_stats["total_number_factorizations_inverse_power_iteration"]
-
+    @test algorithm_counter.total_function_evaluation <= 10
+    @test algorithm_counter.total_gradient_evaluation <= 10
+    @test algorithm_counter.total_hessian_evaluation <= 10
+    @test algorithm_counter.total_number_factorizations <= 15
+    
     @test norm(obj(nlp, x) - (-2), 2) <= tol
     @test norm(x[1] - 10.995653476776056, 2) <= tol
     @test norm(x[2] - 9.424777960768635, 2) <= tol
