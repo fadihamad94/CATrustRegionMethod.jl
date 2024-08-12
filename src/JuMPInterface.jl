@@ -50,7 +50,7 @@ mutable struct CATProblem
 
     # Custom attributes of the CATSolver
     iteration_stats::DataFrame
-    computation_stats::Dict{String,Int64}
+    algorithm_counter::AlgorithmCounter
     termination_criteria::TerminationCriteria
     algorithm_params::AlgorithmicParameters
 
@@ -341,7 +341,7 @@ function MOI.optimize!(solver::CATSolver)
     end
 
     termination_criteria, algorithm_params = create_pars_JuMP(solver.options)
-    x, status, iteration_stats, computation_stats, k =
+    x, status, iteration_stats, algorithm_counter, k =
         CAT_solve(solver, termination_criteria, algorithm_params)
 
     status_str = convertStatusCodeToStatusString(status)
@@ -366,7 +366,7 @@ function MOI.optimize!(solver::CATSolver)
     solver.inner.termination_criteria = termination_criteria
     solver.inner.algorithm_params = algorithm_params
     solver.inner.iteration_stats = iteration_stats
-    solver.inner.computation_stats = computation_stats
+    solver.inner.algorithm_counter = algorithm_counter
 end
 
 function convertStatusCodeToStatusString(status)
@@ -412,7 +412,7 @@ function MOI.optimize!(solver::CATSolver, jumpModel::Model)
     solver.nlp_data = nlp
     termination_criteria = TerminationCriteria()
     algorithm_params = AlgorithmicParameters()
-    x, status, iteration_stats, computation_stats, k =
+    x, status, iteration_stats, algorithm_counter, k =
         CAT_solve(solver, termination_criteria, algorithm_params)
 
     status_str = convertStatusCodeToStatusString(status)
@@ -437,7 +437,7 @@ function MOI.optimize!(solver::CATSolver, jumpModel::Model)
     solver.inner.termination_criteria = termination_criteria
     solver.inner.algorithm_params = algorithm_params
     solver.inner.iteration_stats = iteration_stats
-    solver.inner.computation_stats = computation_stats
+    solver.inner.algorithm_counter = algorithm_counter
 end
 
 function MOI.get(

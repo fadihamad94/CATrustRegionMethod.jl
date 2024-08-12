@@ -65,3 +65,19 @@ function matrix_l2_norm(
     λ_max, _ = power_iteration(H; num_iter = num_iter, tol = tol)  # Largest eigenvalue of A^T A
     return abs(λ_max)  # Largest singular value (spectral norm)
 end
+
+@inline function increment!(algorithm_counter::AlgorithmCounter, s::Symbol)
+    increment!(algorithm_counter, s, 1)
+end
+
+@inline function increment!(algorithm_counter::AlgorithmCounter, s::Symbol, count::Int64)
+    increment!(algorithm_counter, Val(s), count)
+end
+
+for filed_name in fieldnames(AlgorithmCounter)
+    @eval increment!(
+        algorithm_counter::AlgorithmCounter,
+        ::Val{$(Meta.quot(filed_name))},
+        count::Int64,
+    ) = algorithm_counter.$filed_name += count
+end

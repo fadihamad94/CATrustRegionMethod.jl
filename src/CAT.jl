@@ -140,23 +140,15 @@ function sub_routine_trust_region_sub_problem_solver(
     r_k::Float64,
     min_gval_norm::Float64,
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
+    algorithm_counter::AlgorithmCounter,
     print_level::Int64,
 )
     fval_next = fval_current
     gval_next_temp = gval_current
     start_time_temp = time()
-    temp_total_function_evaluation = 0
 
     # Solve the trust-region subproblem to generate the search direction d_k
-    success_subproblem_solve,
-    δ_k,
-    d_k,
-    temp_total_number_factorizations,
-    hard_case,
-    temp_total_number_factorizations_findinterval,
-    temp_total_number_factorizations_bisection,
-    temp_total_number_factorizations_compute_search_direction,
-    temp_total_number_factorizations_inverse_power_iteration = solveTrustRegionSubproblem(
+    success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblem(
         fval_current,
         gval_current,
         hessian_current,
@@ -166,6 +158,7 @@ function sub_routine_trust_region_sub_problem_solver(
         γ_2,
         r_k,
         min_gval_norm,
+        algorithm_counter,
         print_level,
     )
     if success_subproblem_solve
@@ -197,8 +190,7 @@ function sub_routine_trust_region_sub_problem_solver(
     # we will accept the step in case this leads to reduction in the function value.
     if success_subproblem_solve && second_order_model_value_current_iterate < 0
         start_time_temp = time()
-        fval_next = evalFunction(nlp, x_k + d_k)
-        temp_total_function_evaluation += 1
+        fval_next = evalFunction(nlp, x_k + d_k, algorithm_counter)
         end_time_temp = time()
         total_time_temp = end_time_temp - start_time_temp
         if print_level >= 2
@@ -206,17 +198,7 @@ function sub_routine_trust_region_sub_problem_solver(
         end
     end
 
-    return fval_next,
-    success_subproblem_solve,
-    δ_k,
-    d_k,
-    temp_total_number_factorizations,
-    temp_total_function_evaluation,
-    hard_case,
-    temp_total_number_factorizations_findinterval,
-    temp_total_number_factorizations_bisection,
-    temp_total_number_factorizations_compute_search_direction,
-    temp_total_number_factorizations_inverse_power_iteration
+    return fval_next, success_subproblem_solve, δ_k, d_k, hard_case
 end
 
 function CAT_solve(m::JuMP.Model)
@@ -293,7 +275,7 @@ end
     - `x_k::Vector{Float64}`. The final iterate.
 	- `status::TerminationStatusCode`. The algorithm termination status. Check TerminationStatusCode struct in ./common.jl for more details.
 	- `iteration_stats::DataFrame`. It constains the algorithm history for the function and gradient value at each iteration.
-	- `computation_stats::Dict`. It contains the total number of function evaluations, gradient evaluations , Hessian evaluations,
+	- `algorithm_counter::AlgorithmCounter`. It contains the total number of function evaluations, gradient evaluations , Hessian evaluations,
 	and total number of factorizations.
 	- `k::Int64`. The total number of iterations.
 	- `total_execution_time::Float64.` The total Wall clock time (seconds).
@@ -344,26 +326,16 @@ function CAT(
     iteration_stats = DataFrame(k = [], fval = [], gradval = [])
 
     #Algorithm stats
-    total_function_evaluation = 0
-    total_gradient_evaluation = 0
-    total_hessian_evaluation = 0
-    total_number_factorizations = 0
-    total_number_factorizations_findinterval = 0
-    total_number_factorizations_bisection = 0
-    total_number_factorizations_compute_search_direction = 0
-    total_number_factorizations_inverse_power_iteration = 0
+    algorithm_counter = AlgorithmCounter()
 
     #Specify the seed for reproducibility of results
     Random.seed!(seed)
 
     k = 1
     try
-        gval_current = evalGradient(nlp, x_k)
-        fval_current = evalFunction(nlp, x_k)
-        total_function_evaluation += 1
-        total_gradient_evaluation += 1
-        hessian_current = evalHessian(nlp, x_k)
-        total_hessian_evaluation += 1
+        gval_current = evalGradient(nlp, x_k, algorithm_counter)
+        fval_current = evalFunction(nlp, x_k, algorithm_counter)
+        hessian_current = evalHessian(nlp, x_k, algorithm_counter)
 
         #If user doesn't change the starting radius, we select the radius as described in the paper:
         #Initial radius heuristic selection rule : r_1 = INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||gval_current|| / ||hessian_current||
@@ -375,21 +347,6 @@ function CAT(
 
         compute_hessian = false
         if norm(gval_current, 2) <= gradient_termination_tolerance
-            total_number_factorizations = 1
-            computation_stats = Dict(
-                "total_function_evaluation" => total_function_evaluation,
-                "total_gradient_evaluation" => total_gradient_evaluation,
-                "total_hessian_evaluation" => total_hessian_evaluation,
-                "total_number_factorizations" => total_number_factorizations,
-                "total_number_factorizations_findinterval" =>
-                    total_number_factorizations_findinterval,
-                "total_number_factorizations_bisection" =>
-                    total_number_factorizations_bisection,
-                "total_number_factorizations_compute_search_direction" =>
-                    total_number_factorizations_compute_search_direction,
-                "total_number_factorizations_inverse_power_iteration" =>
-                    total_number_factorizations_inverse_power_iteration,
-            )
             if print_level >= 0
                 println("*********************************Iteration Count: ", 1)
             end
@@ -399,7 +356,7 @@ function CAT(
             return x_k,
             TerminationStatusCode.OPTIMAL,
             iteration_stats,
-            computation_stats,
+            algorithm_counter,
             1,
             total_execution_time
         end
@@ -407,22 +364,14 @@ function CAT(
         start_time = time()
         min_gval_norm = norm(gval_current, 2)
         while k <= MAX_ITERATIONS
-            @assert total_number_factorizations ==
-                    total_number_factorizations_findinterval +
-                    total_number_factorizations_bisection +
-                    total_number_factorizations_compute_search_direction +
-                    total_number_factorizations_inverse_power_iteration
             temp_grad = gval_current
             if print_level >= 1
                 start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
-                println(
-                    "$start_time. Iteration $k with radius $r_k and total_number_factorizations $total_number_factorizations.",
-                )
+                println("$start_time. Iteration $k with radius $r_k.")
             end
             if compute_hessian
                 start_time_temp = time()
-                hessian_current = evalHessian(nlp, x_k)
-                total_hessian_evaluation += 1
+                hessian_current = evalHessian(nlp, x_k, algorithm_counter)
                 end_time_temp = time()
                 total_time_temp = end_time_temp - start_time_temp
                 if print_level >= 2
@@ -431,17 +380,7 @@ function CAT(
             end
 
             # Solve the trsut-region subproblem and generate the search direction d_k
-            fval_next,
-            success_subproblem_solve,
-            δ_k,
-            d_k,
-            temp_total_number_factorizations,
-            temp_total_function_evaluation,
-            hard_case,
-            temp_total_number_factorizations_findinterval,
-            temp_total_number_factorizations_bisection,
-            temp_total_number_factorizations_compute_search_direction,
-            temp_total_number_factorizations_inverse_power_iteration =
+            fval_next, success_subproblem_solve, δ_k, d_k, hard_case =
                 sub_routine_trust_region_sub_problem_solver(
                     fval_current,
                     gval_current,
@@ -453,19 +392,10 @@ function CAT(
                     r_k,
                     min_gval_norm,
                     nlp,
+                    algorithm_counter,
                     print_level,
                 )
-            total_number_factorizations_findinterval +=
-                temp_total_number_factorizations_findinterval
-            total_number_factorizations_bisection +=
-                temp_total_number_factorizations_bisection
-            total_number_factorizations_compute_search_direction +=
-                temp_total_number_factorizations_compute_search_direction
-            total_number_factorizations_inverse_power_iteration +=
-                temp_total_number_factorizations_inverse_power_iteration
 
-            total_number_factorizations += temp_total_number_factorizations
-            total_function_evaluation += temp_total_function_evaluation
             gval_next = gval_current
             # When we are able to solve the trust-region subproblem, we compute ρ_k to check if the
             # candidate solution has a reduction in the function value so that we accept the step
@@ -474,8 +404,7 @@ function CAT(
                    fval_current +
                    ξ * min_gval_norm * norm(d_k) +
                    (1 + abs(fval_current)) * eval_offset
-                    total_gradient_evaluation += 1
-                    temp_grad = evalGradient(nlp, x_k + d_k)
+                    temp_grad = evalGradient(nlp, x_k + d_k, algorithm_counter)
                     temp_norm = norm(temp_grad, 2)
                     if isnan(temp_norm)
                         if print_level >= 0
@@ -603,20 +532,6 @@ function CAT(
             if norm(gval_next, 2) <= gradient_termination_tolerance ||
                min_gval_norm <= gradient_termination_tolerance
                 push!(iteration_stats, (k, fval_next, min_gval_norm))
-                computation_stats = Dict(
-                    "total_function_evaluation" => total_function_evaluation,
-                    "total_gradient_evaluation" => total_gradient_evaluation,
-                    "total_hessian_evaluation" => total_hessian_evaluation,
-                    "total_number_factorizations" => total_number_factorizations,
-                    "total_number_factorizations_findinterval" =>
-                        total_number_factorizations_findinterval,
-                    "total_number_factorizations_bisection" =>
-                        total_number_factorizations_bisection,
-                    "total_number_factorizations_compute_search_direction" =>
-                        total_number_factorizations_compute_search_direction,
-                    "total_number_factorizations_inverse_power_iteration" =>
-                        total_number_factorizations_inverse_power_iteration,
-                )
                 if print_level >= 0
                     println("*********************************Iteration Count: ", k)
                 end
@@ -633,27 +548,13 @@ function CAT(
                 return x_k,
                 TerminationStatusCode.OPTIMAL,
                 iteration_stats,
-                computation_stats,
+                algorithm_counter,
                 k,
                 total_execution_time
             end
 
             # Check termination condition for step size if it becomes too small
             if r_k <= STEP_SIZE_LIMIT || 0 < norm(d_k) <= STEP_SIZE_LIMIT
-                computation_stats = Dict(
-                    "total_function_evaluation" => total_function_evaluation,
-                    "total_gradient_evaluation" => total_gradient_evaluation,
-                    "total_hessian_evaluation" => total_hessian_evaluation,
-                    "total_number_factorizations" => total_number_factorizations,
-                    "total_number_factorizations_findinterval" =>
-                        total_number_factorizations_findinterval,
-                    "total_number_factorizations_bisection" =>
-                        total_number_factorizations_bisection,
-                    "total_number_factorizations_compute_search_direction" =>
-                        total_number_factorizations_compute_search_direction,
-                    "total_number_factorizations_inverse_power_iteration" =>
-                        total_number_factorizations_inverse_power_iteration,
-                )
                 if print_level >= 0
                     println("$k. Step size is too small.")
                 end
@@ -662,7 +563,7 @@ function CAT(
                 return x_k,
                 TerminationStatusCode.STEP_SIZE_LIMIT,
                 iteration_stats,
-                computation_stats,
+                algorithm_counter,
                 k,
                 total_execution_time
             end
@@ -670,20 +571,6 @@ function CAT(
             # Check termination condition for function value if the objective function is unbounded (safety check)
             if fval_current <= MINIMUM_OBJECTIVE_FUNCTION ||
                fval_next <= MINIMUM_OBJECTIVE_FUNCTION
-                computation_stats = Dict(
-                    "total_function_evaluation" => total_function_evaluation,
-                    "total_gradient_evaluation" => total_gradient_evaluation,
-                    "total_hessian_evaluation" => total_hessian_evaluation,
-                    "total_number_factorizations" => total_number_factorizations,
-                    "total_number_factorizations_findinterval" =>
-                        total_number_factorizations_findinterval,
-                    "total_number_factorizations_bisection" =>
-                        total_number_factorizations_bisection,
-                    "total_number_factorizations_compute_search_direction" =>
-                        total_number_factorizations_compute_search_direction,
-                    "total_number_factorizations_inverse_power_iteration" =>
-                        total_number_factorizations_inverse_power_iteration,
-                )
                 if print_level >= 0
                     println(
                         "$k. Function values ($fval_current, $fval_next) are too small.",
@@ -694,33 +581,19 @@ function CAT(
                 return x_k,
                 TerminationStatusCode.UNBOUNDED,
                 iteration_stats,
-                computation_stats,
+                algorithm_counter,
                 k,
                 total_execution_time
             end
 
             # Check termination condition for time if we exceeded the time limit
             if time() - start_time > MAX_TIME
-                computation_stats = Dict(
-                    "total_function_evaluation" => total_function_evaluation,
-                    "total_gradient_evaluation" => total_gradient_evaluation,
-                    "total_hessian_evaluation" => total_hessian_evaluation,
-                    "total_number_factorizations" => total_number_factorizations,
-                    "total_number_factorizations_findinterval" =>
-                        total_number_factorizations_findinterval,
-                    "total_number_factorizations_bisection" =>
-                        total_number_factorizations_bisection,
-                    "total_number_factorizations_compute_search_direction" =>
-                        total_number_factorizations_compute_search_direction,
-                    "total_number_factorizations_inverse_power_iteration" =>
-                        total_number_factorizations_inverse_power_iteration,
-                )
                 end_time_ = time()
                 total_execution_time = end_time_ - start_time_
                 return x_k,
                 TerminationStatusCode.TIME_LIMIT,
                 iteration_stats,
-                computation_stats,
+                algorithm_counter,
                 k,
                 total_execution_time
             end
@@ -729,48 +602,21 @@ function CAT(
         # Handle exceptions
     catch e
         @error e
-        computation_stats = Dict(
-            "total_function_evaluation" => total_function_evaluation,
-            "total_gradient_evaluation" => total_gradient_evaluation,
-            "total_hessian_evaluation" => total_hessian_evaluation,
-            "total_number_factorizations" => total_number_factorizations,
-            "total_number_factorizations_findinterval" =>
-                total_number_factorizations_findinterval,
-            "total_number_factorizations_bisection" =>
-                total_number_factorizations_bisection,
-            "total_number_factorizations_compute_search_direction" =>
-                total_number_factorizations_compute_search_direction,
-            "total_number_factorizations_inverse_power_iteration" =>
-                total_number_factorizations_inverse_power_iteration,
-        )
         status = TerminationStatusCode.OTHER_ERROR
         if isa(e, OutOfMemoryError)
             status = TerminationStatusCode.MEMORY_LIMIT
         end
         end_time_ = time()
         total_execution_time = end_time_ - start_time_
-        return x_k, status, iteration_stats, computation_stats, k, total_execution_time
+        return x_k, status, iteration_stats, algorithm_counter, k, total_execution_time
     end
-    computation_stats = Dict(
-        "total_function_evaluation" => total_function_evaluation,
-        "total_gradient_evaluation" => total_gradient_evaluation,
-        "total_hessian_evaluation" => total_hessian_evaluation,
-        "total_number_factorizations" => total_number_factorizations,
-        "total_number_factorizations_findinterval" =>
-            total_number_factorizations_findinterval,
-        "total_number_factorizations_bisection" =>
-            total_number_factorizations_bisection,
-        "total_number_factorizations_compute_search_direction" =>
-            total_number_factorizations_compute_search_direction,
-        "total_number_factorizations_inverse_power_iteration" =>
-            total_number_factorizations_inverse_power_iteration,
-    )
+
     end_time_ = time()
     total_execution_time = end_time_ - start_time_
     return x_k,
     TerminationStatusCode.ITERATION_LIMIT,
     iteration_stats,
-    computation_stats,
+    algorithm_counter,
     k,
     total_execution_time
 end
@@ -784,7 +630,9 @@ function evalFunction(
         Nothing,
     },
     x::Vector{Float64},
+    algorithm_counter::AlgorithmCounter,
 )
+    increment!(algorithm_counter, :total_function_evaluation)
     if typeof(nlp) == AbstractNLPModel ||
        typeof(nlp) == MathOptNLPModel ||
        typeof(nlp) == CUTEstModel
@@ -797,7 +645,9 @@ end
 function evalGradient(
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
     x::Vector{Float64},
+    algorithm_counter::AlgorithmCounter,
 )
+    increment!(algorithm_counter, :total_gradient_evaluation)
     if typeof(nlp) == AbstractNLPModel ||
        typeof(nlp) == MathOptNLPModel ||
        typeof(nlp) == CUTEstModel
@@ -828,7 +678,9 @@ end
 function evalHessian(
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
     x::Vector{Float64},
+    algorithm_counter::AlgorithmCounter,
 )
+    increment!(algorithm_counter, :total_hessian_evaluation)
     if typeof(nlp) == AbstractNLPModel ||
        typeof(nlp) == MathOptNLPModel ||
        typeof(nlp) == CUTEstModel

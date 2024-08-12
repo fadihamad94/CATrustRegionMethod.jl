@@ -20,9 +20,53 @@ function solveTrustRegionSubproblem(
     γ_2::Float64,
     r::Float64,
     min_grad::Float64,
+    algorithm_counter::AlgorithmCounter,
     print_level::Int64 = 0,
 )
-    return optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+    success_subproblem_solve,
+    δ_k,
+    d_k,
+    temp_total_number_factorizations,
+    hard_case,
+    temp_total_number_factorizations_findinterval,
+    temp_total_number_factorizations_bisection,
+    temp_total_number_factorizations_compute_search_direction,
+    temp_total_number_factorizations_inverse_power_iteration =
+        optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+
+    increment!(
+        algorithm_counter,
+        :total_number_factorizations,
+        temp_total_number_factorizations,
+    )
+    increment!(
+        algorithm_counter,
+        :total_number_factorizations_findinterval,
+        temp_total_number_factorizations_findinterval,
+    )
+    increment!(
+        algorithm_counter,
+        :total_number_factorizations_bisection,
+        temp_total_number_factorizations_bisection,
+    )
+    increment!(
+        algorithm_counter,
+        :total_number_factorizations_compute_search_direction,
+        temp_total_number_factorizations_compute_search_direction,
+    )
+    increment!(
+        algorithm_counter,
+        :total_number_factorizations_inverse_power_iteration,
+        temp_total_number_factorizations_inverse_power_iteration,
+    )
+
+    @assert algorithm_counter.total_number_factorizations ==
+            algorithm_counter.total_number_factorizations_findinterval +
+            algorithm_counter.total_number_factorizations_bisection +
+            algorithm_counter.total_number_factorizations_compute_search_direction +
+            algorithm_counter.total_number_factorizations_inverse_power_iteration
+
+    return success_subproblem_solve, δ_k, d_k, hard_case
 end
 
 """

@@ -1,5 +1,6 @@
-using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra
+using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, EnumX
 
+include("../src/common.jl")
 include("../src/trust_region_subproblem_solver.jl")
 
 #Functions to create NLP models

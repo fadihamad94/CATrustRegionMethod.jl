@@ -77,7 +77,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
     algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
 
-    x_k, status, iteration_stats, computation_stats, itr =
+    x_k, status, iteration_stats, algorithm_counter, itr =
         consistently_adaptive_trust_region_method.CAT(
             nlp,
             termination_criteria,
@@ -86,10 +86,11 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
             0.0,
         )
 
-    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
-    @test computation_stats == Dict(
+    @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
+    @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
+    @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
+
+    computation_stats = Dict(
         "total_number_factorizations_compute_search_direction" => 31,
         "total_hessian_evaluation" => 20,
         "total_number_factorizations_findinterval" => 21,
@@ -100,12 +101,45 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
         "total_number_factorizations_inverse_power_iteration" => 0,
     )
 
+    @test algorithm_counter.total_function_evaluation ==
+          computation_stats["total_function_evaluation"]
+    @test algorithm_counter.total_gradient_evaluation ==
+          computation_stats["total_gradient_evaluation"]
+    @test algorithm_counter.total_hessian_evaluation ==
+          computation_stats["total_hessian_evaluation"]
+    @test algorithm_counter.total_number_factorizations ==
+          computation_stats["total_number_factorizations"]
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          computation_stats["total_number_factorizations_findinterval"]
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          computation_stats["total_number_factorizations_bisection"]
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          computation_stats["total_number_factorizations_compute_search_direction"]
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          computation_stats["total_number_factorizations_inverse_power_iteration"]
+
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
-    @test computation_stats == optimizer.inner.computation_stats
+
+    @test algorithm_counter.total_function_evaluation ==
+          optimizer.inner.algorithm_counter.total_function_evaluation
+    @test algorithm_counter.total_gradient_evaluation ==
+          optimizer.inner.algorithm_counter.total_gradient_evaluation
+    @test algorithm_counter.total_hessian_evaluation ==
+          optimizer.inner.algorithm_counter.total_hessian_evaluation
+    @test algorithm_counter.total_number_factorizations ==
+          optimizer.inner.algorithm_counter.total_number_factorizations
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_findinterval
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_bisection
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_compute_search_direction
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_inverse_power_iteration
 
     @test optimizer.inner.algorithm_params.β == default_β
     @test optimizer.inner.algorithm_params.θ == default_θ
@@ -161,7 +195,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     algorithm_params.print_level = print_level
     termination_criteria.MAX_ITERATIONS = MAX_ITERATIONS
     termination_criteria.gradient_termination_tolerance = gradient_termination_tolerance
-    x_k, status, iteration_stats, computation_stats, itr =
+    x_k, status, iteration_stats, algorithm_counter, itr =
         consistently_adaptive_trust_region_method.CAT(
             nlp,
             termination_criteria,
@@ -170,10 +204,11 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
             0.0,
         )
 
-    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
-    @test computation_stats == Dict(
+    @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
+    @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
+    @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
+
+    computation_stats = Dict(
         "total_number_factorizations_compute_search_direction" => 13,
         "total_hessian_evaluation" => 6,
         "total_number_factorizations_findinterval" => 12,
@@ -183,6 +218,23 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
         "total_function_evaluation" => 11,
         "total_number_factorizations_inverse_power_iteration" => 0,
     )
+    @test algorithm_counter.total_function_evaluation ==
+          computation_stats["total_function_evaluation"]
+    @test algorithm_counter.total_gradient_evaluation ==
+          computation_stats["total_gradient_evaluation"]
+    @test algorithm_counter.total_hessian_evaluation ==
+          computation_stats["total_hessian_evaluation"]
+    @test algorithm_counter.total_number_factorizations ==
+          computation_stats["total_number_factorizations"]
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          computation_stats["total_number_factorizations_findinterval"]
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          computation_stats["total_number_factorizations_bisection"]
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          computation_stats["total_number_factorizations_compute_search_direction"]
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          computation_stats["total_number_factorizations_inverse_power_iteration"]
+
 
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
@@ -190,7 +242,23 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     @test status ==
           consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT
     @test iteration_stats == optimizer.inner.iteration_stats
-    @test computation_stats == optimizer.inner.computation_stats
+
+    @test algorithm_counter.total_function_evaluation ==
+          optimizer.inner.algorithm_counter.total_function_evaluation
+    @test algorithm_counter.total_gradient_evaluation ==
+          optimizer.inner.algorithm_counter.total_gradient_evaluation
+    @test algorithm_counter.total_hessian_evaluation ==
+          optimizer.inner.algorithm_counter.total_hessian_evaluation
+    @test algorithm_counter.total_number_factorizations ==
+          optimizer.inner.algorithm_counter.total_number_factorizations
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_findinterval
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_bisection
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_compute_search_direction
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_inverse_power_iteration
 
     @test optimizer.inner.algorithm_params.β == β
     @test optimizer.inner.algorithm_params.ω_2 == ω_2
@@ -232,7 +300,7 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
     algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
 
-    x_k, status, iteration_stats, computation_stats, itr =
+    x_k, status, iteration_stats, algorithm_counter, itr =
         consistently_adaptive_trust_region_method.CAT(
             nlp,
             termination_criteria,
@@ -241,26 +309,60 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
             0.0,
         )
 
-    @test computation_stats["total_function_evaluation"] == nlp.counters.neval_obj
-    @test computation_stats["total_gradient_evaluation"] == nlp.counters.neval_grad
-    @test computation_stats["total_hessian_evaluation"] == nlp.counters.neval_hess
-    @test computation_stats == Dict(
+    @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
+    @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
+    @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
+
+    computation_stats = Dict(
         "total_number_factorizations_compute_search_direction" => 0,
         "total_hessian_evaluation" => 1,
         "total_number_factorizations_findinterval" => 0,
         "total_gradient_evaluation" => 1,
-        "total_number_factorizations" => 1,
+        "total_number_factorizations" => 0,
         "total_number_factorizations_bisection" => 0,
         "total_function_evaluation" => 1,
         "total_number_factorizations_inverse_power_iteration" => 0,
     )
+    @test algorithm_counter.total_function_evaluation ==
+          computation_stats["total_function_evaluation"]
+    @test algorithm_counter.total_gradient_evaluation ==
+          computation_stats["total_gradient_evaluation"]
+    @test algorithm_counter.total_hessian_evaluation ==
+          computation_stats["total_hessian_evaluation"]
+    @test algorithm_counter.total_number_factorizations ==
+          computation_stats["total_number_factorizations"]
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          computation_stats["total_number_factorizations_findinterval"]
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          computation_stats["total_number_factorizations_bisection"]
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          computation_stats["total_number_factorizations_compute_search_direction"]
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          computation_stats["total_number_factorizations_inverse_power_iteration"]
+
 
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
     @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
-    @test computation_stats == optimizer.inner.computation_stats
+
+    @test algorithm_counter.total_function_evaluation ==
+          optimizer.inner.algorithm_counter.total_function_evaluation
+    @test algorithm_counter.total_gradient_evaluation ==
+          optimizer.inner.algorithm_counter.total_gradient_evaluation
+    @test algorithm_counter.total_hessian_evaluation ==
+          optimizer.inner.algorithm_counter.total_hessian_evaluation
+    @test algorithm_counter.total_number_factorizations ==
+          optimizer.inner.algorithm_counter.total_number_factorizations
+    @test algorithm_counter.total_number_factorizations_findinterval ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_findinterval
+    @test algorithm_counter.total_number_factorizations_bisection ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_bisection
+    @test algorithm_counter.total_number_factorizations_compute_search_direction ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_compute_search_direction
+    @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
+          optimizer.inner.algorithm_counter.total_number_factorizations_inverse_power_iteration
 end
 
 function optimize_models_JuMPInterface()

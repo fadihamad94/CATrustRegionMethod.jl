@@ -181,3 +181,18 @@ mutable struct AlgorithmicParameters
         )
     end
 end
+
+mutable struct AlgorithmCounter
+    total_function_evaluation::Int64
+    total_gradient_evaluation::Int64
+    total_hessian_evaluation::Int64
+    total_number_factorizations::Int64
+    total_number_factorizations_findinterval::Int64
+    total_number_factorizations_bisection::Int64
+    total_number_factorizations_compute_search_direction::Int64
+    total_number_factorizations_inverse_power_iteration::Int64
+    function AlgorithmCounter()
+        return new(0, 0, 0, 0, 0, 0, 0, 0)
+    end
+
+end

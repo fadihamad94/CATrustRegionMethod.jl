@@ -364,15 +364,18 @@ function outputIterationsStatusToCSVFile(
     cutest_problem::String,
     status::String,
     total_execution_time::Float64,
-    computation_stats::Dict,
+    algorithm_counter::AlgorithmCounter,
+    function_value::Float64,
+    gradient_value::Float64,
     total_results_output_file_path::String,
 )
-    total_function_evaluation = Int(computation_stats["total_function_evaluation"])
-    total_gradient_evaluation = Int(computation_stats["total_gradient_evaluation"])
-    total_hessian_evaluation = Int(computation_stats["total_hessian_evaluation"])
-    total_number_factorizations = Int(computation_stats["total_number_factorizations"])
-    function_value = computation_stats["function_value"]
-    gradient_value = computation_stats["gradient_value"]
+    total_function_evaluation = algorithm_counter.total_function_evaluation
+    total_gradient_evaluation = algorithm_counter.total_gradient_evaluation
+    total_hessian_evaluation = algorithm_counter.total_hessian_evaluation
+    # When the initial starting point is actually the solution, total_number_factorizations will be zero since
+    # we will only compute function, gradient, and hessian in this case so we need to make sure to put it as 1
+    # for computing the geometric mean.
+    total_number_factorizations = max(1, algorithm_counter.total_number_factorizations)
 
     open(total_results_output_file_path, "a") do iteration_status_csv_file
         write(
@@ -441,7 +444,7 @@ function runModelFromProblem(
         x,
         status,
         iteration_stats,
-        computation_stats,
+        algorithm_counter,
         total_iterations_count,
         total_execution_time = consistently_adaptive_trust_region_method.CAT(
             nlp,
@@ -456,11 +459,6 @@ function runModelFromProblem(
             function_value = last(iteration_stats, 1)[!, "fval"][1]
             gradient_value = last(iteration_stats, 1)[!, "gradval"][1]
         end
-        computation_stats_modified =
-            Dict("function_value" => function_value, "gradient_value" => gradient_value)
-        for key in keys(computation_stats)
-            computation_stats_modified[key] = computation_stats[key]
-        end
         dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
         println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
         @info "$dates_format------------------------MODEL SOLVED WITH STATUS: $status"
@@ -470,20 +468,21 @@ function runModelFromProblem(
             cutest_problem,
             status_string,
             total_execution_time,
-            computation_stats_modified,
+            algorithm_counter,
+            function_value,
+            gradient_value,
             total_results_output_file_path,
         )
     catch e
         @show e
         status = "INCOMPLETE"
-        computation_stats = Dict(
-            "total_function_evaluation" => 2 * max_it + 1,
-            "total_gradient_evaluation" => 2 * max_it + 1,
-            "total_hessian_evaluation" => 2 * max_it + 1,
-            "total_number_factorizations" => 2 * max_it + 1,
-            "function_value" => NaN,
-            "gradient_value" => NaN,
-        )
+        algorithm_counter = consistently_adaptive_trust_region_method.AlgorithmCounter()
+        algorithm_counter.total_function_evaluation = 2 * max_it + 1
+        algorithm_counter.total_gradient_evaluation = 2 * max_it + 1
+        algorithm_counter.total_hessian_evaluation = 2 * max_it + 1
+        algorithm_counter.total_number_factorizations = 2 * max_it + 1
+        function_value = NaN
+        gradient_value = NaN
         dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
         end_time = dates_format
         println("$dates_format------------------------MODEL SOLVED WITH STATUS: ", status)
@@ -493,7 +492,9 @@ function runModelFromProblem(
             cutest_problem,
             status,
             total_execution_time,
-            computation_stats,
+            algorithm_counter,
+            function_value,
+            gradient_value,
             total_results_output_file_path,
         )
     finally

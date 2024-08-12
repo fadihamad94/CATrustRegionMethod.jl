@@ -16,6 +16,23 @@ $ julia --project=scripts test/run_tests.jl
 
 ## Running
 
+### How to use with JuMP
+Here is a simple example where a JuMP model is passed to the CAT solver
+```julia
+using JuMP
+model = Model()
+@variable(model, x)
+@variable(model, y)
+@NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
+set_optimizer(model, consistently_adaptive_trust_region_method.CATSolver)
+optimize!(model)
+status = MOI.get(model, MOI.TerminationStatus())
+# Retrieve the solver instance
+optimizer = backend(model).optimizer.model
+# Algorithm stats (total function evalation, ...)
+algorithm_counter = optimizer.inner.algorithm_counter
+```
+
 ### CUTEst test set
 To test our solver on CUTEst test set, please use the script:
 
