@@ -254,7 +254,6 @@ function runModelFromProblem(
             INITIAL_RADIUS_MULTIPLICATIVE_RULE,
             seed,
             print_level,
-            radius_update_rule_approach,
         )
         x_1 = nlp.meta.x0
         x,
@@ -263,7 +262,7 @@ function runModelFromProblem(
         algorithm_counter,
         total_iterations_count,
         total_execution_time =
-            CAT.optimize(nlp, algorithm_params, termination_criteria, x_1, δ)
+            CAT.optimize(nlp, termination_criteria, algorithm_params, x_1, δ)
         status_string = convertStatusCodeToStatusString(status)
         function_value = NaN
         gradient_value = NaN
@@ -524,7 +523,7 @@ function outputIterationsStatusToCSVFile(
     cutest_problem::String,
     status::String,
     total_execution_time::Float64,
-    algorithm_counter::AlgorithmCounter,
+    algorithm_counter::CAT.AlgorithmCounter,
     function_value::Float64,
     gradient_value::Float64,
     optimization_method::String,

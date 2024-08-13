@@ -117,7 +117,7 @@ mutable struct AlgorithmicParameters
     l2 norm for gradient at the initial iterate and ||H_1|| is the spectral norm for the hessian
     at the initial iterate.
     """
-    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64
+    INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64
     """
     Specify seed level for randomness.
     """
@@ -146,7 +146,7 @@ mutable struct AlgorithmicParameters
         γ_3::Float64 = 1.0,
         ξ::Float64 = 0.1,
         r_1::Float64 = 0.0,
-        INITIAL_RADIUS_MULTIPLICATIVE_RULE::Int64 = 10,
+        INITIAL_RADIUS_MULTIPLICATIVE_RULE::Float64 = 10.0,
         seed::Int64 = 1,
         print_level::Int64 = 0,
         radius_update_rule_approach::String = "DEFAULT",

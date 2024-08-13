@@ -364,7 +364,7 @@ function outputIterationsStatusToCSVFile(
     cutest_problem::String,
     status::String,
     total_execution_time::Float64,
-    algorithm_counter::AlgorithmCounter,
+    algorithm_counter::CAT.AlgorithmCounter,
     function_value::Float64,
     gradient_value::Float64,
     total_results_output_file_path::String,
@@ -442,7 +442,7 @@ function runModelFromProblem(
         algorithm_counter,
         total_iterations_count,
         total_execution_time =
-            CAT.optimize(nlp, algorithm_params, termination_criteria, x_1, δ)
+            CAT.optimize(nlp, termination_criteria, algorithm_params, x_1, δ)
         function_value = NaN
         gradient_value = NaN
         if size(last(iteration_stats, 1))[1] > 0
