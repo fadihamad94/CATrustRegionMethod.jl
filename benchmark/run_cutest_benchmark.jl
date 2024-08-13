@@ -10,7 +10,7 @@ using JuMP,
     StatsBase,
     Random,
     Dates
-include("../src/CAT_Module.jl")
+include("../src/CAT.jl")
 
 const optimization_method_CAT = "CAT"
 const optimization_method_CAT_theta_0 = "CAT_THETA_ZERO"
@@ -241,12 +241,12 @@ function runModelFromProblem(
         nlp = CUTEstModel(cutest_problem)
 
         termination_criteria =
-            consistently_adaptive_trust_region_method.TerminationCriteria(
+            CAT.TerminationCriteria(
                 max_it,
                 tol_opt,
                 max_time,
             )
-        algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters(
+        algorithm_params = CAT.AlgorithmicParameters(
             β,
             θ,
             ω_1,
@@ -267,7 +267,7 @@ function runModelFromProblem(
         iteration_stats,
         algorithm_counter,
         total_iterations_count,
-        total_execution_time = consistently_adaptive_trust_region_method.CAT(
+        total_execution_time = CAT.optimize(
             nlp,
             algorithm_params,
             termination_criteria,
@@ -299,11 +299,11 @@ function runModelFromProblem(
     catch e
         @show e
         status = "INCOMPLETE"
-        algorithm_counter = consistently_adaptive_trust_region_method.AlgorithmCounter()
-        algorithm_counter.total_function_evaluation = 2 * max_it + 1
-        algorithm_counter.total_gradient_evaluation = 2 * max_it + 1
-        algorithm_counter.total_hessian_evaluation = 2 * max_it + 1
-        algorithm_counter.total_number_factorizations = 2 * max_it + 1
+        algorithm_counter = CAT.AlgorithmCounter()
+        algorithm_counter.total_function_evaluation =  2 * max_it + 1
+        algorithm_counter.total_gradient_evaluation =  2 * max_it + 1
+        algorithm_counter.total_hessian_evaluation =  2 * max_it + 1
+        algorithm_counter.total_number_factorizations =  2 * max_it + 1
         function_value = NaN
         gradient_value = NaN
         dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -517,21 +517,21 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL =>
+        CAT.TerminationStatusCode.OPTIMAL =>
             "OPTIMAL",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED =>
+        CAT.TerminationStatusCode.UNBOUNDED =>
             "UNBOUNDED",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT =>
+        CAT.TerminationStatusCode.ITERATION_LIMIT =>
             "ITERATION_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT =>
+        CAT.TerminationStatusCode.TIME_LIMIT =>
             "TIME_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT =>
+        CAT.TerminationStatusCode.MEMORY_LIMIT =>
             "MEMORY_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.STEP_SIZE_LIMIT =>
+        CAT.TerminationStatusCode.STEP_SIZE_LIMIT =>
             "STEP_SIZE_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR =>
+        CAT.TerminationStatusCode.NUMERICAL_ERROR =>
             "NUMERICAL_ERROR",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR =>
+        CAT.TerminationStatusCode.OTHER_ERROR =>
             "OTHER_ERROR",
     )
     return dict_status_code[status]
@@ -551,8 +551,8 @@ function outputIterationsStatusToCSVFile(
     total_gradient_evaluation = algorithm_counter.total_gradient_evaluation
     total_hessian_evaluation = algorithm_counter.total_hessian_evaluation
     # When the initial starting point is actually the solution, total_number_factorizations will be zero since
-    # we only compute function, gradient, and hessian so we need to make sure to put it as 1 for computing
-    # the geometric mean.
+    # we will only compute function, gradient, and hessian in this case so we need to make sure to put it as 1
+    # for computing the geometric mean.
     total_number_factorizations = max(1, algorithm_counter.total_number_factorizations)
 
     file_name = string(directory_name, "/", "table_cutest_$optimization_method.csv")

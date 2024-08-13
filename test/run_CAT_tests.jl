@@ -1,6 +1,6 @@
 using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, DataFrames, SparseArrays
 
-include("../src/CAT_Module.jl")
+include("../src/CAT.jl")
 include("./test_TRS_solver.jl")
 
 function solve_NLP1_starting_at_global_optimum()
@@ -8,7 +8,7 @@ function solve_NLP1_starting_at_global_optimum()
     x = [1.0, 1.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -48,7 +48,7 @@ function solve_NLP1_starting_at_global_optimum()
           computation_stats["total_number_factorizations_inverse_power_iteration"]
 
     @test obj(nlp, x) == 0.0
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModel()
@@ -58,7 +58,7 @@ function solveSimpleConvexNLPModel()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -98,7 +98,7 @@ function solveSimpleConvexNLPModel()
           computation_stats["total_number_factorizations_inverse_power_iteration"]
 
     @test norm(obj(nlp, x) - 0, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexConvexNLPModel()
@@ -107,7 +107,7 @@ function solveComplexConvexNLPModel()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -126,7 +126,7 @@ function solveComplexConvexNLPModel()
     @test algorithm_counter.total_number_factorizations <= 50
 
     @test norm(obj(nlp, x) - 0, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModelDifferentStartingPoint()
@@ -136,7 +136,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -174,7 +174,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     @test algorithm_counter.total_number_factorizations_inverse_power_iteration ==
           computation_stats["total_number_factorizations_inverse_power_iteration"]
     @test norm(obj(nlp, x) - 0.0, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveSimpleConvexNLPModelAnotherStartingPoint()
@@ -184,7 +184,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -223,7 +223,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
           computation_stats["total_number_factorizations_inverse_power_iteration"]
 
     @test norm(obj(nlp, x) - 0.0, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexConvexNLP1()
@@ -233,7 +233,7 @@ function solveComplexConvexNLP1()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -274,7 +274,7 @@ function solveComplexConvexNLP1()
     @test norm(obj(nlp, x) - 0.750000000125, 2) <= tol
     @test norm(x[1] - 0.33332500000000004, 2) <= tol
     @test norm(x[2] - 0.166665, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveComplexNLPModeL1()
@@ -283,7 +283,7 @@ function solveComplexNLPModeL1()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -302,7 +302,7 @@ function solveComplexNLPModeL1()
     @test norm(obj(nlp, x) - 0.183430792966865, 2) <= tol
     @test norm(x[1] - 0.7221896985843893, 2) <= tol
     @test norm(x[2] - (-0.5819243669997765), 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1()
@@ -312,7 +312,7 @@ function solveNLPSinCosModel1()
     x = [0.0, 0.0]
     δ = 0.049
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -329,7 +329,7 @@ function solveNLPSinCosModel1()
     @test algorithm_counter.total_number_factorizations <= 25
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1DifferentStartingPoint()
@@ -338,7 +338,7 @@ function solveNLPSinCosModel1DifferentStartingPoint()
     x = [10.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -355,7 +355,7 @@ function solveNLPSinCosModel1DifferentStartingPoint()
     @test algorithm_counter.total_number_factorizations <= 15
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel1DeltaNotZero()
@@ -364,7 +364,7 @@ function solveNLPSinCosModel1DeltaNotZero()
     x = [0.0, 0.0]
     δ = 1.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -381,7 +381,7 @@ function solveNLPSinCosModel1DeltaNotZero()
     @test algorithm_counter.total_number_factorizations <= 25
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function solveNLPSinCosModel2()
@@ -391,7 +391,7 @@ function solveNLPSinCosModel2()
     x = [10.0, 10.0]
     δ = 1.0
     x, status, iteration_stats, algorithm_counter =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -406,11 +406,11 @@ function solveNLPSinCosModel2()
     @test algorithm_counter.total_gradient_evaluation <= 10
     @test algorithm_counter.total_hessian_evaluation <= 10
     @test algorithm_counter.total_number_factorizations <= 15
-    
+
     @test norm(obj(nlp, x) - (-2), 2) <= tol
     @test norm(x[1] - 10.995653476776056, 2) <= tol
     @test norm(x[2] - 9.424777960768635, 2) <= tol
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
 end
 
 function optimize_models()

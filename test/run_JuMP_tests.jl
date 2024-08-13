@@ -21,7 +21,7 @@ function rosenbrook2()
 end
 
 function createHardCaseUsingSimpleBivariateConvexProblem()
-    model = Model(consistently_adaptive_trust_region_method.CATSolver)
+    model = Model(CAT.CATSolver)
     @variable(model, x)
     @variable(model, y)
     @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
@@ -32,7 +32,7 @@ end
 ####Utility Method####
 ######################
 function attachSolverWithAttributesToJuMPModel(model::Model, options::Dict{String,Any})
-    set_optimizer(model, consistently_adaptive_trust_region_method.CATSolver)
+    set_optimizer(model, CAT.CATSolver)
     for (name, value) in options
         sname = string(name)
         set_optimizer_attribute(model, sname, value)
@@ -74,11 +74,11 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
-    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
+    termination_criteria = CAT.TerminationCriteria()
+    algorithm_params = CAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -98,7 +98,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==
@@ -163,8 +163,8 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
-    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
+    termination_criteria = CAT.TerminationCriteria()
+    algorithm_params = CAT.AlgorithmicParameters()
 
     algorithm_params.β = β
     algorithm_params.ω_2 = ω_2
@@ -173,7 +173,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     termination_criteria.MAX_ITERATIONS = MAX_ITERATIONS
     termination_criteria.gradient_termination_tolerance = gradient_termination_tolerance
     x_k, status, iteration_stats, algorithm_counter, itr =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -194,7 +194,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
     @test status ==
-          consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT
+          CAT.TerminationStatusCode.ITERATION_LIMIT
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==
@@ -225,7 +225,7 @@ end
 
 function optimize_model_with_constraints_failure_expected()
     model = rosenbrook2()
-    set_optimizer(model, consistently_adaptive_trust_region_method.CATSolver)
+    set_optimizer(model, CAT.CATSolver)
     try
         optimize!(model)
     catch e
@@ -251,11 +251,11 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = consistently_adaptive_trust_region_method.TerminationCriteria()
-    algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters()
+    termination_criteria = CAT.TerminationCriteria()
+    algorithm_params = CAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        consistently_adaptive_trust_region_method.CAT(
+        CAT.optimize(
             nlp,
             termination_criteria,
             algorithm_params,
@@ -299,7 +299,7 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status == consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL
+    @test status == CAT.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==

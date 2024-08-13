@@ -2,7 +2,7 @@ import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics
 
 using Random
-include("../src/CAT_Module.jl")
+include("../src/CAT.jl")
 
 """
 Defines parses and args.
@@ -417,12 +417,12 @@ function runModelFromProblem(
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
         termination_criteria =
-            consistently_adaptive_trust_region_method.TerminationCriteria(
+            CAT.TerminationCriteria(
                 max_it,
                 tol_opt,
                 max_time,
             )
-        algorithm_params = consistently_adaptive_trust_region_method.AlgorithmicParameters(
+        algorithm_params = CAT.AlgorithmicParameters(
             β,
             θ,
             ω_1,
@@ -446,7 +446,7 @@ function runModelFromProblem(
         iteration_stats,
         algorithm_counter,
         total_iterations_count,
-        total_execution_time = consistently_adaptive_trust_region_method.CAT(
+        total_execution_time = CAT.optimize(
             nlp,
             algorithm_params,
             termination_criteria,
@@ -476,7 +476,7 @@ function runModelFromProblem(
     catch e
         @show e
         status = "INCOMPLETE"
-        algorithm_counter = consistently_adaptive_trust_region_method.AlgorithmCounter()
+        algorithm_counter = CAT.AlgorithmCounter()
         algorithm_counter.total_function_evaluation = 2 * max_it + 1
         algorithm_counter.total_gradient_evaluation = 2 * max_it + 1
         algorithm_counter.total_hessian_evaluation = 2 * max_it + 1
@@ -710,21 +710,21 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        consistently_adaptive_trust_region_method.TerminationStatusCode.OPTIMAL =>
+        CAT.TerminationStatusCode.OPTIMAL =>
             "OPTIMAL",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.UNBOUNDED =>
+        CAT.TerminationStatusCode.UNBOUNDED =>
             "UNBOUNDED",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.ITERATION_LIMIT =>
+        CAT.TerminationStatusCode.ITERATION_LIMIT =>
             "ITERATION_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.TIME_LIMIT =>
+        CAT.TerminationStatusCode.TIME_LIMIT =>
             "TIME_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.MEMORY_LIMIT =>
+        CAT.TerminationStatusCode.MEMORY_LIMIT =>
             "MEMORY_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.STEP_SIZE_LIMIT =>
+        CAT.TerminationStatusCode.STEP_SIZE_LIMIT =>
             "STEP_SIZE_LIMIT",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.NUMERICAL_ERROR =>
+        CAT.TerminationStatusCode.NUMERICAL_ERROR =>
             "NUMERICAL_ERROR",
-        consistently_adaptive_trust_region_method.TerminationStatusCode.OTHER_ERROR =>
+        CAT.TerminationStatusCode.OTHER_ERROR =>
             "OTHER_ERROR",
     )
     return dict_status_code[status]
