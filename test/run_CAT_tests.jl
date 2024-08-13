@@ -8,13 +8,7 @@ function solve_NLP1_starting_at_global_optimum()
     x = [1.0, 1.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test x == [1.0, 1.0]
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -58,13 +52,7 @@ function solveSimpleConvexNLPModel()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test norm(x - [0.0, 1.0], 2) <= tol
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -107,13 +95,7 @@ function solveComplexConvexNLPModel()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test norm(x[1] - 1, 2) <= tol
     @test norm(x[2] - 1, 2) <= tol
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
@@ -136,13 +118,7 @@ function solveSimpleConvexNLPModelDifferentStartingPoint()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -184,13 +160,7 @@ function solveSimpleConvexNLPModelAnotherStartingPoint()
     δ = 0.0
     algorithm_params.r_1 = -1.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -233,13 +203,7 @@ function solveComplexConvexNLP1()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -283,13 +247,7 @@ function solveComplexNLPModeL1()
     x = [0.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -312,13 +270,7 @@ function solveNLPSinCosModel1()
     x = [0.0, 0.0]
     δ = 0.049
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -338,13 +290,7 @@ function solveNLPSinCosModel1DifferentStartingPoint()
     x = [10.0, 0.0]
     δ = 0.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -364,13 +310,7 @@ function solveNLPSinCosModel1DeltaNotZero()
     x = [0.0, 0.0]
     δ = 1.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
@@ -391,13 +331,7 @@ function solveNLPSinCosModel2()
     x = [10.0, 10.0]
     δ = 1.0
     x, status, iteration_stats, algorithm_counter =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            x,
-            δ,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, x, δ)
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess

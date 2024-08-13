@@ -43,7 +43,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     default_β = 0.1
     default_θ = 0.1
     default_ω_1 = 8.0
-    default_ω_2 = 20.0
+    default_ω_2 = 16.0
     default_γ_1 = 1e-2
     default_γ_2 = 0.8
     default_r_1 = 0.0
@@ -78,22 +78,16 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     algorithm_params = CAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            nlp.meta.x0,
-            0.0,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
     @test algorithm_counter.total_hessian_evaluation == nlp.counters.neval_hess
 
-    @test algorithm_counter.total_function_evaluation <= 30
+    @test algorithm_counter.total_function_evaluation <= 35
     @test algorithm_counter.total_gradient_evaluation <= 25
     @test algorithm_counter.total_hessian_evaluation <= 25
-    @test algorithm_counter.total_number_factorizations <= 70
+    @test algorithm_counter.total_number_factorizations <= 110
 
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
@@ -173,13 +167,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     termination_criteria.MAX_ITERATIONS = MAX_ITERATIONS
     termination_criteria.gradient_termination_tolerance = gradient_termination_tolerance
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            nlp.meta.x0,
-            0.0,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -193,8 +181,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments(
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status ==
-          CAT.TerminationStatusCode.ITERATION_LIMIT
+    @test status == CAT.TerminationStatusCode.ITERATION_LIMIT
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==
@@ -255,13 +242,7 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     algorithm_params = CAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(
-            nlp,
-            termination_criteria,
-            algorithm_params,
-            nlp.meta.x0,
-            0.0,
-        )
+        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad

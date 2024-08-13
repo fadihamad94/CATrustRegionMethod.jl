@@ -371,22 +371,14 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        CAT.TerminationStatusCode.OPTIMAL =>
-            "OPTIMAL",
-        CAT.TerminationStatusCode.UNBOUNDED =>
-            "UNBOUNDED",
-        CAT.TerminationStatusCode.ITERATION_LIMIT =>
-            "ITERATION_LIMIT",
-        CAT.TerminationStatusCode.TIME_LIMIT =>
-            "TIME_LIMIT",
-        CAT.TerminationStatusCode.MEMORY_LIMIT =>
-            "MEMORY_LIMIT",
-        CAT.TerminationStatusCode.STEP_SIZE_LIMIT =>
-            "STEP_SIZE_LIMIT",
-        CAT.TerminationStatusCode.NUMERICAL_ERROR =>
-            "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.OTHER_ERROR =>
-            "OTHER_ERROR",
+        CAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+        CAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+        CAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+        CAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+        CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+        CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
+        CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
 end

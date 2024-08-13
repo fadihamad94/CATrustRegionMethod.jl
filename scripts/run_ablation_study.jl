@@ -207,7 +207,7 @@ function parse_command_line()
         "--ω_2"
         help = "ω_2 parameter for CAT"
         arg_type = Float64
-        default = 20.0
+        default = 16.0
 
         "--γ_1"
         help = "γ_1 parameter for CAT"
@@ -416,12 +416,7 @@ function runModelFromProblem(
         println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
-        termination_criteria =
-            CAT.TerminationCriteria(
-                max_it,
-                tol_opt,
-                max_time,
-            )
+        termination_criteria = CAT.TerminationCriteria(max_it, tol_opt, max_time)
         algorithm_params = CAT.AlgorithmicParameters(
             β,
             θ,
@@ -446,13 +441,8 @@ function runModelFromProblem(
         iteration_stats,
         algorithm_counter,
         total_iterations_count,
-        total_execution_time = CAT.optimize(
-            nlp,
-            algorithm_params,
-            termination_criteria,
-            x_1,
-            δ,
-        )
+        total_execution_time =
+            CAT.optimize(nlp, algorithm_params, termination_criteria, x_1, δ)
         function_value = NaN
         gradient_value = NaN
         if size(last(iteration_stats, 1))[1] > 0
@@ -710,22 +700,14 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        CAT.TerminationStatusCode.OPTIMAL =>
-            "OPTIMAL",
-        CAT.TerminationStatusCode.UNBOUNDED =>
-            "UNBOUNDED",
-        CAT.TerminationStatusCode.ITERATION_LIMIT =>
-            "ITERATION_LIMIT",
-        CAT.TerminationStatusCode.TIME_LIMIT =>
-            "TIME_LIMIT",
-        CAT.TerminationStatusCode.MEMORY_LIMIT =>
-            "MEMORY_LIMIT",
-        CAT.TerminationStatusCode.STEP_SIZE_LIMIT =>
-            "STEP_SIZE_LIMIT",
-        CAT.TerminationStatusCode.NUMERICAL_ERROR =>
-            "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.OTHER_ERROR =>
-            "OTHER_ERROR",
+        CAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+        CAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+        CAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+        CAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+        CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+        CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
+        CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
 end

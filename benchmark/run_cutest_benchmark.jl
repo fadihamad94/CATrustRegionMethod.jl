@@ -240,12 +240,7 @@ function runModelFromProblem(
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 
-        termination_criteria =
-            CAT.TerminationCriteria(
-                max_it,
-                tol_opt,
-                max_time,
-            )
+        termination_criteria = CAT.TerminationCriteria(max_it, tol_opt, max_time)
         algorithm_params = CAT.AlgorithmicParameters(
             β,
             θ,
@@ -267,13 +262,8 @@ function runModelFromProblem(
         iteration_stats,
         algorithm_counter,
         total_iterations_count,
-        total_execution_time = CAT.optimize(
-            nlp,
-            algorithm_params,
-            termination_criteria,
-            x_1,
-            δ,
-        )
+        total_execution_time =
+            CAT.optimize(nlp, algorithm_params, termination_criteria, x_1, δ)
         status_string = convertStatusCodeToStatusString(status)
         function_value = NaN
         gradient_value = NaN
@@ -300,10 +290,10 @@ function runModelFromProblem(
         @show e
         status = "INCOMPLETE"
         algorithm_counter = CAT.AlgorithmCounter()
-        algorithm_counter.total_function_evaluation =  2 * max_it + 1
-        algorithm_counter.total_gradient_evaluation =  2 * max_it + 1
-        algorithm_counter.total_hessian_evaluation =  2 * max_it + 1
-        algorithm_counter.total_number_factorizations =  2 * max_it + 1
+        algorithm_counter.total_function_evaluation = 2 * max_it + 1
+        algorithm_counter.total_gradient_evaluation = 2 * max_it + 1
+        algorithm_counter.total_hessian_evaluation = 2 * max_it + 1
+        algorithm_counter.total_number_factorizations = 2 * max_it + 1
         function_value = NaN
         gradient_value = NaN
         dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -338,7 +328,7 @@ function executeCUTEST_Models_benchmark(
     θ::Float64 = 0.1,
     β::Float64 = 0.1,
     ω_1::Float64 = 8.0,
-    ω_2::Float64 = 20.0,
+    ω_2::Float64 = 16.0,
     γ_1::Float64 = 0.01,
     γ_2::Float64 = 0.8,
     γ_3::Float64 = 1.0,
@@ -517,22 +507,14 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        CAT.TerminationStatusCode.OPTIMAL =>
-            "OPTIMAL",
-        CAT.TerminationStatusCode.UNBOUNDED =>
-            "UNBOUNDED",
-        CAT.TerminationStatusCode.ITERATION_LIMIT =>
-            "ITERATION_LIMIT",
-        CAT.TerminationStatusCode.TIME_LIMIT =>
-            "TIME_LIMIT",
-        CAT.TerminationStatusCode.MEMORY_LIMIT =>
-            "MEMORY_LIMIT",
-        CAT.TerminationStatusCode.STEP_SIZE_LIMIT =>
-            "STEP_SIZE_LIMIT",
-        CAT.TerminationStatusCode.NUMERICAL_ERROR =>
-            "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.OTHER_ERROR =>
-            "OTHER_ERROR",
+        CAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+        CAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+        CAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+        CAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+        CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+        CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
+        CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
 end

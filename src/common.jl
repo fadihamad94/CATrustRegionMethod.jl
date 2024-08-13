@@ -140,7 +140,7 @@ mutable struct AlgorithmicParameters
         β::Float64 = 0.1,
         θ::Float64 = 0.1,
         ω_1::Float64 = 8.0,
-        ω_2::Float64 = 20.0,
+        ω_2::Float64 = 16.0,
         γ_1::Float64 = 0.01,
         γ_2::Float64 = 0.8,
         γ_3::Float64 = 1.0,
