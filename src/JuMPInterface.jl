@@ -8,25 +8,8 @@ export CATSolver
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities
 
-# TODO
 const SF = Union{MOI.ScalarAffineFunction{Float64},MOI.ScalarQuadraticFunction{Float64}}
-const VAF = MOI.VectorAffineFunction{Float64}
-const VOV = MOI.VectorOfVariables
 
-# ScalarAffineFunctions and VectorAffineFunctions
-const SAF = MOI.ScalarAffineFunction{Float64}
-const AF = Union{SAF,VAF}
-
-const SS = Union{
-    MOI.EqualTo{Float64},
-    MOI.GreaterThan{Float64},
-    MOI.LessThan{Float64},
-    MOI.Interval{Float64},
-}
-# LinSets
-const LS = Union{MOI.EqualTo{Float64},MOI.GreaterThan{Float64},MOI.LessThan{Float64}}
-# VecLinSets
-const VLS = Union{MOI.Nonnegatives,MOI.Nonpositives,MOI.Zeros}
 ##################################################
 mutable struct VariableInfo
     lower_bound::Float64  # May be -Inf even if has_lower_bound == true
@@ -62,26 +45,8 @@ end
 ##################################################
 # EmptyNLPEvaluator for non-NLP problems.
 struct EmptyNLPEvaluator <: MOI.AbstractNLPEvaluator end
-MOI.features_available(::EmptyNLPEvaluator) = [:Grad, :Hess]
-MOI.initialize(::EmptyNLPEvaluator, features) = nothing
-MOI.eval_objective(::EmptyNLPEvaluator, x) = NaN
-
-
-MOI.eval_objective_gradient(::EmptyNLPEvaluator, g, x) = nothing
-MOI.hessian_lagrangian_structure(::EmptyNLPEvaluator) = Tuple{Int64,Int64}[]
-
-function MOI.eval_hessian_lagrangian(::EmptyNLPEvaluator, H, x, s, mu)
-    @assert length(H) == 0
-    return
-end
-function MOI.eval_hessian_lagrangian(::Nothing, H, x, s, mu)
-    @assert length(H) == 0
-    return
-end
 
 empty_nlp_data() = MOI.NLPBlockData([], EmptyNLPEvaluator(), false)
-
-
 
 mutable struct CATSolver <: MOI.AbstractOptimizer
     #inner::CATProblem
@@ -201,90 +166,6 @@ function MOI.set(
     check_inbounds(model, func)
     model.objective = func
     return
-end
-
-function NLPModels.obj(nlp::MathOptNLPModel, x::AbstractVector)
-    NLPModels.increment!(nlp, :neval_obj)
-    if nlp.obj.type == "LINEAR"
-        res = dot(nlp.obj.gradient, x) + nlp.obj.constant
-    end
-    if nlp.obj.type == "QUADRATIC"
-        res =
-            0.5 * coo_sym_dot(
-                nlp.obj.hessian.rows,
-                nlp.obj.hessian.cols,
-                nlp.obj.hessian.vals,
-                x,
-                x,
-            ) +
-            dot(nlp.obj.gradient, x) +
-            nlp.obj.constant
-    end
-    if nlp.obj.type == "NONLINEAR"
-        res = MOI.eval_objective(nlp.eval, x)
-    end
-    return res
-end
-
-function append_to_hessian_sparsity!(
-    ::Any,
-    ::Union{MOI.VariableIndex,MOI.ScalarAffineFunction},
-)
-    return nothing
-end
-
-function append_to_hessian_sparsity!(hessian_sparsity, quad::MOI.ScalarQuadraticFunction)
-    for term in quad.quadratic_terms
-        push!(hessian_sparsity, (term.variable_1.value, term.variable_2.value))
-    end
-end
-
-function hessian_lagrangian_structure(model::CATSolver, nlp::MathOptNLPModel)
-    hessian_sparsity = Tuple{Int64,Int64}[]
-    @assert model.objective !== nothing
-    append_to_hessian_sparsity!(hessian_sparsity, model.obj)
-
-    nlp_hessian_sparsity = MOI.hessian_lagrangian_structure(nlp.eval)
-    append!(hessian_sparsity, nlp_hessian_sparsity)
-    return hessian_sparsity
-end
-
-function hess_coord(
-    nlp::MathOptNLPModel,
-    x::Array{Float64};
-    obj_weight::Float64 = 1.0,
-    y::Array{Float64} = zeros(nlp.meta.ncon),
-)
-    NLPModels.increment!(nlp, :neval_hess)
-    MOI.eval_hessian_lagrangian(nlp.eval, nlp.obj.hessian.vals, x, obj_weight, y)
-
-    return (
-        NLPModels.hess_structure(nlp)[1],
-        NLPModels.hess_structure(nlp)[2],
-        NLPModels.hess_coord(nlp, x, y, obj_weight = obj_weight),
-    )
-end
-
-function NLPModels.hess_structure!(
-    nlp::MathOptNLPModel,
-    rows::AbstractVector{<:Integer},
-    cols::AbstractVector{<:Integer},
-)
-    if nlp.obj.type == "QUADRATIC"
-        for index = 1:(nlp.obj.nnzh)
-            rows[index] = nlp.obj.hessian.rows[index]
-            cols[index] = nlp.obj.hessian.cols[index]
-        end
-    end
-    if (nlp.obj.type == "NONLINEAR") || (nlp.meta.nnln > 0)
-        hesslag_struct = MOI.hessian_lagrangian_structure(nlp.eval)
-        for index = (nlp.obj.nnzh+1):(nlp.meta.nnzh)
-            shift_index = index - nlp.obj.nnzh
-            rows[index] = hesslag_struct[shift_index][1]
-            cols[index] = hesslag_struct[shift_index][2]
-        end
-    end
-    return rows, cols
 end
 
 ############################
