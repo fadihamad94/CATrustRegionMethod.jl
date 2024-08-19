@@ -20,7 +20,7 @@ function rosenbrook2()
     return model
 end
 
-function createHardCaseUsingSimpleBivariateConvexProblem()
+function createHardCaseUsingSimpleBivariateConvexProblemJuMP()
     model = Model(CAT.CATSolver)
     @variable(model, x)
     @variable(model, y)
@@ -226,7 +226,7 @@ function optimize_model_with_constraints_failure_expected()
 end
 
 function optimizeHardCaseUsingSimpleBivariateConvexProblem()
-    model = createHardCaseUsingSimpleBivariateConvexProblem()
+    model = createHardCaseUsingSimpleBivariateConvexProblemJuMP()
 
     #Test using JUMP
     optimize!(model)
