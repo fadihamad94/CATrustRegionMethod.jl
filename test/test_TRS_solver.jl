@@ -120,14 +120,6 @@ function createHardCaseUsingSimpleBivariateConvexProblem3()
     return nlp
 end
 
-function createHardCaseUsingSimpleUnivariateConvexProblem()
-    model = Model()
-    @variable(model, x)
-    @NLobjective(model, Min, -x^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
 function test_create_dummy_problem()
     nlp = createDummyNLPModel()
     termination_criteria = CAT.TerminationCriteria(100, 1e-4)
@@ -975,7 +967,7 @@ function unit_tests()
     test_compute_l_2_norms_ymmetric_matrix_3_by_3()
 end
 
-function optimize_models()
+function optimize_models_test()
     test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     test_optimize_second_order_model_phi_zero()
     test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
@@ -996,5 +988,5 @@ end
 end
 
 @testset "TRS_Solver_Tests" begin
-    optimize_models()
+    optimize_models_test()
 end
