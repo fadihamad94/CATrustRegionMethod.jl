@@ -142,10 +142,6 @@ function MOI.is_valid(model::CATSolver, vi::MOI.VariableIndex)
     return vi.value in eachindex(model.variable_info)
 end
 
-function MOI.copy_to(model::CATSolver, src::MOI.ModelLike; copy_names = false)
-    return MOI.Utilities.default_copy_to(model, src, copy_names)
-end
-
 function has_upper_bound(model::CATSolver, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].has_upper_bound
 end
@@ -196,9 +192,6 @@ MOI.get(model::CATSolver, ::MOI.RawSolver) = model
 
 # copy
 MOI.supports_incremental_interface(solver::CATSolver) = true
-function MOI.copy_to(solver::CATSolver, src::MOI.ModelLike)
-    return MOI.Utilities.automatic_copy_to(model, src)
-end
 
 function MOI.optimize!(solver::CATSolver)
     t = time()
