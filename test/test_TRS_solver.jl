@@ -120,55 +120,10 @@ function createHardCaseUsingSimpleBivariateConvexProblem3()
     return nlp
 end
 
-
-function createSimpleUnivariateConvexProblem()
-    model = Model()
-    @variable(model, x)
-    @NLobjective(model, Min, (x - 1)^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
 function createHardCaseUsingSimpleUnivariateConvexProblem()
     model = Model()
     @variable(model, x)
     @NLobjective(model, Min, -x^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
-function createHardCaseUsingSimpleBivariateConvexProblem()
-    model = Model()
-    @variable(model, x)
-    @variable(model, y)
-    @NLobjective(model, Min, -x^2 - y^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
-function createHardCaseUsingSimpleBivariateConvexProblem1()
-    model = Model()
-    @variable(model, x)
-    @variable(model, y)
-    @NLobjective(model, Min, -x^2 - 2 * y^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
-function createHardCaseUsingSimpleBivariateConvexProblem2()
-    model = Model()
-    @variable(model, x)
-    @variable(model, y)
-    @NLobjective(model, Min, x^2 + 0.01 * x - y^2)
-    nlp = MathOptNLPModel(model)
-    return nlp
-end
-
-function createHardCaseUsingSimpleBivariateConvexProblem3()
-    model = Model()
-    @variable(model, x)
-    @variable(model, y)
-    @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
     nlp = MathOptNLPModel(model)
     return nlp
 end
