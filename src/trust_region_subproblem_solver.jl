@@ -370,7 +370,6 @@ function optimizeSecondOrderModel(
             )
         end
     catch e
-        println("Error: ", e)
         if e == ErrorException("Bisection logic failed to find a root for the phi function")
             start_time_temp = time()
             # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
@@ -412,7 +411,6 @@ function optimizeSecondOrderModel(
         elseif e == ErrorException(
             "Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.",
         )
-            @error e
             start_time_temp = time()
             # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
             # eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
@@ -451,7 +449,6 @@ function optimizeSecondOrderModel(
             temp_total_number_factorizations_compute_search_direction,
             temp_total_number_factorizations_inverse_power_iteration
         else
-            @error e
             throw(e)
         end
     end
@@ -889,7 +886,6 @@ function solveHardCaseLogic(
         temp_total_number_factorizations_inverse_power_iteration
     catch e
         # We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
-        @error e
         if print_level >= 2
             matrix_H = Matrix(H)
             mimimum_eigenvalue = eigmin(Matrix(H))
@@ -989,10 +985,6 @@ function inverse_power_iteration(
         x = y
     end
     temp_ = dot(y, H * y)
-
-    if print_level >= 2
-        @error ("Inverse power iteration did not converge. computed eigenValue is $temp_.")
-    end
 
     if print_level >= 2
         end_time_temp = time()
