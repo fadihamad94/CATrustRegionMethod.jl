@@ -268,9 +268,9 @@ function parse_command_line()
         default = 1
 
         "--criteria"
-        help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `initial_radius`, `radius_update_rule`."
+        help = "The ordering of criteria separated by commas. Allowed values are `ρ_hat_rule`, `initial_radius`, `radius_update_rule`, `trust_region_subproblem`."
         arg_type = String
-        default = "ρ_hat_rule,radius_update_rule,initial_radius"
+        default = "ρ_hat_rule,radius_update_rule,initial_radius,trust_region_subproblem"
     end
 
     return ArgParse.parse_args(arg_parse)
@@ -294,6 +294,7 @@ function createProblemData(
 )
     problem_data_vec = []
     radius_update_rule_approach = "DEFAULT"
+    trust_region_subproblem_solver_default = "NEW"
     problem_data_original = (
         β,
         θ,
@@ -309,6 +310,7 @@ function createProblemData(
         ξ,
         INITIAL_RADIUS_MULTIPLICATIVE_RULE,
         radius_update_rule_approach,
+        trust_region_subproblem_solver_default
     )
     for crt in criteria
         if crt == "original"
@@ -337,7 +339,7 @@ function createProblemData(
             problem_data = new_problem_data
             push!(problem_data_vec, problem_data)
             # radius_update_rule
-        else
+        elseif crt == "radius_update_rule"
             problem_data = problem_data_original
             index_to_override = 4
             new_problem_data = (
@@ -355,6 +357,9 @@ function createProblemData(
             )
             problem_data = new_problem_data
             push!(problem_data_vec, problem_data)
+        else # trust_region_subproblem_solver
+            problem_data = problem_data_original
+            problem_data[end] = "OLD"
         end
     end
     return problem_data_vec
@@ -409,8 +414,10 @@ function runModelFromProblem(
     γ_3,
     ξ,
     INITIAL_RADIUS_MULTIPLICATIVE_RULE,
-    radius_update_rule_approach = problem_data
+    radius_update_rule_approach,
+    trust_region_subproblem_solver = problem_data
     start_time = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
+    eval_offset = 1e-8 # default
     try
         dates_format = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
         println("$dates_format-----------EXECUTING PROBLEM----------", cutest_problem)
@@ -431,6 +438,8 @@ function runModelFromProblem(
             seed,
             print_level,
             radius_update_rule_approach,
+            eval_offset,
+            trust_region_subproblem_solver
         )
         x_1 = nlp.meta.x0
         x = x_1
@@ -655,7 +664,7 @@ function main()
     print_level = parsed_args["print_level"]
     seed = parsed_args["seed"]
 
-    default_criteria = ["ρ_hat_rule", "initial_radius", "radius_update_rule"]
+    default_criteria = ["ρ_hat_rule", "initial_radius", "radius_update_rule", "trust_region_subproblem"]
     criteria = split(parsed_args["criteria"], ",")
     for val in criteria
         if val ∉ default_criteria

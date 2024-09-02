@@ -118,12 +118,12 @@ function compute_ρ_standard_trust_region_method(
 end
 
 """
-  sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, print_level)
+  sub_routine_trust_region_sub_problem_solver(fval_current, gval_current, hessian_current, x_k, δ_k, γ_1, γ_2, r_k, min_gval_norm, nlp, print_level, trust_region_subproblem_solver)
   The method computes a search direction that solves the trust-region subproblem. The method checks for numerical erros to
   validate that the trust-region subproblem was solved correctly. If the second order model (1) is positive, then we
   failed to solve the trusrt-region subproblem.
 
-  See optimizeSecondOrderModel in ./trust_region_subproblem_solver.jl for more details on the implementation, on the
+  See optimizeSecondOrderModel in ./trust_region_subproblem_solver.jl and ./trust_region_subproblem_solver.jl for more details on the implementation, on the
   inputs description, and the outputs description.
 """
 function sub_routine_trust_region_sub_problem_solver(
@@ -142,25 +142,40 @@ function sub_routine_trust_region_sub_problem_solver(
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
     algorithm_counter::AlgorithmCounter,
     print_level::Int64,
+    trust_region_subproblem_solver::String = "NEW"
 )
     fval_next = fval_current
     gval_next_temp = gval_current
     start_time_temp = time()
 
     # Solve the trust-region subproblem to generate the search direction d_k
-    success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblem(
-        fval_current,
-        gval_current,
-        hessian_current,
-        x_k,
-        δ_k,
-        γ_1,
-        γ_2,
-        r_k,
-        min_gval_norm,
-        algorithm_counter,
-        print_level,
-    )
+    success_subproblem_solve, d_k, hard_case = nothing, nothing, nothing
+
+    if trust_region_subproblem_solver == "OLD"
+        success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblemOldApproach(
+            fval_current,
+            gval_current,
+            hessian_current,
+            x_k,
+            δ_k,
+            γ_2,
+            r_k
+        )
+    else
+        success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblem(
+            fval_current,
+            gval_current,
+            hessian_current,
+            x_k,
+            δ_k,
+            γ_1,
+            γ_2,
+            r_k,
+            min_gval_norm,
+            algorithm_counter,
+            print_level,
+        )
+    end
     if success_subproblem_solve
         q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
         q_2 = γ_1 * min_gval_norm
@@ -328,11 +343,14 @@ function optimize(
     #Algorithm stats
     algorithm_counter = AlgorithmCounter()
 
+    # Trust-region subproblem method
+    trust_region_subproblem_solver = algorithm_params.trust_region_subproblem_solver
+
     #Specify the seed for reproducibility of results
     Random.seed!(seed)
 
     k = 1
-    try
+    # try
         gval_current = evalGradient(nlp, x_k, algorithm_counter)
         fval_current = evalFunction(nlp, x_k, algorithm_counter)
         hessian_current = evalHessian(nlp, x_k, algorithm_counter)
@@ -394,6 +412,7 @@ function optimize(
                     nlp,
                     algorithm_counter,
                     print_level,
+                    trust_region_subproblem_solver
                 )
 
             gval_next = gval_current
@@ -600,16 +619,16 @@ function optimize(
             k += 1
         end
         # Handle exceptions
-    catch e
-        @error e
-        status = TerminationStatusCode.OTHER_ERROR
-        if isa(e, OutOfMemoryError)
-            status = TerminationStatusCode.MEMORY_LIMIT
-        end
-        end_time_ = time()
-        total_execution_time = end_time_ - start_time_
-        return x_k, status, iteration_stats, algorithm_counter, k, total_execution_time
-    end
+    # catch e
+    #     @error e
+    #     status = TerminationStatusCode.OTHER_ERROR
+    #     if isa(e, OutOfMemoryError)
+    #         status = TerminationStatusCode.MEMORY_LIMIT
+    #     end
+    #     end_time_ = time()
+    #     total_execution_time = end_time_ - start_time_
+    #     return x_k, status, iteration_stats, algorithm_counter, k, total_execution_time
+    # end
 
     end_time_ = time()
     total_execution_time = end_time_ - start_time_

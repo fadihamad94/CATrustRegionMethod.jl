@@ -24,6 +24,7 @@ export phi,
 
 include("./common.jl")
 include("./utils.jl")
+include("./old_trust_region_subproblem_solver.jl")
 include("./trust_region_subproblem_solver.jl")
 include("./JuMPInterface.jl")
 include("./main.jl")

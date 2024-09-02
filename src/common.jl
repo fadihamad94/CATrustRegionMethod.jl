@@ -135,6 +135,11 @@ mutable struct AlgorithmicParameters
     eval_offset param for the algorithm. It is used for the trust-region subproblem termination criteria.
     """
     eval_offset::Float64
+    """
+    trust_region_subproblem_solver param for the algorithm. It is used to determine which method to use the
+    trust-region subproblem. Using the new appraoch or the old appraoch in the NEURips paper.
+    """
+    trust_region_subproblem_solver
     # initialize parameters
     function AlgorithmicParameters(
         β::Float64 = 0.1,
@@ -151,6 +156,7 @@ mutable struct AlgorithmicParameters
         print_level::Int64 = 0,
         radius_update_rule_approach::String = "DEFAULT",
         eval_offset::Float64 = 1e-8,
+        trust_region_subproblem_solver::String = "NEW" #This is mainly for ablation study to compare against old approach (conference version)
     )
         @assert(β > 0 && β < 1)
         @assert(θ >= 0 && θ < 1)
@@ -178,6 +184,7 @@ mutable struct AlgorithmicParameters
             print_level,
             radius_update_rule_approach,
             eval_offset,
+            trust_region_subproblem_solver
         )
     end
 end
