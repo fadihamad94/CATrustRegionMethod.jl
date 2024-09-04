@@ -360,7 +360,7 @@ function createProblemData(
         else # trust_region_subproblem_solver
             problem_data = problem_data_original
             index_to_override = 15
-            trust_region_subproblem_solver = 'OLD'
+            trust_region_subproblem_solver = "OLD"
             new_problem_data = (
                 problem_data[1:index_to_override-1]...,
                 trust_region_subproblem_solver
