@@ -364,7 +364,7 @@ function createProblemData(
             new_problem_data = (
                 problem_data[1:index_to_override-1]...,
                 trust_region_subproblem_solver
-            }
+            )
             problem_data = new_problem_data
             push!(problem_data_vec, problem_data)
         end
