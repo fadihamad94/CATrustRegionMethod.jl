@@ -1,7 +1,11 @@
 # CAT
 This package is the implementation of a simple and reliable adaptive trust-region method for finding stationary points of nonconvex functions with L-Lipschitz Hessians and bounded optimality gap.
 
-## How to install
+## License
+CAT.jl is licensed under the MIT License.
+
+## Installation
+Installing the CAT solver can be done in two different ways:
 
 ### Install CAT as a package
 Install Julia 1.10.4 or later. CAT can be installed and tested through the Julia package manager:
