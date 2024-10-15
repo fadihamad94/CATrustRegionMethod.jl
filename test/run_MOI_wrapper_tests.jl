@@ -39,7 +39,7 @@ function attachSolverWithAttributesToJuMPModel(model::Model, options::Dict{Strin
     end
 end
 
-function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
+function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     default_β = 0.1
     default_θ = 0.1
     default_ω_1 = 8.0
@@ -127,7 +127,7 @@ function optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
     @test optimizer.inner.termination_criteria.STEP_SIZE_LIMIT == default_step_size_limit
 end
 
-function optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments()
+function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     β = 0.2
     ω_2 = 8.0
     r_1 = 100.0
@@ -301,13 +301,13 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
           optimizer.inner.algorithm_counter.total_number_factorizations_inverse_power_iteration
 end
 
-function optimize_models_JuMPInterface()
-    optimize_rosenbrook1_model_JuMPInterface_with_default_arguments()
-    optimize_rosenbrook1_model_JuMPInterface_with_user_specified_arguments()
+function optimize_models_MOI_wrapper()
+    optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
+    optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     optimize_model_with_constraints_failure_expected()
     optimizeHardCaseUsingSimpleBivariateConvexProblem()
 end
 
-@testset "optimization_using_JUMP_interface" begin
-    optimize_models_JuMPInterface()
+@testset "optimization_using_MOI_wrapper" begin
+    optimize_models_MOI_wrapper()
 end

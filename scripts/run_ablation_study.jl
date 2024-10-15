@@ -10,8 +10,8 @@ Defines parses and args.
 A dictionary with the values of the command-line arguments.
 """
 
-const skip_list = ["YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
-
+# const skip_list = ["YATP1LS", "YATP2CLS", "YATP2LS", "YATP1CLS"]
+const skip_list = []
 const default_problems_list = [
     "ARGLINA",
     "ARGLINB",
@@ -510,22 +510,25 @@ function runModelFromProblem(
     end
 end
 
-function computeGeomeans(df::DataFrame, max_it::Int64)
+function computeGeomeans(df::DataFrame, max_it::Int64, max_time::Float64, shift::Int64)
     total_factorization_count_vec = Vector{Float64}()
     total_function_evaluation_vec = Vector{Float64}()
     total_gradient_evaluation_vec = Vector{Float64}()
     total_hessian_evaluation_vec = Vector{Float64}()
+    total_wall_clock_time_vec = Vector{Float64}()
     for i = 1:size(df)[1]
         if df[i, :].status == "SUCCESS" || df[i, :].status == "OPTIMAL"
             push!(total_factorization_count_vec, df[i, :].total_factorization_evaluation)
             push!(total_function_evaluation_vec, df[i, :].total_function_evaluation)
             push!(total_gradient_evaluation_vec, df[i, :].total_gradient_evaluation)
             push!(total_hessian_evaluation_vec, df[i, :].total_hessian_evaluation)
+            push!(total_wall_clock_time_vec, df[i, :].total_execution_time)
         else
-            push!(total_factorization_count_vec, 2 * max_it + 1)
-            push!(total_function_evaluation_vec, 2 * max_it + 1)
-            push!(total_gradient_evaluation_vec, 2 * max_it + 1)
-            push!(total_hessian_evaluation_vec, 2 * max_it + 1)
+            push!(total_factorization_count_vec, 2 * max_it)
+            push!(total_function_evaluation_vec, 2 * max_it)
+            push!(total_gradient_evaluation_vec, 2 * max_it)
+            push!(total_hessian_evaluation_vec, 2 * max_it)
+            push!(total_wall_clock_time_vec, 2 * max_time)
         end
     end
 
@@ -535,17 +538,19 @@ function computeGeomeans(df::DataFrame, max_it::Int64)
     df_results_new.total_function_evaluation = total_function_evaluation_vec
     df_results_new.total_gradient_evaluation = total_gradient_evaluation_vec
     df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
+    df_results_new.total_execution_time = total_wall_clock_time_vec
 
-    geomean_count_factorization = geomean(df_results_new.total_factorization_evaluation)
-    geomean_total_function_evaluation = geomean(df_results_new.total_function_evaluation)
-    geomean_total_gradient_evaluation = geomean(df_results_new.total_gradient_evaluation)
-    geomean_total_hessian_evaluation = geomean(df_results_new.total_hessian_evaluation)
-
+    geomean_count_factorization = geomean(df_results_new.total_factorization_evaluation .+ shift) - shift
+    geomean_total_function_evaluation = geomean(df_results_new.total_function_evaluation .+ shift) - shift
+    geomean_total_gradient_evaluation = geomean(df_results_new.total_gradient_evaluation .+ shift) - shift
+    geomean_total_hessian_evaluation = geomean(df_results_new.total_hessian_evaluation .+ shift) - shift
+    geomean_total_wall_clock_time = geomean(df_results_new.total_execution_time .+ shift) - shift
     return (
         geomean_total_function_evaluation,
         geomean_total_gradient_evaluation,
         geomean_total_hessian_evaluation,
         geomean_count_factorization,
+        geomean_total_wall_clock_time,
     )
 end
 
@@ -579,7 +584,7 @@ function runProblems(
     open(geomean_results_file_path, "w") do file
         write(
             file,
-            "criteria,total_failure,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization\n",
+            "criteria,total_failure,geomean_total_function_evaluation,geomean_total_gradient_evaluation,geomean_total_hessian_evaluation,geomean_count_factorization,geomean_total_wall_clock_time\n",
         )
     end
 
@@ -623,17 +628,20 @@ function runProblems(
         df = DataFrame(CSV.File(total_results_output_file_path))
         df = filter(:problem_name => p_n -> p_n in cutest_problems, df)
         max_it = problem_data_vec[index][6]
+        max_time = problem_data_vec[index][8]
+        shift = 1
         geomean_total_function_evaluation,
         geomean_total_gradient_evaluation,
         geomean_total_hessian_evaluation,
-        geomean_count_factorization = computeGeomeans(df, max_it)
+        geomean_count_factorization,
+        geomean_total_wall_clock_time = computeGeomeans(df, max_it, max_time, shift)
         counts = countmap(df.status)
         total_failure =
             length(df.status) - get(counts, "SUCCESS", 0) - get(counts, "OPTIMAL", 0)
         open(geomean_results_file_path, "a") do file
             write(
                 file,
-                "$crt,$total_failure,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization\n",
+                "$crt,$total_failure,$geomean_total_function_evaluation,$geomean_total_gradient_evaluation,$geomean_total_hessian_evaluation,$geomean_count_factorization,$geomean_total_wall_clock_time\n",
             )
         end
     end
@@ -682,7 +690,6 @@ function main()
     end
     criteria = vcat("original", criteria)
     criteria = String.(criteria)
-
     problem_data_vec = createProblemData(
         criteria,
         max_it,
