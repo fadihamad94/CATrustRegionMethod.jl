@@ -52,6 +52,9 @@ mutable struct CATSolver <: MOI.AbstractOptimizer
     #inner::CATProblem
     inner::Union{CATProblem,Nothing}
 
+    # Storage for `MOI.Name`.
+    name::String
+
     # Problem data.
     variable_info::Vector{VariableInfo}
     nlp_data::MOI.NLPBlockData
@@ -66,7 +69,6 @@ mutable struct CATSolver <: MOI.AbstractOptimizer
     nlp_dual_start::Union{Nothing,Vector{Float64}}
 
     # Parameters.
-    silent::Bool
     options::Dict{String,Any}
 
     # Solution attributes.
@@ -82,12 +84,12 @@ function CATSolver(; options...)
 
     CATSolverModel = CATSolver(
         CATProblem(),
+        "",
         [],
         empty_nlp_data(),
         MOI.FEASIBILITY_SENSE,
         nothing,
         nothing,
-        false,
         options_dict,
         NaN,
     )
@@ -104,7 +106,64 @@ function set_options(model::CATSolver, options)
     return
 end
 
+###
+### MOI.Silent
+###
+
+MOI.supports(::CATSolver, ::MOI.Silent) = true
+
+function MOI.get(model::CATSolver, ::MOI.Silent)
+    return MOI.get(model, MOI.RawOptimizerAttribute("output_flag"))
+end
+
+function MOI.set(model::CATSolver, ::MOI.Silent, flag::Bool)
+    MOI.set(model, MOI.RawOptimizerAttribute("output_flag"), flag)
+    return
+end
+
+###
+### MOI.Name
+###
+
+MOI.supports(::CATSolver, ::MOI.Name) = true
+
+MOI.get(model::CATSolver, ::MOI.Name) = model.name
+
+MOI.set(model::CATSolver, ::MOI.Name, name::String) = (model.name = name)
+
 MOI.get(::CATSolver, ::MOI.SolverName) = "CATSolver"
+
+function MOI.get(::CATSolver, ::MOI.SolverVersion)
+    X, Y, Z = 1, 0, 0
+    return "v$X.$Y.$Z"
+end
+
+
+###
+### MOI.TimeLimitSec
+###
+
+MOI.supports(::CATSolver, ::MOI.TimeLimitSec) = true
+
+function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, ::Nothing)
+    return MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), Inf)
+end
+
+function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, limit::Real)
+    if limit <= 0
+        limit = Inf
+    end
+    return MOI.set(
+        model,
+        MOI.RawOptimizerAttribute("time_limit"),
+        Float64(limit),
+    )
+end
+
+function MOI.get(model::CATSolver, ::MOI.TimeLimitSec)
+    value = MOI.get(model, MOI.RawOptimizerAttribute("time_limit"))
+    return value == Inf ? nothing : value
+end
 
 """
     MOI.is_empty(model::CATSolver )
@@ -117,7 +176,8 @@ function MOI.is_empty(model::CATSolver)
 end
 
 function MOI.empty!(model::CATSolver)
-    model.inner = nothing
+    model.inner = CATProblem()
+    model.name = ""
     empty!(model.variable_info)
     model.nlp_data = empty_nlp_data()
     model.sense = MOI.FEASIBILITY_SENSE
@@ -215,6 +275,21 @@ function MOI.optimize!(solver::CATSolver)
     end
 
     termination_criteria, algorithm_params = create_pars_JuMP(solver.options)
+    try
+        if MOI.get(solver, MOI.RawOptimizerAttribute("time_limit")) != nothing
+            termination_criteria.MAX_TIME = MOI.get(model, MOI.RawOptimizerAttribute("time_limit"))
+        end
+    catch
+        MOI.set(solver, MOI.RawOptimizerAttribute("time_limit"), termination_criteria.MAX_TIME)
+    end
+
+    try
+        if MOI.get(solver, MOI.Silent())
+            algorithm_params.print_level = 0
+        end
+    catch
+        MOI.set(solver, MOI.RawOptimizerAttribute("output_flag"), algorithm_params.print_level == 0)
+    end
     x, status, iteration_stats, algorithm_counter, k =
         CAT_solve(solver, termination_criteria, algorithm_params)
 
@@ -257,6 +332,18 @@ function convertStatusCodeToStatusString(status)
     return dict_status_code[status]
 end
 
+function convertStatusToJuMPStatusCode(status)
+    dict_status_code = Dict(
+        :Optimal =>  MOI.FEASIBLE_POINT,
+        :Unbounded => MOI.INFEASIBLE_POINT,
+        :IterationLimit => MOI.INFEASIBILITY_CERTIFICATE,
+        :TimeLimit => MOI.INFEASIBILITY_CERTIFICATE,
+        :UserLimit => MOI.INFEASIBILITY_CERTIFICATE,
+        :Error => MOI.NO_SOLUTION,
+    )
+    return dict_status_code[status]
+end
+
 function status_CAT_To_JuMP(status::String)
     # since our status are not equal to JuMPs we need to do a conversion
     if status == "OPTIMAL"
@@ -264,46 +351,13 @@ function status_CAT_To_JuMP(status::String)
     elseif status == "UNBOUNDED"
         return :Unbounded
     elseif status == "ITERATION_LIMIT" ||
-           status == "TIME_LIMIT" ||
-           status == "STEP_SIZE_LIMIT"
+        status == "TIME_LIMIT" ||
+        status == "STEP_SIZE_LIMIT" ||
+        status == "MEMORY_LIMIT"
         return :UserLimit
     else
         return :Error
     end
-end
-
-function MOI.optimize!(solver::CATSolver, jumpModel::Model)
-    t = time()
-    nlp = MathOptNLPModel(jumpModel)
-    solver.nlp_data = nlp
-    termination_criteria = TerminationCriteria()
-    algorithm_params = AlgorithmicParameters()
-    x, status, iteration_stats, algorithm_counter, k =
-        CAT_solve(solver, termination_criteria, algorithm_params)
-
-    status_str = convertStatusCodeToStatusString(status)
-
-    solver.inner = CATProblem()
-    solver.inner.status = status_CAT_To_JuMP(status_str)
-    solver.inner.x = x
-
-    function_value = NaN
-    gradient_value = NaN
-    if size(last(iteration_stats, 1))[1] > 0
-        function_value = last(iteration_stats, 1)[!, "fval"][1]
-        gradient_value = last(iteration_stats, 1)[!, "gradval"][1]
-    end
-
-    solver.inner.obj_val = function_value
-    solver.inner.grad_val = gradient_value
-    solver.inner.itr = k
-    solver.inner.solve_time = time() - t
-
-    # custom CAT features
-    solver.inner.termination_criteria = termination_criteria
-    solver.inner.algorithm_params = algorithm_params
-    solver.inner.iteration_stats = iteration_stats
-    solver.inner.algorithm_counter = algorithm_counter
 end
 
 function MOI.get(
@@ -359,8 +413,6 @@ end
 
 MOI.supports(::CATSolver, ::MOI.ObjectiveSense) = true
 
-MOI.supports(::CATSolver, ::MOI.Silent) = true
-
 MOI.supports(::CATSolver, ::MOI.RawOptimizerAttribute) = true
 
 function MOI.get(model::CATSolver, ::MOI.ObjectiveFunction)
@@ -378,13 +430,6 @@ function MOI.set(model::CATSolver, ::MOI.ObjectiveSense, sense::MOI.Optimization
 end
 
 MOI.get(model::CATSolver, ::MOI.ObjectiveSense) = model.sense
-
-function MOI.set(model::CATSolver, ::MOI.Silent, value)
-    model.silent = value
-    return
-end
-
-MOI.get(model::CATSolver, ::MOI.Silent) = model.silent
 
 function MOI.supports(::CATSolver, ::MOI.VariablePrimalStart, ::Type{MOI.VariableIndex})
     return true
@@ -415,10 +460,6 @@ function MOI.get(model::CATSolver, attr::MOI.VariablePrimal, vi::MOI.VariableInd
     return model.inner.x[vi.value]
 end
 
-function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, value::Real)
-    MOI.set(model, MOI.RawOptimizerAttribute(TIME_LIMIT), Float64(value))
-end
-
 function MOI.set(model::CATSolver, p::MOI.RawOptimizerAttribute, value)
     model.options[p.name] = value
     return
@@ -440,7 +481,11 @@ function MOI.get(model::CATSolver, ::MOI.TerminationStatus)
 end
 
 function MOI.get(model::CATSolver, ::MOI.RawStatusString)
-    return string(model.inner.status)
+    if model.inner === nothing
+        return sting(MOI.OPTIMIZE_NOT_CALLED)
+    end
+    status_ = model.inner.status
+    return string(status_)
 end
 
 function MOI.get(model::CATSolver, ::MOI.ResultCount)
@@ -448,20 +493,21 @@ function MOI.get(model::CATSolver, ::MOI.ResultCount)
 end
 
 function MOI.get(model::CATSolver, attr::MOI.PrimalStatus)
-    if !(1 <= attr.N <= MOI.get(model, MOI.ResultCount()))
+    if model.inner === nothing
         return MOI.NO_SOLUTION
     end
 
-    status = model.inner.status
-    return status
+    status_ = convertStatusToJuMPStatusCode(model.inner.status)
+    return status_
 end
 
 function MOI.get(model::CATSolver, attr::MOI.DualStatus)
-    if !(1 <= attr.N <= MOI.get(model, MOI.ResultCount()))
+    if model.inner === nothing
         return MOI.NO_SOLUTION
     end
-    status = model.inner.status
-    return status
+
+    status_ = convertStatusToJuMPStatusCode(model.inner.status)
+    return status_
 end
 
 function MOI.get(model::CATSolver, attr::MOI.ObjectiveValue)

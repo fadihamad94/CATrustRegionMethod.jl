@@ -70,6 +70,14 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     y = JuMP.value.(model[:y])
     status = MOI.get(model, MOI.TerminationStatus())
     @test status == :Optimal
+    @test MOI.get(model, MOI.RawStatusString()) == "Optimal"
+    @test MOI.get(model, MOI.DualStatus()) == MOI.FEASIBLE_POINT
+    @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+    @test abs(MOI.get(model, MOI.ObjectiveValue()) - 4.68876e-19) <= 1e-3
+
+    @test MOI.get(model, MOI.Silent()) == true
+    @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == default_max_time
+    
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
 
