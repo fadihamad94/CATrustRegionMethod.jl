@@ -358,9 +358,12 @@ function optimize(
         #If user doesn't change the starting radius, we select the radius as described in the paper:
         #Initial radius heuristic selection rule : r_1 = INITIAL_RADIUS_MULTIPLICATIVE_RULE * ||gval_current|| / ||hessian_current||
         if r_k <= 0.0
-            r_k =
-                INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) /
-                matrix_l2_norm(hessian_current, num_iter = 20)
+            matrix_l2_norm_val = matrix_l2_norm(hessian_current, num_iter = 20)
+            if matrix_l2_norm_val > 0
+                r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) /matrix_l2_norm_val
+            else
+                r_k = 1.0
+            end
         end
 
         compute_hessian = false

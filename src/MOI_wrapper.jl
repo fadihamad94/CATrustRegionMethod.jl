@@ -239,10 +239,14 @@ function create_pars_JuMP(options)
         elseif what[1] == "algorithm_params"
             node = algorithm_params
         else
-            error("Unkown argument.")
+            if param ∉ ["time_limit", "output_flag"]
+                error("Unkown argument.")
+            end
         end
-        field = what[2]
-        setfield!(node, Symbol(field), value)
+        if param ∉ ["time_limit", "output_flag"]
+            field = what[2]
+            setfield!(node, Symbol(field), value)
+        end
     end
 
     return termination_criteria, algorithm_params

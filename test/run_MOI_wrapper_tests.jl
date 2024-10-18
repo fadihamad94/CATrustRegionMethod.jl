@@ -77,7 +77,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
 
     @test MOI.get(model, MOI.Silent()) == true
     @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == default_max_time
-    
+
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
 
@@ -309,11 +309,51 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
           optimizer.inner.algorithm_counter.total_number_factorizations_inverse_power_iteration
 end
 
+function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_attributes()
+    # time_limit and output_flag
+    β = 0.2
+    ω_2 = 8.0
+    r_1 = 100.0
+    print_level = -1
+    MAX_ITERATIONS = 100
+    MAX_TIME = 5 * 60.0
+    gradient_termination_tolerance = 1e-3
+    options = Dict{String,Any}(
+        "algorithm_params!r_1" => r_1,
+        "algorithm_params!β" => β,
+        "algorithm_params!ω_2" => ω_2,
+        "algorithm_params!print_level" => print_level,
+        "termination_criteria!MAX_ITERATIONS" => MAX_ITERATIONS,
+        "termination_criteria!MAX_TIME" => MAX_TIME,
+        "termination_criteria!gradient_termination_tolerance" =>
+            gradient_termination_tolerance,
+    )
+    model = rosenbrook1()
+    attachSolverWithAttributesToJuMPModel(model, options)
+
+    MOI.set(model, MOI.Silent(), true)
+    MOI.set(model, MOI.TimeLimitSec(), MAX_TIME)
+    # MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), MAX_TIME)
+
+    #Test using JUMP (UserLimit due to MAX_ITERATIONS = 10)
+    optimize!(model)
+
+    @test MOI.get(model, MOI.Silent()) == true
+    @test MOI.get(model, MOI.TimeLimitSec()) == MAX_TIME
+    @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == MAX_TIME
+
+    # Retrieve the solver instance
+    optimizer = backend(model).optimizer.model
+    @test optimizer.inner.termination_criteria.MAX_TIME == MAX_TIME
+    @test optimizer.inner.algorithm_params.print_level == 0
+end
+
 function optimize_models_MOI_wrapper()
     optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     optimize_model_with_constraints_failure_expected()
     optimizeHardCaseUsingSimpleBivariateConvexProblem()
+    optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_attributes()
 end
 
 @testset "optimization_using_MOI_wrapper" begin
