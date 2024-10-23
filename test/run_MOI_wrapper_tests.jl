@@ -333,18 +333,32 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_attributes()
 
     MOI.set(model, MOI.Silent(), true)
     MOI.set(model, MOI.TimeLimitSec(), MAX_TIME)
-    # MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), MAX_TIME)
+    @test MOI.get(model, MOI.Silent()) == true
+    @test MOI.get(model, MOI.TimeLimitSec()) == MAX_TIME
+    @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == MAX_TIME
 
-    #Test using JUMP (UserLimit due to MAX_ITERATIONS = 10)
     optimize!(model)
 
     @test MOI.get(model, MOI.Silent()) == true
     @test MOI.get(model, MOI.TimeLimitSec()) == MAX_TIME
     @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == MAX_TIME
 
+    MOI.set(model, MOI.Silent(), false)
+    @test MOI.get(model, MOI.Silent()) == false
+    MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 2 * MAX_TIME)
+    @test MOI.get(model, MOI.TimeLimitSec()) == 2 * MAX_TIME
+    @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == 2 * MAX_TIME
+
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
     @test optimizer.inner.termination_criteria.MAX_TIME == MAX_TIME
+    @test optimizer.inner.algorithm_params.print_level == -1
+
+    # call optimize again (the previous modifications should be reflected in the optimizer)
+    optimize!(model)
+    # Retrieve the solver instance
+    optimizer = backend(model).optimizer.model
+    @test optimizer.inner.termination_criteria.MAX_TIME == 2 * MAX_TIME
     @test optimizer.inner.algorithm_params.print_level == 0
 end
 

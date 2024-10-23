@@ -281,7 +281,7 @@ function MOI.optimize!(solver::CATSolver)
     termination_criteria, algorithm_params = create_pars_JuMP(solver.options)
     try
         if MOI.get(solver, MOI.RawOptimizerAttribute("time_limit")) != nothing
-            termination_criteria.MAX_TIME = MOI.get(model, MOI.RawOptimizerAttribute("time_limit"))
+            termination_criteria.MAX_TIME = MOI.get(solver, MOI.RawOptimizerAttribute("time_limit"))
         end
     catch
         MOI.set(solver, MOI.RawOptimizerAttribute("time_limit"), termination_criteria.MAX_TIME)
@@ -289,6 +289,9 @@ function MOI.optimize!(solver::CATSolver)
 
     try
         if MOI.get(solver, MOI.Silent())
+            algorithm_params.print_level = -1
+        end
+        if !MOI.get(solver, MOI.Silent()) && algorithm_params.print_level == -1
             algorithm_params.print_level = 0
         end
     catch
