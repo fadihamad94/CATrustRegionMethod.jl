@@ -1,8 +1,8 @@
 # CAT
-This package is the implementation of a simple and reliable adaptive trust-region method for finding stationary points of nonconvex functions with L-Lipschitz Hessians and bounded optimality gap.
+This package is the implementation of a simple and practical adaptive trust-region method for finding stationary points of nonconvex functions with L-Lipschitz Hessians and bounded optimality gap.
 
 ## License
-CAT.jl is licensed under the MIT License.
+CAT.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
 
 ## Installation
 Installing the CAT solver can be done in two different ways:
@@ -88,4 +88,9 @@ $ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchma
 $ julia --project=scripts scripts/run_ablation_study.jl --output_dir ./scripts/benchmark/results_ablation_study/cutest --default_problems true
 ```
 
+### Examples
+Examples can be found under the [test directory](https://github.com/fadihamad94/CAT-Journal/tree/master/test)
+
 ## References
+* [Hamad, Fadi, and Oliver Hinder. "A simple and practical adaptive trust-region method."](https://proceedings.neurips.cc/paper_files/paper/2022/hash/2c19666cbb2c14d45d39e2dcf6ab0b99-Abstract-Conference.html)
+* [Hamad, Fadi, and Oliver Hinder. "A consistently adaptive trust-region method."](https://proceedings.neurips.cc/paper_files/paper/2022/hash/2c19666cbb2c14d45d39e2dcf6ab0b99-Abstract-Conference.html)
