@@ -40,6 +40,8 @@ model = Model()
 @variable(model, y)
 @NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
 set_optimizer(model, CAT.CATSolver)
+MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 1800.0)
+MOI.set(model, MOI.RawOptimizerAttribute("algorithm_params!r_1"), 100.0)
 optimize!(model)
 status = MOI.get(model, MOI.TerminationStatus())
 # Retrieve the solver instance

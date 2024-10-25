@@ -348,11 +348,13 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_attributes()
     MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 2 * MAX_TIME)
     @test MOI.get(model, MOI.TimeLimitSec()) == 2 * MAX_TIME
     @test MOI.get(model, MOI.RawOptimizerAttribute("time_limit")) == 2 * MAX_TIME
+    MOI.set(model, MOI.RawOptimizerAttribute("algorithm_params!r_1"), 2 * r_1)
 
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
     @test optimizer.inner.termination_criteria.MAX_TIME == MAX_TIME
     @test optimizer.inner.algorithm_params.print_level == -1
+    @test optimizer.inner.algorithm_params.r_1 == r_1
 
     # call optimize again (the previous modifications should be reflected in the optimizer)
     optimize!(model)
@@ -360,6 +362,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_attributes()
     optimizer = backend(model).optimizer.model
     @test optimizer.inner.termination_criteria.MAX_TIME == 2 * MAX_TIME
     @test optimizer.inner.algorithm_params.print_level == 0
+    @test optimizer.inner.algorithm_params.r_1 == 2 * r_1
 end
 
 function optimize_models_MOI_wrapper()
