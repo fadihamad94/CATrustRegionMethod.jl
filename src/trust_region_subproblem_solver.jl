@@ -675,6 +675,7 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
   'δ_m::Float64'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
   'δ::Float64'. See (3). The new lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
   'δ_prime::Float64'. See (3). The new upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'd_k:Vector{Float64}`. See (1). The search direction which is the solution of (1).
   'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
 """
 function bisection(
@@ -956,7 +957,7 @@ function inverse_power_iteration(
             try
                 temp_factorization += 1
                 # Validate that H + eigenvalue is positive definite
-                temp_d_k = cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
+                temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
                 return true, eigenvalue, y, temp_factorization, temp_d_k
             catch
                 #DO NOTHING
@@ -968,7 +969,7 @@ function inverse_power_iteration(
             eigenvalue = dot(y, H * y)
             try
                 temp_factorization += 1
-                temp_d_k = cholesky(H + (abs(eigenvalue) + 1e-1) * sparse_identity) \ (-g)
+                temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
                 return true, eigenvalue, y, temp_factorization, temp_d_k
             catch
                 #DO NOTHING
