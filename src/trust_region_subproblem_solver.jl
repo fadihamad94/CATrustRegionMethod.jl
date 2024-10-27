@@ -161,7 +161,7 @@ function computeSearchDirection(
 
     # Find a root δ_m ∈ [δ, δ_prime] for the ϕ function using bisection.
     # we compute d_k as d_k = (H + δ_m * I) \ (-g)
-    success, δ_m, δ, δ_prime, temp_total_number_factorizations_bisection =
+    success, δ_m, δ, δ_prime, temp_d_k, temp_total_number_factorizations_bisection =
         bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
     temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
     end_time_temp = time()
@@ -199,13 +199,15 @@ function computeSearchDirection(
 
     # Using δ_m, we compute d_k = (H + δ_m * I) \ (-g)
     # Cholesky factorization is done as an extra validation that H + δ_m * I is positive definite.
-    start_time_temp = time()
-    d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
-    end_time_temp = time()
-    total_time_temp = end_time_temp - start_time_temp
-    if print_level >= 2
-        println("d_k operation took $total_time_temp.")
-    end
+    # start_time_temp = time()
+    # d_k = cholesky(H + δ_m * sparse_identity) \ (-g)
+    # end_time_temp = time()
+    # total_time_temp = end_time_temp - start_time_temp
+    # if print_level >= 2
+    #     println("d_k operation took $total_time_temp.")
+    # end
+    d_k = temp_d_k
+    @assert γ_2 * r <= norm(d_k) <= r
     @assert temp_total_number_factorizations_ ==
             temp_total_number_factorizations_findinterval +
             temp_total_number_factorizations_bisection +
@@ -380,7 +382,7 @@ function optimizeSecondOrderModel(
             temp_total_number_factorizations,
             total_number_factorizations_compute_search_direction,
             temp_total_number_factorizations_inverse_power_iteration =
-                solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+                solveHardCaseLogic(g, H, γ_1, γ_2, r, δ, δ_prime, min_grad, print_level)
             @assert temp_total_number_factorizations ==
                     total_number_factorizations_compute_search_direction +
                     temp_total_number_factorizations_inverse_power_iteration
@@ -420,7 +422,7 @@ function optimizeSecondOrderModel(
             temp_total_number_factorizations,
             total_number_factorizations_compute_search_direction,
             temp_total_number_factorizations_inverse_power_iteration =
-                solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+                solveHardCaseLogic(g, H, γ_1, γ_2, r, δ, δ_prime, min_grad, print_level)
             @assert temp_total_number_factorizations ==
                     total_number_factorizations_compute_search_direction +
                     temp_total_number_factorizations_inverse_power_iteration
@@ -744,18 +746,18 @@ function bisection(
             println("Φ_δ_m is $Φ_δ_m.")
             println("δ, δ_prime, and δ_m are $δ, $δ_prime, and $δ_m. γ_2 is $γ_2.")
         end
-        return false, δ_m, δ, δ_prime, min(k, max_iterations) + 1
+        return false, δ_m, δ, δ_prime, temp_d, min(k, max_iterations) + 1
     end
     if print_level >= 1
         println(
             "****************************ENDING BISECTION with δ_m = $δ_m**************",
         )
     end
-    return true, δ_m, δ, δ_prime, min(k, max_iterations) + 1
+    return true, δ_m, δ, δ_prime, temp_d, min(k, max_iterations) + 1
 end
 
 """
-solveHardCaseLogic(g, H, γ_2, r, δ, δ_prime, min_grad, print_level)
+solveHardCaseLogic(g, H, γ_1, γ_2, r, δ, δ_prime, min_grad, print_level)
 
 Find a solution to (2) if for a reason, we failed to construct the interval or the bisection failed. In this case,
  we mark the problem as a hard case and we use inverse power iteration to find an approximate minimum eigen value
@@ -765,6 +767,7 @@ Find a solution to (2) if for a reason, we failed to construct the interval or t
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
   - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
+  - `γ_1::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
   - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
   - `r::Float64`. See (1). The trsut-region radius.
   - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
@@ -788,6 +791,7 @@ function solveHardCaseLogic(
         SparseMatrixCSC{Float64,Int64},
         Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
     },
+    γ_1::Float64,
     γ_2::Float64,
     r::Float64,
     δ::Float64,
@@ -810,7 +814,7 @@ function solveHardCaseLogic(
         eigenvalue,
         eigenvector,
         temp_total_number_factorizations_inverse_power_iteration,
-        temp_d_k = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2)
+        temp_d_k = inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_1)
         temp_eigenvalue = eigenvalue
         end_time_temp = time()
         total_time_temp = end_time_temp - start_time_temp
@@ -896,7 +900,7 @@ function solveHardCaseLogic(
 end
 
 """
-inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_2, max_iter, ϵ, print_level)
+inverse_power_iteration(g, H, min_grad, δ, δ_prime, r, γ_1, max_iter, ϵ, print_level)
 
 Compute iteratively an approximate value to the minimum eigenvalue of H.
 
@@ -908,7 +912,7 @@ Compute iteratively an approximate value to the minimum eigenvalue of H.
   - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
   - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
   - `r::Float64`. See (1). The trsut-region radius.
-  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `γ_1::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
   - `max_iter::Int64`. The maximum number of iterations to run.
   - `ϵ::Float64`. The tolerance to specify how close the solution should be from the minimum eigenvalue.
   - `print_level::Float64`. The verbosity level of logs.
@@ -930,7 +934,7 @@ function inverse_power_iteration(
     δ::Float64,
     δ_prime::Float64,
     r::Float64,
-    γ_2::Float64;
+    γ_1::Float64;
     max_iter::Int64 = 1000,
     ϵ::Float64 = 1e-3,
     print_level::Int64 = 2,
@@ -948,7 +952,7 @@ function inverse_power_iteration(
         y /= norm(y)
         eigenvalue = dot(y, H * y)
 
-        if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + (min_grad / (10^2 * r))
+        if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + ((γ_1 * min_grad) / r)
             try
                 temp_factorization += 1
                 # Validate that H + eigenvalue is positive definite
