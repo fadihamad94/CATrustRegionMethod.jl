@@ -692,8 +692,6 @@ function bisection(
 )
     # the input of the function is the two end of the interval (δ,δ_prime)
     # our goal here is to find the approximate δ using classic bisection method
-    initial_δ = δ
-    initial_δ_prime = δ_prime
     if print_level >= 1
         println(
             "****************************STARTING BISECTION with (δ, δ_prime) = ($δ, $δ_prime)**************",
@@ -726,24 +724,15 @@ function bisection(
             if print_level >= 2
                 println("$k===============Bisection entered here=================")
             end
-
-            if (abs(δ_prime - δ) <= (min_grad / (1000 * r))) &&
+            if (δ_prime - δ <= ((γ_1 * min_grad) / r)) &&
                q_1 <= q_2 &&
                !positive_definite_δ
                 if print_level >= 2
                     println(
                         "$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============",
                     )
-                    println("$k===================min_grad / (100 r) is $q_2.============")
+                    println("$k===================(γ_1 * min_grad / r) is $q_2.============")
                     println("$k===================ϕ_δ_prime is $ϕ_δ_prime.============")
-
-                    println("$k===============Bisection entered here=================")
-                    mimimum_eigenvalue = eigmin(Matrix(H))
-                    mimimum_eigenvalue_abs = abs(mimimum_eigenvalue)
-                    @info "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs."
-                    println(
-                        "$k=============Bisection Failure New Logic==============$initial_δ,$δ,$mimimum_eigenvalue,$mimimum_eigenvalue_abs.",
-                    )
                 end
                 break
             end
