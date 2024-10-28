@@ -579,7 +579,7 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     γ_2 = 1 - 1e-8
     δ = 6.205227748467783e-12
 
-    success, δ, δ_prime, temp_total_number_factorizations =
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     @test success
     # @test abs(δ - 2.5e-8) <= tol
@@ -590,7 +590,7 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     # @test abs(δ_prime - 0.00666) <= tol
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
     @test success
     @test abs(δ_m - 5.173e-7) <= tol
 
@@ -693,7 +693,7 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations = CAT.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime = CAT.findinterval(g, H, δ, ϵ, r)
     # @test δ == δ_prime == 64.0
     @test δ == 16.0
     @test δ_prime == 512.0
@@ -778,11 +778,11 @@ function test_bisection_with_starting_on_root_δ_zero()
     γ_1 = 0.01
     γ_2 = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations =
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
     @test success
     @test δ_m == δ == δ_prime
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, γ_2, r)
@@ -806,11 +806,11 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations =
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
     @test success
     # @test δ_m == 34.0
     # @test δ == 4.0
@@ -841,11 +841,11 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.3
-    success, δ, δ_prime, temp_total_number_factorizations =
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, 0)
+        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
     @test success
     @test abs(δ_m - 500.0) <= 1e-3
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, γ_2, r)

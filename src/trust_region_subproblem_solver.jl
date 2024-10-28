@@ -128,7 +128,7 @@ function computeSearchDirection(
     end
 
     # Construct an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0
-    success, δ, δ_prime, temp_total_number_factorizations_findinterval =
+    success, δ, δ_prime, temp_total_number_factorizations_findinterval, temp_d_δ_prime =
         findinterval(g, H, δ, γ_2, r, print_level)
     temp_total_number_factorizations_ += temp_total_number_factorizations_findinterval
     end_time_temp = time()
@@ -164,7 +164,7 @@ function computeSearchDirection(
     # Find a root δ_m ∈ [δ, δ_prime] for the ϕ function using bisection.
     # we compute d_k as d_k = cholesky(H + δ_m * I) \ (-g)
     success, δ_m, δ, δ_prime, temp_d_k, temp_total_number_factorizations_bisection =
-        bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
+        bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, print_level)
     temp_total_number_factorizations_ += temp_total_number_factorizations_bisection
     end_time_temp = time()
     total_time_temp = end_time_temp - start_time_temp
@@ -535,6 +535,7 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
   'success_find_interval::Bool'. See (3). It specifies if we found an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0.
   'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
   'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'd_δ_prime:Vector{Float64}`. See (1). The search direction which is computed using δ_prime.
   'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
 """
 function findinterval(
@@ -559,7 +560,7 @@ function findinterval(
     Φ_δ_original *= 1.0
     if Φ_δ_original == 0
         δ_prime = δ_original
-        return true, δ_original, δ_prime, 1
+        return true, δ_original, δ_prime, 1, temp_d_x
     end
 
     max_iterations = 50
@@ -572,7 +573,7 @@ function findinterval(
 
         if Φ_x == 0
             δ, δ_prime = x, x
-            return true, δ, δ_prime, k
+            return true, δ, δ_prime, k, temp_d_x
         end
 
         y = δ_original * (((2 ^ (k ^ 2))) ^ Φ_δ_original)
@@ -580,21 +581,26 @@ function findinterval(
 
         if Φ_y == 0
             δ, δ_prime = y, y
-            return true, δ, δ_prime, k + 1
+            return true, δ, δ_prime, k + 1, temp_d_y
         end
 
         if Φ_x * Φ_y < 0
             δ, δ_prime = min(x, y), max(x, y)
             @assert δ_prime > δ
-            return true, δ, δ_prime, k + 1
+            temd_d = temp_d_y
+            @assert (Φ_x == -1 && Φ_y == 1 && x == max(x, y) && y == min(x, y)) || (Φ_y == -1 && Φ_x == 1 && y == max(x, y) && x == min(x, y))
+            if Φ_x == -1
+                temd_d = temp_d_x
+            end
+            return true, δ, δ_prime, k + 1, temd_d
         end
         k = k + 1
     end
-    return false, Φ_δ_original, Φ_δ_original, max_iterations + 1
+    return false, Φ_δ_original, Φ_δ_original, max_iterations + 1, temp_d_x
 end
 
 """
-bisection(g, H, δ, γ_1, γ_2, δ_prime, r, min_grad, print_level)
+bisection(g, H, δ, γ_1, γ_2, δ_prime, d_δ_prime, r, min_grad, print_level)
 
 Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (3)) such that ϕ(δ) >= 0 and ϕ(δ_prime) <=0.
 # Inputs:
@@ -605,6 +611,7 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
   - `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
   - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
   - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - 'd_δ_prime:Vector{Float64}`. See (1). The search direction which is computed using δ_prime.
   - `r::Float64`. See (1). The trsut-region radius.
   - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
   - `print_level::Float64`. The verbosity level of logs.
@@ -628,6 +635,7 @@ function bisection(
     γ_1::Float64,
     γ_2::Float64,
     δ_prime::Float64,
+    d_δ_prime::Vector{Float64},
     r::Float64,
     min_grad::Float64,
     print_level::Int64 = 0,
@@ -643,6 +651,7 @@ function bisection(
     k = 1
     δ_m = (δ + δ_prime) / 2
     Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
+    ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime = -1, d_δ_prime, true
     max_iterations = 50
     while (Φ_δ_m != 0) && k <= max_iterations
         start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
@@ -653,14 +662,12 @@ function bisection(
             δ = δ_m
         else
             δ_prime = δ_m
+            ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime = Φ_δ_m, temp_d, positive_definite
         end
         δ_m = (δ + δ_prime) / 2
         Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
         k = k + 1
         if Φ_δ_m != 0
-            ϕ_δ_prime, d_temp_δ_prime, positive_definite_δ_prime =
-                phi(g, H, δ_prime, γ_2, r)
-            ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
             q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
             q_2 = (γ_1 * min_grad) / 3
             if print_level >= 2
