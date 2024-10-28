@@ -18,8 +18,19 @@ An Enum of possible values for the `TerminationStatus` attribute.
     STEP_SIZE_LIMIT
     "The algorithm stopped because it encountered unrecoverable numerical error."
     NUMERICAL_ERROR
+    "The algorithm stopped because failure in solving the trust-region subproblem."
+    TRUST_REGION_SUBPROBLEM_ERROR
     "The algorithm stopped because of an error not covered by one of the statuses defined above."
     OTHER_ERROR
+end
+
+"A description of trust-region subproblem termination failure reason."
+struct TrustRegionSubproblemError <: Exception
+    msg::String
+    failure_reason_6a::Bool
+    failure_reason_6b::Bool
+    failure_reason_6c::Bool
+    failure_reason_6d::Bool
 end
 
 "A description of solver termination criteria."

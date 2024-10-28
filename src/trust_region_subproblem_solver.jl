@@ -66,6 +66,8 @@ function solveTrustRegionSubproblem(
             algorithm_counter.total_number_factorizations_compute_search_direction +
             algorithm_counter.total_number_factorizations_inverse_power_iteration
 
+    γ_3 = 0.5
+    validateTrustRegionSubproblemTerminationCriteria(d_k, g, H, δ_k, γ_1, γ_2, γ_3, r, min_grad)
     return success_subproblem_solve, δ_k, d_k, hard_case
 end
 
@@ -214,6 +216,46 @@ function computeSearchDirection(
     temp_total_number_factorizations_findinterval,
     temp_total_number_factorizations_bisection,
     temp_total_number_factorizations_compute_search_direction
+end
+
+function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_2, γ_3, r, min_grad)
+    # condition (6a)
+    error_message = "Trust-region subproblem failure."
+    failure = false
+    failure_reason_6a = false
+    failure_reason_6b = false
+    failure_reason_6c = false
+    failure_reason_6d = false
+    condition = norm(H * d + g + δ * d) <= γ_1 * min_grad
+    if !condition
+        failure = true
+        failure_reason_6a = true
+        error_message = string(error_message, " Reason (6a) failed to be satisfied.")
+    end
+    # condition (6b)
+    condition = γ_2 * δ * r <= δ * norm(d)
+    if !condition
+        failure = true
+        failure_reason_6b = true
+        error_message = string(error_message, " Reason (6b) failed to be satisfied.")
+    end
+    # condition (6c)
+    condition = norm(d) <= r
+    if !condition
+        failure = true
+        failure_reason_6c = true
+        error_message = string(error_message, " Reason (6c) failed to be satisfied.")
+    end
+    # condition (6d)
+    condition = dot(g, d) + 0.5 * dot(d, H * d) <= -γ_3 * 0.5 * δ * (norm(d)) ^ 2
+    if !condition
+        failure = true
+        failure_reason_6d = true
+        error_message = string(error_message, " Reason (6d) failed to be satisfied.")
+    end
+    if failure
+        throw(TrustRegionSubproblemError(error_message, failure_reason_6a, failure_reason_6b, failure_reason_6c, failure_reason_6d))
+    end
 end
 
 """
@@ -625,7 +667,7 @@ function bisection(
             if print_level >= 2
                 println("$k===============Bisection entered here=================")
             end
-            if (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
+            if (δ_prime - δ < 0.3 * δ) && (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
                q_1 <= q_2 &&
                !positive_definite_δ
                 if print_level >= 2

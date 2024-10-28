@@ -10,7 +10,8 @@ using NLPModels,
     NLPModelsJuMP,
     MathOptInterface,
     Random,
-    CUTEst
+    CUTEst,
+    CSV
 
 export TerminationCriteria, AlgorithmicParameters, AlgorithmCounter
 export phi,

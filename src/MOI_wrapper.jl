@@ -334,6 +334,7 @@ function convertStatusCodeToStatusString(status)
         CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
         CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
         CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR => "TRUST_REGION_SUBPROBLEM_ERROR",
         CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]

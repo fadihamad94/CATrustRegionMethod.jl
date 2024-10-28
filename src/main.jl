@@ -176,14 +176,6 @@ function sub_routine_trust_region_sub_problem_solver(
             print_level,
         )
     end
-    if success_subproblem_solve
-        q_1 = norm(hessian_current * d_k + gval_current + δ_k * d_k)
-        q_2 = γ_1 * min_gval_norm
-        if q_1 > q_2
-            success_subproblem_solve = false
-            @warn "q_1: $q_1 is larger than q_2: $q_2."
-        end
-    end
     end_time_temp = time()
     total_time_temp = end_time_temp - start_time_temp
     if print_level >= 2
@@ -350,7 +342,7 @@ function optimize(
     Random.seed!(seed)
 
     k = 1
-    # try
+    try
         gval_current = evalGradient(nlp, x_k, algorithm_counter)
         fval_current = evalFunction(nlp, x_k, algorithm_counter)
         hessian_current = evalHessian(nlp, x_k, algorithm_counter)
@@ -622,16 +614,25 @@ function optimize(
             k += 1
         end
         # Handle exceptions
-    # catch e
-    #     @error e
-    #     status = TerminationStatusCode.OTHER_ERROR
-    #     if isa(e, OutOfMemoryError)
-    #         status = TerminationStatusCode.MEMORY_LIMIT
-    #     end
-    #     end_time_ = time()
-    #     total_execution_time = end_time_ - start_time_
-    #     return x_k, status, iteration_stats, algorithm_counter, k, total_execution_time
-    # end
+    catch e
+        @error e
+        status = TerminationStatusCode.OTHER_ERROR
+        if isa(e, OutOfMemoryError)
+            status = TerminationStatusCode.MEMORY_LIMIT
+        end
+        if isa(e, TrustRegionSubproblemError)
+            status = TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR
+            problem_name = nlp.meta.name
+            failure_reason_6a = e.failure_reason_6a
+            failure_reason_6b = e.failure_reason_6b
+            failure_reason_6c = e.failure_reason_6c
+            failure_reason_6d = e.failure_reason_6d
+            printFailures(problem_name, failure_reason_6a, failure_reason_6b, failure_reason_6c, failure_reason_6d)
+        end
+        end_time_ = time()
+        total_execution_time = end_time_ - start_time_
+        return x_k, status, iteration_stats, algorithm_counter, k, total_execution_time
+    end
 
     end_time_ = time()
     total_execution_time = end_time_ - start_time_
