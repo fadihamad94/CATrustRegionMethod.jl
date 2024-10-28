@@ -372,47 +372,10 @@ function optimizeSecondOrderModel(
             )
         end
     catch e
-        if e == ErrorException("Bisection logic failed to find a root for the phi function")
-            start_time_temp = time()
-            # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
-            # eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
-            success,
-            δ,
-            d_k,
-            temp_total_number_factorizations,
-            total_number_factorizations_compute_search_direction,
-            temp_total_number_factorizations_inverse_power_iteration =
-                solveHardCaseLogic(g, H, γ_1, γ_2, r, δ, δ_prime, min_grad, print_level)
-            @assert temp_total_number_factorizations ==
-                    total_number_factorizations_compute_search_direction +
-                    temp_total_number_factorizations_inverse_power_iteration
-            temp_total_number_factorizations_compute_search_direction +=
-                total_number_factorizations_compute_search_direction
-            temp_total_number_factorizations_ += temp_total_number_factorizations
-            end_time_temp = time()
-            total_time_temp = end_time_temp - start_time_temp
-            if print_level >= 2
-                @info "$success. solveHardCaseLogic operation took $total_time_temp."
-                println("$success. solveHardCaseLogic operation took $total_time_temp.")
-            end
-            @assert temp_total_number_factorizations_ ==
-                    temp_total_number_factorizations_findinterval +
-                    temp_total_number_factorizations_bisection +
-                    temp_total_number_factorizations_compute_search_direction +
-                    temp_total_number_factorizations_inverse_power_iteration
-            total_number_factorizations += temp_total_number_factorizations_
-            return success,
-            δ,
-            d_k,
-            total_number_factorizations,
-            true,
-            temp_total_number_factorizations_findinterval,
-            temp_total_number_factorizations_bisection,
-            temp_total_number_factorizations_compute_search_direction,
-            temp_total_number_factorizations_inverse_power_iteration
-        elseif e == ErrorException(
-            "Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.",
-        )
+        if e == ErrorException("Bisection logic failed to find a root for the phi function") ||
+            e == ErrorException(
+                "Bisection logic failed to find a pair δ and δ_prime such that ϕ(δ) >= 0 and ϕ(δ_prime) <= 0.",
+            )
             start_time_temp = time()
             # Solve the trust-region subproblem using the hard-case logic. The root for the ϕ function is the minimum
             # eigenvalue of the Hessian matrix and the search direction is on the trust-region boundary.
@@ -509,9 +472,16 @@ function phi(
             println("computed_norm opertion took $total_time_temp.")
         end
 
-        if (δ <= 1e-6 && computed_norm <= r)
-            return 0, temp_d, positive_definite
-        elseif computed_norm < γ_2 * r
+        # if (δ <= 1e-6 && computed_norm <= r)
+        #     return 0, temp_d, positive_definite
+        # elseif computed_norm < γ_2 * r
+        #     return -1, temp_d, positive_definite
+        # elseif computed_norm <= r
+        #     return 0, temp_d, positive_definite
+        # else
+        #     return 1, temp_d, positive_definite
+        # end
+        if (δ > 1e-6 && computed_norm < γ_2 * r)
             return -1, temp_d, positive_definite
         elseif computed_norm <= r
             return 0, temp_d, positive_definite
@@ -555,103 +525,162 @@ function findinterval(
     r::Float64,
     print_level::Int64 = 0,
 )
-    @assert δ >= 0
-    if print_level >= 1
-        println("STARTING WITH δ = $δ.")
-    end
-    Φ_δ, temp_d, positive_definite = phi(g, H, 0.0, γ_2, r)
-
-    if Φ_δ == 0
-        δ = 0.0
-        δ_prime = 0.0
-        return true, δ, δ_prime, 1
-    end
-
     δ_original = δ
-
-    Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
-
-    if Φ_δ == 0
-        δ_prime = δ
-        return true, δ, δ_prime, 2
+    if δ == 0.0
+        δ_original = 1.0
     end
 
-    δ_prime = δ
-    Φ_δ_prime = Φ_δ
-    search_δ_prime = true
+    Φ_δ_original, temp_d_original, positive_definite = phi(g, H, δ_original, γ_2, r)
 
-    if Φ_δ > 0
-        δ_prime = δ == 0.0 ? 1.0 : δ * 2
-        search_δ_prime = true
-    else
-        # Here ϕ(δ) < 0 and we need to find new δ' >= 0 such that ϕ(δ') >= 0 and δ' < δ which is not possible
-        # in case δ == 0
-        @assert δ > 0
-        search_δ_prime = false
-        # The aim is to find [δ, δ'] such that ϕ(δ) ∈ {0, 1}, ϕ(δ') ∈ {0, -1}, and  ϕ(δ) * ϕ(δ') <= ∈ {0, -1}
-        # since here ϕ(δ) < 0, we set δ' = δ and we search for δ < δ'such that ϕ(δ) ∈ {0, 1}
-        δ_prime = δ
-        Φ_δ_prime = -1
-        δ = δ / 2
+    Φ_δ_original *= 1.0
+    if Φ_δ_original == 0
+        δ_prime = δ_original
+        return true, δ_original, δ_prime, 1
     end
 
     max_iterations = 50
     k = 1
+    y = δ_original
     while k < max_iterations
-        if search_δ_prime
-            Φ_δ_prime, temp_d, positive_definite = phi(g, H, δ_prime, γ_2, r)
-            if Φ_δ_prime == 0
-                δ = δ_prime
-                return true, δ, δ_prime, k + 2
-            end
+        if k == 1
+            x = δ_original
         else
-            Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
-            if Φ_δ == 0
-                δ_prime = δ
-                return true, δ, δ_prime, k + 2
-            end
+            # x = δ_original * (((2 ^ (2 ^ (k - 1)))) ^ Φ_δ_original)
+            # approach 2
+            # x = δ_original * (((2 ^ ((k - 1) ^ 2))) ^ Φ_δ_original)
+            x = y
         end
+        # approach 1
+        # y = δ_original * (((2 ^ (2 ^ k))) ^ Φ_δ_original)
+        # approach 2
+        y = δ_original * (((2 ^ (k ^ 2))) ^ Φ_δ_original)
 
-        if ((Φ_δ * Φ_δ_prime) < 0)
-            if print_level >= 1
-                println("ENDING WITH ϕ(δ) = $Φ_δ and Φ_δ_prime = $Φ_δ_prime.")
-                println("ENDING WITH δ = $δ and δ_prime = $δ_prime.")
-            end
+        Φ_x, temp_d_x, positive_definite_x = phi(g, H, x, γ_2, r)
+        Φ_y, temp_d_y, positive_definite_y = phi(g, H, y, γ_2, r)
+        if Φ_x == 0
+            δ, δ_prime = x, x
+            return true, δ, δ_prime, k + 1
+        end
+        if Φ_y == 0
+            δ, δ_prime = y, y
+            return true, δ, δ_prime, k + 1
+        end
+        if Φ_x * Φ_y < 0
+            δ, δ_prime = min(x, y), max(x, y)
             @assert δ_prime > δ
-            @assert ((δ == 0.0) & (δ_prime == 1.0)) ||
-                    ((δ_prime / δ) == 2^(2^(k - 1))) ||
-                    ((δ_prime / δ) - 2^(2^(k - 1)) <= 1e-3)
-            factor = δ_prime / δ
-            return true, δ, δ_prime, k + 2
+            return true, δ, δ_prime, k + 1
         end
-        if search_δ_prime
-            # Here Φ_δ_prime is still 1 and we are continue searching for δ',
-            # but we can update δ to give it larger values which is the current value of δ'
-            @assert Φ_δ_prime > 0
-            δ = δ_prime
-            δ_prime = δ_prime * (2^(2^k))
-        else
-            # Here Φ_δ is still -1 and we are continue searching for δ,
-            # but we can update δ' to give it smaller value which is the current value of δ
-            @assert Φ_δ < 0
-            δ_prime = δ
-            δ = δ / (2^(2^k))
-        end
-
         k = k + 1
     end
-
-    if (Φ_δ * Φ_δ_prime > 0)
-        if print_level >= 1
-            println(
-                "Φ_δ is $Φ_δ and Φ_δ_prime is $Φ_δ_prime. δ is $δ and δ_prime is $δ_prime.",
-            )
-        end
-        return false, δ, δ_prime, max_iterations + 2
-    end
-    factor = δ_prime / δ
-    return true, δ, δ_prime, max_iterations + 2
+    return false, Φ_δ_original, Φ_δ_original, max_iterations + 1
 end
+# function findinterval(
+#     g::Vector{Float64},
+#     H::Union{
+#         Matrix{Float64},
+#         SparseMatrixCSC{Float64,Int64},
+#         Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+#     },
+#     δ::Float64,
+#     γ_2::Float64,
+#     r::Float64,
+#     print_level::Int64 = 0,
+# )
+#     @assert δ >= 0
+#     if print_level >= 1
+#         println("STARTING WITH δ = $δ.")
+#     end
+#     # Φ_δ, temp_d, positive_definite = phi(g, H, 0.0, γ_2, r)
+#     #
+#     # if Φ_δ == 0
+#     #     δ = 0.0
+#     #     δ_prime = 0.0
+#     #     return true, δ, δ_prime, 1
+#     # end
+#
+#     δ_original = δ
+#
+#     Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
+#
+#     if Φ_δ == 0
+#         δ_prime = δ
+#         return true, δ, δ_prime, 1
+#     end
+#
+#     δ_prime = δ
+#     Φ_δ_prime = Φ_δ
+#     search_δ_prime = true
+#
+#     if Φ_δ > 0
+#         δ_prime = δ == 0.0 ? 1.0 : δ * 2
+#         search_δ_prime = true
+#     else
+#         # Here ϕ(δ) < 0 and we need to find new δ' >= 0 such that ϕ(δ') >= 0 and δ' < δ which is not possible
+#         # in case δ == 0
+#         @assert δ > 0
+#         search_δ_prime = false
+#         # The aim is to find [δ, δ'] such that ϕ(δ) ∈ {0, 1}, ϕ(δ') ∈ {0, -1}, and  ϕ(δ) * ϕ(δ') <= ∈ {0, -1}
+#         # since here ϕ(δ) < 0, we set δ' = δ and we search for δ < δ'such that ϕ(δ) ∈ {0, 1}
+#         δ_prime = δ
+#         Φ_δ_prime = -1
+#         δ = δ / 2
+#     end
+#
+#     max_iterations = 50
+#     k = 1
+#     while k < max_iterations
+#         if search_δ_prime
+#             Φ_δ_prime, temp_d, positive_definite = phi(g, H, δ_prime, γ_2, r)
+#             if Φ_δ_prime == 0
+#                 δ = δ_prime
+#                 return true, δ, δ_prime, k + 1
+#             end
+#         else
+#             Φ_δ, temp_d, positive_definite = phi(g, H, δ, γ_2, r)
+#             if Φ_δ == 0
+#                 δ_prime = δ
+#                 return true, δ, δ_prime, k + 1
+#             end
+#         end
+#
+#         if ((Φ_δ * Φ_δ_prime) < 0)
+#             if print_level >= 1
+#                 println("ENDING WITH ϕ(δ) = $Φ_δ and Φ_δ_prime = $Φ_δ_prime.")
+#                 println("ENDING WITH δ = $δ and δ_prime = $δ_prime.")
+#             end
+#             @assert δ_prime > δ
+#             @assert ((δ == 0.0) & (δ_prime == 1.0)) ||
+#                     ((δ_prime / δ) == 2^(2^(k - 1))) ||
+#                     ((δ_prime / δ) - 2^(2^(k - 1)) <= 1e-3)
+#             return true, δ, δ_prime, k + 1
+#         end
+#         if search_δ_prime
+#             # Here Φ_δ_prime is still 1 and we are continue searching for δ',
+#             # but we can update δ to give it larger values which is the current value of δ'
+#             @assert Φ_δ_prime > 0
+#             δ = δ_prime
+#             δ_prime = δ_prime * (2^(2^k))
+#         else
+#             # Here Φ_δ is still -1 and we are continue searching for δ,
+#             # but we can update δ' to give it smaller value which is the current value of δ
+#             @assert Φ_δ < 0
+#             δ_prime = δ
+#             δ = δ / (2^(2^k))
+#         end
+#
+#         k = k + 1
+#     end
+#
+#     if (Φ_δ * Φ_δ_prime > 0)
+#         if print_level >= 1
+#             println(
+#                 "Φ_δ is $Φ_δ and Φ_δ_prime is $Φ_δ_prime. δ is $δ and δ_prime is $δ_prime.",
+#             )
+#         end
+#         return false, δ, δ_prime, max_iterations + 1
+#     end
+#     return true, δ, δ_prime, max_iterations + 1
+# end
 
 
 """
@@ -723,11 +752,11 @@ function bisection(
                 phi(g, H, δ_prime, γ_2, r)
             ϕ_δ, d_temp_δ, positive_definite_δ = phi(g, H, δ, γ_2, r)
             q_1 = norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime)
-            q_2 = γ_1 * min_grad
+            q_2 = (γ_1 * min_grad) / 3
             if print_level >= 2
                 println("$k===============Bisection entered here=================")
             end
-            if (δ_prime - δ <= ((γ_1 * min_grad) / r)) &&
+            if (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
                q_1 <= q_2 &&
                !positive_definite_δ
                 if print_level >= 2
@@ -805,7 +834,6 @@ function solveHardCaseLogic(
     temp_total_number_factorizations_compute_search_direction = 0
     temp_total_number_factorizations_inverse_power_iteration = 0
     temp_total_number_factorizations_ = 0
-
     temp_eigenvalue = 0
     try
         start_time_temp = time()
@@ -846,7 +874,8 @@ function solveHardCaseLogic(
         end
         # Validate that the search direction satisfies the trust-region subproblem termination critera
         # The search direction in the hard case should be approximately on the trust-region boundary
-        if γ_2 * r <= norm(temp_d_k) <= r
+        # if γ_2 * r <= norm(temp_d_k) <= r
+        if abs(norm(temp_d_k) - r) <= 1e-3
             @assert temp_total_number_factorizations_ ==
                     temp_total_number_factorizations_compute_search_direction +
                     temp_total_number_factorizations_inverse_power_iteration
@@ -859,7 +888,7 @@ function solveHardCaseLogic(
             temp_total_number_factorizations_inverse_power_iteration
         end
         # The computed search direction is outside the trust-region boundary.
-        if norm(temp_d_k) > r
+        if abs(norm(temp_d_k) - r) > 1e-3
             if print_level >= 1
                 println(
                     "This is noit a hard case. FAILURE======candidate search direction norm is $norm_temp_d_k. r is $r. γ_2 is $γ_2",
@@ -923,7 +952,7 @@ Compute iteratively an approximate value to the minimum eigenvalue of H.
   'eigenvalue::Float64'. The minimum eigenvalue of H.
   'eigenvector::::Vector{Float64}'. The eigenvector for the minimum eigenvalue of H.
   'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
-  'temp_d_k::Vector{Float64}'. temp_d_k =  cholesky(H + (abs(eigenvalue) + 1e-1) * I) ^ {-1} (-g)
+  'temp_d_k::Vector{Float64}'. temp_d_k = cholesky(H + δ_prime * I) / (-g) + α * eigenvector
 """
 function inverse_power_iteration(
     g::Vector{Float64},
@@ -947,34 +976,49 @@ function inverse_power_iteration(
     y = ones(n)
     sparse_identity = SparseMatrixCSC{Float64}(LinearAlgebra.I, size(H)[1], size(H)[2])
     y_original_fact = cholesky(H + sigma * sparse_identity)
+    d_k_δ_prime = y_original_fact \ (-g)
     temp_factorization = 1
     for k = 1:max_iter
         y = y_original_fact \ x
         y /= norm(y)
         eigenvalue = dot(y, H * y)
 
-        if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + ((γ_1 * min_grad) / r)
-            try
-                temp_factorization += 1
-                # Validate that H + eigenvalue is positive definite
-                temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
-                return true, eigenvalue, y, temp_factorization, temp_d_k
-            catch
-                #DO NOTHING
+        if norm(H * y + δ_prime * y) <= abs(δ_prime - δ) + ((γ_1 * min_grad) / (3 * r))
+            α = - dot(d_k_δ_prime, y) + sqrt((dot(d_k_δ_prime, y)) ^ 2 + r ^ 2 - norm(d_k_δ_prime) ^ 2)
+            τ = - dot(d_k_δ_prime, y) - sqrt((dot(d_k_δ_prime, y)) ^ 2 + r ^ 2 - norm(d_k_δ_prime) ^ 2)
+            temp_d_k_1 = d_k_δ_prime + α * y
+            temp_d_k_2 = d_k_δ_prime + τ * y
+            model_temp_d_k_val_1 = dot(g, temp_d_k_1) + 0.5 * dot(temp_d_k_1, H * temp_d_k_1)
+            model_temp_d_k_val_2 = dot(g, temp_d_k_2) + 0.5 * dot(temp_d_k_2, H * temp_d_k_2)
+            @assert abs(norm(temp_d_k_1) - r) <= ϵ
+            @assert abs(norm(temp_d_k_2) - r) <= ϵ
+            temp_d_k = temp_d_k_1
+            if model_temp_d_k_val_1 > model_temp_d_k_val_2
+                temp_d_k = temp_d_k_2
             end
+            # try
+                # temp_factorization += 1
+                # Validate that H + eigenvalue is positive definite
+                # temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
+            return true, eigenvalue, y, temp_factorization, temp_d_k
+            # catch
+            #     #DO NOTHING
+            # end
         end
 
         #Keep as a safety check. This a sign that we can't solve the trust region subprobelm
-        if norm(x + y) <= ϵ || norm(x - y) <= ϵ
-            eigenvalue = dot(y, H * y)
-            try
-                temp_factorization += 1
-                temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
-                return true, eigenvalue, y, temp_factorization, temp_d_k
-            catch
-                #DO NOTHING
-            end
-        end
+        # if norm(x + y) <= ϵ || norm(x - y) <= ϵ
+        #     eigenvalue = dot(y, H * y)
+        #     α = - dot(d_k_δ_prime, y) + sqrt((dot(d_k_δ_prime, y)) ^ 2 + r ^ 2 - norm(d_k_δ_prime) ^ 2)
+        #     temp_d_k = d_k_δ_prime + α * y
+        #     try
+        #         # temp_factorization += 1
+        #         # temp_d_k = cholesky(H + (abs(eigenvalue)) * sparse_identity) \ (-g)
+        #         return true, eigenvalue, y, temp_factorization, temp_d_k
+        #     catch
+        #         #DO NOTHING
+        #     end
+        # end
 
         x = y
     end
