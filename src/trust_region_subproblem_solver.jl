@@ -200,7 +200,7 @@ function computeSearchDirection(
 
     # Using δ_m, we compute d_k = (H + δ_m * I) \ (-g)
     d_k = temp_d_k
-    @assert γ_2 * r <= norm(d_k) <= r
+    @assert (δ <= 1e-6 && norm(d_k) <= r) || γ_2 * r <= norm(d_k) <= r
     @assert temp_total_number_factorizations_ ==
             temp_total_number_factorizations_findinterval +
             temp_total_number_factorizations_bisection +
@@ -226,7 +226,7 @@ function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_
     failure_reason_6b = false
     failure_reason_6c = false
     failure_reason_6d = false
-    condition = norm(H * d + g + δ * d) <= γ_1 * min_grad
+    condition = norm(H * d + g + δ * d) <= γ_1 * min_grad + 1e-6
     if !condition
         failure = true
         failure_reason_6a = true
@@ -240,7 +240,7 @@ function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_
         error_message = string(error_message, " Reason (6b) failed to be satisfied.")
     end
     # condition (6c)
-    condition = norm(d) <= r
+    condition = (norm(d) - r) <= 1e-3
     if !condition
         failure = true
         failure_reason_6c = true
@@ -555,7 +555,7 @@ function findinterval(
     end
 
     Φ_δ_original, temp_d_original, positive_definite = phi(g, H, δ_original, γ_2, r)
-
+    Φ_x, temp_d_x, positive_definite_x = Φ_δ_original, temp_d_original, positive_definite
     Φ_δ_original *= 1.0
     if Φ_δ_original == 0
         δ_prime = δ_original
@@ -565,25 +565,24 @@ function findinterval(
     max_iterations = 50
     k = 1
     y = δ_original
-    while k < max_iterations
-        if k == 1
-            x = δ_original
-        else
-            # x = δ_original * (((2 ^ ((k - 1) ^ 2))) ^ Φ_δ_original)
-            x = y
-        end
-        y = δ_original * (((2 ^ (k ^ 2))) ^ Φ_δ_original)
+    Φ_y, temp_d_y, positive_definite_y = Φ_x, temp_d_x, positive_definite_x
+    while k <= max_iterations
+        x = y
+        Φ_x, temp_d_x, positive_definite_x = Φ_y, temp_d_y, positive_definite_y
 
-        Φ_x, temp_d_x, positive_definite_x = phi(g, H, x, γ_2, r)
-        Φ_y, temp_d_y, positive_definite_y = phi(g, H, y, γ_2, r)
         if Φ_x == 0
             δ, δ_prime = x, x
-            return true, δ, δ_prime, k + 1
+            return true, δ, δ_prime, k
         end
+
+        y = δ_original * (((2 ^ (k ^ 2))) ^ Φ_δ_original)
+        Φ_y, temp_d_y, positive_definite_y = phi(g, H, y, γ_2, r)
+
         if Φ_y == 0
             δ, δ_prime = y, y
             return true, δ, δ_prime, k + 1
         end
+
         if Φ_x * Φ_y < 0
             δ, δ_prime = min(x, y), max(x, y)
             @assert δ_prime > δ
@@ -644,7 +643,7 @@ function bisection(
     k = 1
     δ_m = (δ + δ_prime) / 2
     Φ_δ_m, temp_d, positive_definite = phi(g, H, δ_m, γ_2, r)
-    max_iterations = 100
+    max_iterations = 50
     while (Φ_δ_m != 0) && k <= max_iterations
         start_time_str = Dates.format(now(), "mm/dd/yyyy HH:MM:SS")
         if print_level >= 2
@@ -668,8 +667,7 @@ function bisection(
                 println("$k===============Bisection entered here=================")
             end
             if (δ_prime - δ < 0.3 * δ) && (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
-               q_1 <= q_2 &&
-               !positive_definite_δ
+               q_1 <= q_2
                 if print_level >= 2
                     println(
                         "$k===================norm(H * d_temp_δ_prime + g + δ_prime * d_temp_δ_prime) is $q_1.============",

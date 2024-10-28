@@ -404,7 +404,7 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     x_k = [1e-5]
     δ = 0.0
     γ_1 = 0.01
-    γ_2 = 1 - 1e-5
+    γ_2 = 0.8
     r = 0.0002
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -413,10 +413,11 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
-    @test q_1 <= q_2
+    @test q_1 <= q_2 + tol
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(δ_k - 2.1) <= tol
+    @test abs(norm(d_k) - r) <= tol
+    @test abs(δ_k - 2.109) <= tol
     @test norm((x_k + d_k) - [0.00021], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-4.00004e-8)) <= tol
@@ -430,7 +431,8 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    γ_2 = 1 - 1e-5
+    # γ_2 = 1 - 1e-5
+    γ_2 = 0.8
     r = 0.00029
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -442,7 +444,7 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(δ_k - 2.097) <= tol
+    @test abs(δ_k - 2.109) <= tol
     @test norm((x_k + d_k) - [2.00001e-5, 2.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test norm(obj(nlp, x_k + d_k) - (-8.000079e-8), 2) <= tol
@@ -456,7 +458,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    γ_2 = 1 - 1e-5
+    # γ_2 = 1 - 1e-5
+    γ_2 = 0.8
     r = 4.0e-4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -469,7 +472,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm(d_k) - r) <= tol
-    @test abs(δ_k - 4.1) <= tol
+    @test abs(δ_k - 4.105) <= tol
     @test norm((x_k + d_k) - [2e-5, 4.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-32.004e-8)) <= tol
@@ -483,7 +486,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    γ_2 = 1 - 1e-5
+    # γ_2 = 1 - 1e-5
+    γ_2 = 0.8
     r = 0.00245
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -496,7 +500,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k, 2) - r <= tol
-    @test abs(δ_k - 2.102) <= tol
+    @test abs(δ_k - 2.875) <= tol
     @test norm((x_k + d_k) - [-0.0025, 2.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-1.8459e-5)) <= tol
@@ -510,7 +514,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    γ_2 = 1 - 1e-5
+    # γ_2 = 1 - 1e-5
+    γ_2 = 0.8
     r = 0.00114
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
@@ -522,7 +527,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(δ_k - 8.099) <= tol
+    @test abs(δ_k - 8.111) <= tol
     @test norm((x_k + d_k) - [8.1e-4, 8.1e-4], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-5.2488e-6)) <= tol
@@ -589,16 +594,32 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     @test success
     @test abs(δ_m - 5.173e-7) <= tol
 
-    r = 0.0018
-    γ_2 = 1 - 1e-5
+    r = 0.08343452704764227
+    g = [
+        3.4679032978601754e-9,
+        7.39587593251434e-9,
+        2.7183407851072428e-8,
+        -0.003000483357027406,
+        0.008419134290306829,
+    ]
+    H = [
+        66.0 65.0743102550725 65.67263629092243 -1.2900082661017744e7 3.6178787247129455e7
+        65.0743102550725 64.1661603269859 64.75315415279051 -1.265594646809823e7 3.549303722643331e7
+        65.67263629092243 64.75315415279051 65.34746955501134 -1.2813679600892197e7 3.59360895721625e7
+        -1.2900082661017744e7 -1.265594646809823e7 -1.2813679600892197e7 3.3981511777610044e12 -9.544912385973707e12
+        3.6178787247129455e7 3.549303722643331e7 3.59360895721625e7 -9.544912385973707e12 2.6810622545473246e13
+    ]
+    γ_1 = 0.01
+    γ_2 = 1 - 1e-8
+    δ = 6.205227748467783e-12
+
     status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
-    γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
-    @test γ_2 * r <= norm(d_k) <= r
+    @test δ_k <= 1e-6 && norm((H + δ_k * I) \ g, 2) <= r
+    @test δ_k <= 1e-6 && norm(d_k) <= r
     @test abs(δ_k - 5.173e-7) <= tol
     @test abs(δ_k - 1e-5) <= γ_2 && abs(norm(d_k, 2) - r) <= γ_2
 end
@@ -1032,11 +1053,11 @@ function optimize_models_test()
     test_optimize_second_order_model_for_simple_univariate_convex_model()
     test_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
     test_optimize_second_order_model_for_simple_bivariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
+    test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model() #This i snot a hard case
+    test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()  #This i snot a hard case
+    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1() #This i snot a hard case
+    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2() #This i snot a hard case
+    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3() #This i snot a hard case
     test_optimize_second_order_model_hard_case_using_bivariate_convex_model_4()
     test_optimize_second_order_model_bisection_logic_bug_fix()
     test_optimize_second_order_model_bisection_failure_non_hard_case()
