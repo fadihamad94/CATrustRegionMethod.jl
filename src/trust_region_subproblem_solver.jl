@@ -673,7 +673,7 @@ function bisection(
             if print_level >= 2
                 println("$k===============Bisection entered here=================")
             end
-            if (δ_prime - δ < 0.3 * δ) && (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
+            if (δ_prime - δ <= ((γ_1 * min_grad) / (3 * r))) &&
                q_1 <= q_2
                 if print_level >= 2
                     println(
