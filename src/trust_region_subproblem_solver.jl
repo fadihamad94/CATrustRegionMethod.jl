@@ -67,7 +67,7 @@ function solveTrustRegionSubproblem(
             algorithm_counter.total_number_factorizations_inverse_power_iteration
 
     γ_3 = 0.5
-    validateTrustRegionSubproblemTerminationCriteria(d_k, g, H, δ_k, γ_1, γ_2, γ_3, r, min_grad)
+    validateTrustRegionSubproblemTerminationCriteria(d_k, g, H, δ_k, γ_1, γ_2, γ_3, r, min_grad, hard_case)
     return success_subproblem_solve, δ_k, d_k, hard_case
 end
 
@@ -218,7 +218,7 @@ function computeSearchDirection(
     temp_total_number_factorizations_compute_search_direction
 end
 
-function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_2, γ_3, r, min_grad)
+function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_2, γ_3, r, min_grad, hard_case)
     # condition (6a)
     error_message = "Trust-region subproblem failure."
     failure = false
@@ -233,11 +233,13 @@ function validateTrustRegionSubproblemTerminationCriteria(d, g, H, δ, γ_1, γ_
         error_message = string(error_message, " Reason (6a) failed to be satisfied.")
     end
     # condition (6b)
-    condition = γ_2 * δ * r <= δ * norm(d)
-    if !condition
-        failure = true
-        failure_reason_6b = true
-        error_message = string(error_message, " Reason (6b) failed to be satisfied.")
+    if !hard_case && δ > 1e-6
+        condition = γ_2 * δ * r <= δ * norm(d)
+        if !condition
+            failure = true
+            failure_reason_6b = true
+            error_message = string(error_message, " Reason (6b) failed to be satisfied.")
+        end
     end
     # condition (6c)
     condition = (norm(d) - r) <= 1e-3
