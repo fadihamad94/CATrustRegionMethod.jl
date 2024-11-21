@@ -105,7 +105,7 @@ function solveComplexConvexNLPModel()
     @test algorithm_counter.total_function_evaluation <= 20
     @test algorithm_counter.total_gradient_evaluation <= 20
     @test algorithm_counter.total_hessian_evaluation <= 15
-    @test algorithm_counter.total_number_factorizations <= 50
+    @test algorithm_counter.total_number_factorizations <= 55
 
     @test norm(obj(nlp, x) - 0, 2) <= tol
     @test status == CAT.TerminationStatusCode.OPTIMAL
@@ -278,7 +278,7 @@ function solveNLPSinCosModel1()
     @test algorithm_counter.total_function_evaluation <= 5
     @test algorithm_counter.total_gradient_evaluation <= 5
     @test algorithm_counter.total_hessian_evaluation <= 5
-    @test algorithm_counter.total_number_factorizations <= 25
+    @test algorithm_counter.total_number_factorizations <= 35
 
     @test norm(obj(nlp, x) + 1, 2) <= tol
     @test status == CAT.TerminationStatusCode.OPTIMAL

@@ -82,14 +82,20 @@ for filed_name in fieldnames(AlgorithmCounter)
     ) = algorithm_counter.$filed_name += count
 end
 
-function printFailures(problem_name::String, failure_reason_6a::Bool, failure_reason_6b::Bool, failure_reason_6c::Bool, failure_reason_6d::Bool)
+function printFailures(
+    problem_name::String,
+    failure_reason_6a::Bool,
+    failure_reason_6b::Bool,
+    failure_reason_6c::Bool,
+    failure_reason_6d::Bool,
+)
     # Create a DataFrame with the specified columns
     df = DataFrame(
         problem_name = problem_name,
         failure_reason_6a = failure_reason_6a,
         failure_reason_6b = failure_reason_6b,
         failure_reason_6c = failure_reason_6c,
-        failure_reason_6d = failure_reason_6d
+        failure_reason_6d = failure_reason_6d,
     )
 
     # Check if file exists to decide whether to append or create a new file

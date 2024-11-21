@@ -153,11 +153,7 @@ function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, limit::Real)
     if limit <= 0
         limit = Inf
     end
-    return MOI.set(
-        model,
-        MOI.RawOptimizerAttribute("time_limit"),
-        Float64(limit),
-    )
+    return MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), Float64(limit))
 end
 
 function MOI.get(model::CATSolver, ::MOI.TimeLimitSec)
@@ -281,10 +277,15 @@ function MOI.optimize!(solver::CATSolver)
     termination_criteria, algorithm_params = create_pars_JuMP(solver.options)
     try
         if MOI.get(solver, MOI.RawOptimizerAttribute("time_limit")) != nothing
-            termination_criteria.MAX_TIME = MOI.get(solver, MOI.RawOptimizerAttribute("time_limit"))
+            termination_criteria.MAX_TIME =
+                MOI.get(solver, MOI.RawOptimizerAttribute("time_limit"))
         end
     catch
-        MOI.set(solver, MOI.RawOptimizerAttribute("time_limit"), termination_criteria.MAX_TIME)
+        MOI.set(
+            solver,
+            MOI.RawOptimizerAttribute("time_limit"),
+            termination_criteria.MAX_TIME,
+        )
     end
 
     try
@@ -295,7 +296,11 @@ function MOI.optimize!(solver::CATSolver)
             algorithm_params.print_level = 0
         end
     catch
-        MOI.set(solver, MOI.RawOptimizerAttribute("output_flag"), algorithm_params.print_level == 0)
+        MOI.set(
+            solver,
+            MOI.RawOptimizerAttribute("output_flag"),
+            algorithm_params.print_level == 0,
+        )
     end
     x, status, iteration_stats, algorithm_counter, k =
         CAT_solve(solver, termination_criteria, algorithm_params)
@@ -334,7 +339,8 @@ function convertStatusCodeToStatusString(status)
         CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
         CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
         CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR => "TRUST_REGION_SUBPROBLEM_ERROR",
+        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
+            "TRUST_REGION_SUBPROBLEM_ERROR",
         CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
@@ -342,7 +348,7 @@ end
 
 function convertStatusToJuMPStatusCode(status)
     dict_status_code = Dict(
-        :Optimal =>  MOI.FEASIBLE_POINT,
+        :Optimal => MOI.FEASIBLE_POINT,
         :Unbounded => MOI.INFEASIBLE_POINT,
         :IterationLimit => MOI.INFEASIBILITY_CERTIFICATE,
         :TimeLimit => MOI.INFEASIBILITY_CERTIFICATE,
@@ -359,9 +365,9 @@ function status_CAT_To_JuMP(status::String)
     elseif status == "UNBOUNDED"
         return :Unbounded
     elseif status == "ITERATION_LIMIT" ||
-        status == "TIME_LIMIT" ||
-        status == "STEP_SIZE_LIMIT" ||
-        status == "MEMORY_LIMIT"
+           status == "TIME_LIMIT" ||
+           status == "STEP_SIZE_LIMIT" ||
+           status == "MEMORY_LIMIT"
         return :UserLimit
     else
         return :Error

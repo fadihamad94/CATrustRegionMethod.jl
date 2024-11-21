@@ -291,8 +291,7 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     γ_1 = 0.01
     γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, hard_case =
-        optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k, hard_case = optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     @test status == true
     @test abs(norm(d_k) - 0.0) <= 1e-3
     @test hard_case == false
@@ -406,8 +405,7 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     δ = 250.0
     γ_2 = 0.2
     r = 0.3
-    δ, δ_prime =
-        CAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CAT.findintervalOldApproach(g, H, δ, γ_2, r)
     @test (δ, δ_prime) == (500.0, 500.0)
     Φ_δ = CAT.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
@@ -427,11 +425,9 @@ function test_bisection_with_starting_on_root_δ_zero()
     γ_1 = 0.01
     γ_2 = 0.8
     r = 0.2
-    δ, δ_prime =
-        CAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CAT.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m =
-        CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test δ_m == δ == δ_prime
     Φ_δ = CAT.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
@@ -454,11 +450,9 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.2
-    δ, δ_prime =
-        CAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CAT.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m =
-        CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test δ_m == 8.0
     @test δ == 8.0
     @test δ_prime == 8.0
@@ -483,11 +477,9 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.3
-    δ, δ_prime =
-        CAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CAT.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m =
-        CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test abs(δ_m - 500.0) <= 1e-3
     Φ_δ = CAT.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0

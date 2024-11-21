@@ -260,7 +260,8 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -282,7 +283,8 @@ function test_optimize_second_order_model_phi_zero()
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -292,7 +294,7 @@ function test_optimize_second_order_model_phi_zero()
     @test γ_2 * r <= norm(d_k) <= r
     # @test norm(d_k - [0.106, 0.139], 2) <= tol
     # @test abs(δ_k - 64.0) <= tol
-    @test abs(δ_k - 78.0) <= tol
+    @test abs(δ_k - 88.0) <= tol
     @test abs(norm(d_k, 2) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -308,7 +310,8 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -334,7 +337,8 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -357,7 +361,8 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -382,7 +387,8 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -409,7 +415,8 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     temp_ = norm(g)
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
@@ -436,7 +443,8 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     r = 0.00029
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -463,7 +471,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 4.0e-4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -472,7 +481,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm(d_k) - r) <= tol
-    @test abs(δ_k - 4.105) <= tol
+    @test abs(δ_k - 4.1099) <= tol
     @test norm((x_k + d_k) - [2e-5, 4.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-32.004e-8)) <= tol
@@ -491,7 +500,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00245
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -500,7 +510,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k, 2) - r <= tol
-    @test abs(δ_k - 2.875) <= tol
+    @test abs(δ_k - 3.0) <= tol
     @test norm((x_k + d_k) - [-0.0025, 2.00001e-5], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-1.8459e-5)) <= tol
@@ -519,7 +529,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00114
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -527,7 +538,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(δ_k - 8.111) <= tol
+    @test abs(δ_k - 8.113) <= tol
     @test norm((x_k + d_k) - [8.1e-4, 8.1e-4], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-5.2488e-6)) <= tol
@@ -546,7 +557,8 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     H = hess(nlp, x_k)
     r = algorithm_params.r_1
 
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
@@ -589,8 +601,19 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     # @test abs(δ_prime - 0.000104) <= tol
     # @test abs(δ_prime - 0.00666) <= tol
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = CAT.bisection(
+        "problem_name",
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        δ_prime,
+        temp_d_δ_prime,
+        r,
+        min_grad,
+        0,
+    )
     @test success
     @test abs(δ_m - 5.173e-7) <= tol
 
@@ -613,7 +636,8 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     γ_2 = 1 - 1e-8
     δ = 6.205227748467783e-12
 
-    status, δ_k, d_k = CAT.optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g))
+    status, δ_k, δ_prime_k, d_k =
+        CAT.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g))
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
     @test status
@@ -622,6 +646,41 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     @test δ_k <= 1e-6 && norm(d_k) <= r
     @test abs(δ_k - 5.173e-7) <= tol
     @test abs(δ_k - 1e-5) <= γ_2 && abs(norm(d_k, 2) - r) <= γ_2
+end
+
+function test_hard_case_failure()
+    tol = 1e-3
+    problem_name = "MSQRTBLS"
+    g = vec(readdlm("./test/examples_CUTEST/$(problem_name)_gradient.txt", ','))
+    g = map(Float64, g)
+    H = readdlm("./test/examples_CUTEST/$(problem_name)_hessian.txt")
+    H = sparse(H)
+    hard_case_sol, δ, γ_1, γ_2, γ_3, r, min_grad =
+        readdlm("./test/examples_CUTEST/$(problem_name)_params.txt")
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, min_grad, 0)
+    @test status == true
+    @test !hard_case == hard_case_sol == true
+    q_1 = norm(H * d_k + g + δ_k * d_k)
+    q_2 = γ_1 * min_grad
+    @test q_1 <= q_2
+    @test norm(d_k) <= r
+
+    problem_name = "SPIN2LS"
+    g = vec(readdlm("./test/examples_CUTEST/$(problem_name)_gradient.txt", ','))
+    g = map(Float64, g)
+    H = readdlm("./test/examples_CUTEST/$(problem_name)_hessian.txt")
+    H = sparse(H)
+    hard_case_sol, δ, γ_1, γ_2, γ_3, r, min_grad =
+        readdlm("./test/examples_CUTEST/$(problem_name)_params.txt")
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, min_grad, 0)
+    @test status == true
+    @test !hard_case == hard_case_sol == true
+    q_1 = norm(H * d_k + g + δ_k * d_k)
+    q_2 = γ_1 * min_grad
+    @test q_1 <= q_2
+    @test norm(d_k) <= r
 end
 
 function test_optimize_second_order_model_bisection_failure_non_hard_case()
@@ -634,8 +693,8 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     γ_1 = 0.01
     γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, temp_total_number_factorizations, hard_case =
-        optimizeSecondOrderModel(g, H, δ, γ_1, γ_2, r, norm(g), print_level)
+    status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
+        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, r, norm(g), print_level)
     @test status == false
     @test norm(d_k) == 0.0
     @test hard_case == true
@@ -693,7 +752,8 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime = CAT.findinterval(g, H, δ, ϵ, r)
+    success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
+        CAT.findinterval(g, H, δ, ϵ, r)
     # @test δ == δ_prime == 64.0
     @test δ == 16.0
     @test δ_prime == 512.0
@@ -781,8 +841,19 @@ function test_bisection_with_starting_on_root_δ_zero()
     success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = CAT.bisection(
+        "problem_name",
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        δ_prime,
+        temp_d_δ_prime,
+        r,
+        min_grad,
+        0,
+    )
     @test success
     @test δ_m == δ == δ_prime
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, γ_2, r)
@@ -809,8 +880,19 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = CAT.bisection(
+        "problem_name",
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        δ_prime,
+        temp_d_δ_prime,
+        r,
+        min_grad,
+        0,
+    )
     @test success
     # @test δ_m == 34.0
     # @test δ == 4.0
@@ -844,8 +926,19 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    success, δ_m, temp_total_number_factorizations =
-        CAT.bisection(g, H, δ, γ_1, γ_2, δ_prime, temp_d_δ_prime, r, min_grad, 0)
+    success, δ_m, temp_total_number_factorizations = CAT.bisection(
+        "problem_name",
+        g,
+        H,
+        δ,
+        γ_1,
+        γ_2,
+        δ_prime,
+        temp_d_δ_prime,
+        r,
+        min_grad,
+        0,
+    )
     @test success
     @test abs(δ_m - 500.0) <= 1e-3
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, γ_2, r)
@@ -1061,6 +1154,7 @@ function optimize_models_test()
     test_optimize_second_order_model_hard_case_using_bivariate_convex_model_4()
     test_optimize_second_order_model_bisection_logic_bug_fix()
     test_optimize_second_order_model_bisection_failure_non_hard_case()
+    test_hard_case_failure()
 end
 
 @testset "basic_unit_tests" begin

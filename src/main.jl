@@ -142,7 +142,7 @@ function sub_routine_trust_region_sub_problem_solver(
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
     algorithm_counter::AlgorithmCounter,
     print_level::Int64,
-    trust_region_subproblem_solver::String = "NEW"
+    trust_region_subproblem_solver::String = "NEW",
 )
     fval_next = fval_current
     gval_next_temp = gval_current
@@ -152,17 +152,25 @@ function sub_routine_trust_region_sub_problem_solver(
     success_subproblem_solve, d_k, hard_case = nothing, nothing, nothing
 
     if trust_region_subproblem_solver == "OLD"
-        success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblemOldApproach(
-            fval_current,
-            gval_current,
-            hessian_current,
-            x_k,
-            δ_k,
-            γ_2,
-            r_k
-        )
+        success_subproblem_solve, δ_k, d_k, hard_case =
+            solveTrustRegionSubproblemOldApproach(
+                fval_current,
+                gval_current,
+                hessian_current,
+                x_k,
+                δ_k,
+                γ_2,
+                r_k,
+            )
     else
+        problem_name = "Generic"
+        if typeof(nlp) == AbstractNLPModel ||
+           typeof(nlp) == MathOptNLPModel ||
+           typeof(nlp) == CUTEstModel
+            problem_name = nlp.meta.name
+        end
         success_subproblem_solve, δ_k, d_k, hard_case = solveTrustRegionSubproblem(
+            problem_name,
             fval_current,
             gval_current,
             hessian_current,
@@ -182,6 +190,18 @@ function sub_routine_trust_region_sub_problem_solver(
         println("solveTrustRegionSubproblem operation took $total_time_temp.")
     end
 
+    if !success_subproblem_solve
+        throw(
+            TrustRegionSubproblemError(
+                "Trust-region subproblem failure.",
+                true,
+                true,
+                true,
+                true,
+            ),
+        )
+    end
+
     start_time_temp = time()
     second_order_model_value_current_iterate =
         computeSecondOrderModel(gval_current, hessian_current, d_k)
@@ -195,7 +215,7 @@ function sub_routine_trust_region_sub_problem_solver(
     # in computing the predicted reduction from the second order model M_k. If no numerical
     # errors, we compute the objective function for the candidate solution to check if
     # we will accept the step in case this leads to reduction in the function value.
-    if success_subproblem_solve && second_order_model_value_current_iterate < 0
+    if second_order_model_value_current_iterate < 0
         start_time_temp = time()
         fval_next = evalFunction(nlp, x_k + d_k, algorithm_counter)
         end_time_temp = time()
@@ -352,7 +372,9 @@ function optimize(
         if r_k <= 0.0
             matrix_l2_norm_val = matrix_l2_norm(hessian_current, num_iter = 20)
             if matrix_l2_norm_val > 0
-                r_k = INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) /matrix_l2_norm_val
+                r_k =
+                    INITIAL_RADIUS_MULTIPLICATIVE_RULE * norm(gval_current, 2) /
+                    matrix_l2_norm_val
             else
                 r_k = 1.0
             end
@@ -407,7 +429,7 @@ function optimize(
                     nlp,
                     algorithm_counter,
                     print_level,
-                    trust_region_subproblem_solver
+                    trust_region_subproblem_solver,
                 )
 
             gval_next = gval_current
@@ -463,8 +485,11 @@ function optimize(
                     "Iteration $k with actual_fct_decrease is $actual_fct_decrease and predicted_fct_decrease is $predicted_fct_decrease.",
                 )
             end
-
-            ρ_hat_k = ρ_k
+            if fval_next > fval_current
+                ρ_hat_k = -1.0
+            else
+                ρ_hat_k = ρ_k
+            end
             norm_gval_current = norm(gval_current, 2)
             norm_gval_next = norm_gval_current
             # Accept the generated search direction d_k when ρ_k is positive
@@ -473,6 +498,14 @@ function optimize(
                 if print_level >= 1
                     println(
                         "$k. =======STEP IS ACCEPTED========== $ρ_k =========fval_next is $fval_next and fval_current is $fval_current.",
+                    )
+                end
+                if !success_subproblem_solve && norm(d_k) > 0
+                    @warn(
+                        "Warning: accepting search direction even with TRS failure. Search direction is a descent direction."
+                    )
+                    println(
+                        "Warning: accepting search direction even with TRS failure. Search direction is a descent direction.",
                     )
                 end
                 x_k = x_k + d_k
@@ -520,7 +553,6 @@ function optimize(
                 norm_d_k = norm(d_k, 2)
                 println("$k. r_k is $r_k and ||d_k|| is $norm_d_k.")
             end
-
             # Radius update
             if radius_update_rule_approach == "DEFAULT"
                 if !success_subproblem_solve || isnan(ρ_hat_k) || ρ_hat_k < β
@@ -622,12 +654,23 @@ function optimize(
         end
         if isa(e, TrustRegionSubproblemError)
             status = TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR
-            problem_name = nlp.meta.name
+            problem_name = "Generic"
+            if typeof(nlp) == AbstractNLPModel ||
+               typeof(nlp) == MathOptNLPModel ||
+               typeof(nlp) == CUTEstModel
+                problem_name = nlp.meta.name
+            end
             failure_reason_6a = e.failure_reason_6a
             failure_reason_6b = e.failure_reason_6b
             failure_reason_6c = e.failure_reason_6c
             failure_reason_6d = e.failure_reason_6d
-            printFailures(problem_name, failure_reason_6a, failure_reason_6b, failure_reason_6c, failure_reason_6d)
+            printFailures(
+                problem_name,
+                failure_reason_6a,
+                failure_reason_6b,
+                failure_reason_6c,
+                failure_reason_6d,
+            )
         end
         end_time_ = time()
         total_execution_time = end_time_ - start_time_

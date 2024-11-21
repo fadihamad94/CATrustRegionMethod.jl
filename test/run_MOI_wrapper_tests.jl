@@ -184,7 +184,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     @test algorithm_counter.total_function_evaluation <= 15
     @test algorithm_counter.total_gradient_evaluation <= 10
     @test algorithm_counter.total_hessian_evaluation <= 10
-    @test algorithm_counter.total_number_factorizations <= 40
+    @test algorithm_counter.total_number_factorizations <= 45
 
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr

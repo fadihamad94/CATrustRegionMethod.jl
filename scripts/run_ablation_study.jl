@@ -310,7 +310,7 @@ function createProblemData(
         ξ,
         INITIAL_RADIUS_MULTIPLICATIVE_RULE,
         radius_update_rule_approach,
-        trust_region_subproblem_solver_default
+        trust_region_subproblem_solver_default,
     )
     for crt in criteria
         if crt == "original"
@@ -361,10 +361,8 @@ function createProblemData(
             problem_data = problem_data_original
             index_to_override = 15
             trust_region_subproblem_solver = "OLD"
-            new_problem_data = (
-                problem_data[1:index_to_override-1]...,
-                trust_region_subproblem_solver
-            )
+            new_problem_data =
+                (problem_data[1:index_to_override-1]..., trust_region_subproblem_solver)
             problem_data = new_problem_data
             push!(problem_data_vec, problem_data)
         end
@@ -446,7 +444,7 @@ function runModelFromProblem(
             print_level,
             radius_update_rule_approach,
             eval_offset,
-            trust_region_subproblem_solver
+            trust_region_subproblem_solver,
         )
         x_1 = nlp.meta.x0
         x = x_1
@@ -540,11 +538,16 @@ function computeGeomeans(df::DataFrame, max_it::Int64, max_time::Float64, shift:
     df_results_new.total_hessian_evaluation = total_hessian_evaluation_vec
     df_results_new.total_execution_time = total_wall_clock_time_vec
 
-    geomean_count_factorization = geomean(df_results_new.total_factorization_evaluation .+ shift) - shift
-    geomean_total_function_evaluation = geomean(df_results_new.total_function_evaluation .+ shift) - shift
-    geomean_total_gradient_evaluation = geomean(df_results_new.total_gradient_evaluation .+ shift) - shift
-    geomean_total_hessian_evaluation = geomean(df_results_new.total_hessian_evaluation .+ shift) - shift
-    geomean_total_wall_clock_time = geomean(df_results_new.total_execution_time .+ shift) - shift
+    geomean_count_factorization =
+        geomean(df_results_new.total_factorization_evaluation .+ shift) - shift
+    geomean_total_function_evaluation =
+        geomean(df_results_new.total_function_evaluation .+ shift) - shift
+    geomean_total_gradient_evaluation =
+        geomean(df_results_new.total_gradient_evaluation .+ shift) - shift
+    geomean_total_hessian_evaluation =
+        geomean(df_results_new.total_hessian_evaluation .+ shift) - shift
+    geomean_total_wall_clock_time =
+        geomean(df_results_new.total_execution_time .+ shift) - shift
     return (
         geomean_total_function_evaluation,
         geomean_total_gradient_evaluation,
@@ -679,7 +682,8 @@ function main()
     print_level = parsed_args["print_level"]
     seed = parsed_args["seed"]
 
-    default_criteria = ["ρ_hat_rule", "initial_radius", "radius_update_rule", "trust_region_subproblem"]
+    default_criteria =
+        ["ρ_hat_rule", "initial_radius", "radius_update_rule", "trust_region_subproblem"]
     criteria = split(parsed_args["criteria"], ",")
     for val in criteria
         if val ∉ default_criteria
@@ -730,7 +734,8 @@ function convertStatusCodeToStatusString(status)
         CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
         CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
         CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR => "TRUST_REGION_SUBPROBLEM_ERROR",
+        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
+            "TRUST_REGION_SUBPROBLEM_ERROR",
         CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
