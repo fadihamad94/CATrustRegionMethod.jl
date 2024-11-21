@@ -105,3 +105,20 @@ function printFailures(
         CSV.write("error_reason.csv", df)
     end
 end
+
+
+function restoreFullMatrix(
+    H::Union{
+        SparseMatrixCSC{Float64,Int64},
+        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
+    },
+)
+    nmbRows = size(H)[1]
+    numbColumns = size(H)[2]
+    for i = 1:nmbRows
+        for j = i:numbColumns
+            H[i, j] = H[j, i]
+        end
+    end
+    return H
+end

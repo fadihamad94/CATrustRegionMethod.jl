@@ -500,14 +500,7 @@ function optimize(
                         "$k. =======STEP IS ACCEPTED========== $ρ_k =========fval_next is $fval_next and fval_current is $fval_current.",
                     )
                 end
-                if !success_subproblem_solve && norm(d_k) > 0
-                    @warn(
-                        "Warning: accepting search direction even with TRS failure. Search direction is a descent direction."
-                    )
-                    println(
-                        "Warning: accepting search direction even with TRS failure. Search direction is a descent direction.",
-                    )
-                end
+
                 x_k = x_k + d_k
                 start_time_temp = time()
                 gval_next = temp_grad
@@ -723,22 +716,6 @@ function evalGradient(
         MOI.eval_objective_gradient(nlp.evaluator, gval, x)
         return gval
     end
-end
-
-function restoreFullMatrix(
-    H::Union{
-        SparseMatrixCSC{Float64,Int64},
-        Symmetric{Float64,SparseMatrixCSC{Float64,Int64}},
-    },
-)
-    nmbRows = size(H)[1]
-    numbColumns = size(H)[2]
-    for i = 1:nmbRows
-        for j = i:numbColumns
-            H[i, j] = H[j, i]
-        end
-    end
-    return H
 end
 
 function evalHessian(
