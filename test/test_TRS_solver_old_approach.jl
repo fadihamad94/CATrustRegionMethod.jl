@@ -694,10 +694,10 @@ function optimize_models_test()
     test_optimize_second_order_model_bisection_failure_non_hard_case()
 end
 
-@testset "basic_unit_tests" begin
+@testset "basic_unit_tests_old_TRS" begin
     unit_tests()
 end
 
-@testset "TRS_Solver_Tests" begin
+@testset "OLD_TRS_Solver_Tests" begin
     optimize_models_test()
 end

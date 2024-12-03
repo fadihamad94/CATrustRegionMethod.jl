@@ -190,18 +190,6 @@ function sub_routine_trust_region_sub_problem_solver(
         println("solveTrustRegionSubproblem operation took $total_time_temp.")
     end
 
-    if !success_subproblem_solve
-        throw(
-            TrustRegionSubproblemError(
-                "Trust-region subproblem failure.",
-                true,
-                true,
-                true,
-                true,
-            ),
-        )
-    end
-
     start_time_temp = time()
     second_order_model_value_current_iterate =
         computeSecondOrderModel(gval_current, hessian_current, d_k)

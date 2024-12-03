@@ -81,26 +81,23 @@ function solveTrustRegionSubproblem(
             "----------validating solution  with δ_k * ||d_k|| = $(δ_k * norm_d_k) and γ_1 * min_grad = $(γ_1 * min_grad)",
         )
     end
-    try
-        validateTrustRegionSubproblemTerminationCriteria(
-            problem_name,
-            d_k,
-            g,
-            H,
-            original_δ,
-            δ_k,
-            δ_prime_k,
-            γ_1,
-            γ_2,
-            γ_3,
-            r,
-            min_grad,
-            hard_case,
-            print_level,
-        )
-    catch e
-        return false, δ_k, d_k, hard_case
-    end
+    
+    validateTrustRegionSubproblemTerminationCriteria(
+        problem_name,
+        d_k,
+        g,
+        H,
+        original_δ,
+        δ_k,
+        δ_prime_k,
+        γ_1,
+        γ_2,
+        γ_3,
+        r,
+        min_grad,
+        hard_case,
+        print_level,
+    )
     return true, δ_k, d_k, hard_case
 end
 
