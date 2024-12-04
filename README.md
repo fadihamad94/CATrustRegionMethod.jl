@@ -94,5 +94,5 @@ $ julia --project=scripts scripts/run_ablation_study.jl --output_dir ./scripts/b
 Examples can be found under the [test directory](https://github.com/fadihamad94/CAT-Journal/tree/master/test)
 
 ## References
-* [Hamad, Fadi, and Oliver Hinder. "A simple and practical adaptive trust-region method."](https://arxiv.org/submit/6018980/view)
+* [Hamad, Fadi, and Oliver Hinder. "A simple and practical adaptive trust-region method."](https://arxiv.org/abs/2412.02079)
 * [Hamad, Fadi, and Oliver Hinder. "A consistently adaptive trust-region method."](https://proceedings.neurips.cc/paper_files/paper/2022/hash/2c19666cbb2c14d45d39e2dcf6ab0b99-Abstract-Conference.html)
