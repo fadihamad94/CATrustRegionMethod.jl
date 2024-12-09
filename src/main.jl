@@ -722,7 +722,7 @@ function evalHessian(
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         #Sparse hessian entry vector
         H_vec = zeros(Float64, length(hessian_sparsity))
-        MOI.eval_hessian_lagrangian(d, H_vec, x, 1.0, zeros(0))
+        MOI.eval_hessian_lagrangian(d, H_vec, x, 1.0, zeros(length(x)))
         if !isempty(hessian_sparsity)
             index = 1
             if length(hessian_sparsity) < 3
