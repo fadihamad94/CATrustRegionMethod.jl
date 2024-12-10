@@ -98,19 +98,20 @@ function test_runtests()
             # r"^test_objective_ScalarQuadraticFunction_in_ListOfModelAttributesSet$",
             # r"^test_objective_VariableIndex_in_ListOfModelAttributesSet$",
             r"^test_objective_get_ObjectiveFunction_ScalarAffineFunction$", # TODO check
-            r"^test_objective_set_via_modify$", #TODO check
+            # r"^test_objective_set_via_modify$",
+            # This to test an unbounded linear program. CAT works with function at least twice differentiable.
             r"^test_solve_TerminationStatus_DUAL_INFEASIBLE$", # TODO check
             # r"^test_variable_add_variable$",
             # r"^test_variable_add_variables$",
             # r"^test_variable_delete$",
             # r"^test_variable_delete_variables$",
-            r"^test_nonlinear_invalid$", # TODO check
+            # r"^test_nonlinear_invalid$",
             # r"^test_model_default_TerminationStatus$",
             # r"^test_model_default_PrimalStatus$",
             # r"^test_model_default_DualStatus$",
             # r"^test_model_VariablePrimalStart$",
-            r"^test_model_Name$",
-            r"^test_quadratic$",
+            # r"^test_model_Name$",
+            # r"^test_quadratic$",
             # CAT is not compliant with the MOI.ListOfModelAttributesSet attribute
             "_in_ListOfModelAttributesSet",
         ],

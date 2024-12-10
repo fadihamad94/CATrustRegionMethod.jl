@@ -69,8 +69,8 @@ mutable struct CATSolver <: MOI.AbstractOptimizer
     nlp_data::MOI.NLPBlockData
     sense::MOI.OptimizationSense
     objective::Union{
-        MOI.VariableIndex,
-        MOI.ScalarAffineFunction{Float64},
+        # MOI.VariableIndex,
+        # MOI.ScalarAffineFunction{Float64},
         MOI.ScalarQuadraticFunction{Float64},
         Nothing,
     }
@@ -125,20 +125,20 @@ end
 # end
 
 # TODO support
-# function MOI.get(model::CATSolver, ::MOI.ListOfModelAttributesSet)
-#     attributes = MOI.AbstractModelAttribute[]
-#     if model.sense != MOI.FEASIBILITY_SENSE
-#         push!(attributes, MOI.ObjectiveSense())
-#     end
-#     if model.objective != nothing
-#         F = MOI.get(model, MOI.ObjectiveFunctionType())
-#         push!(attributes, MOI.ObjectiveFunction{F}())
-#     end
-#     if !isempty(model.name)
-#         push!(attributes, MOI.Name())
-#     end
-#     return attributes
-# end
+function MOI.get(model::CATSolver, ::MOI.ListOfModelAttributesSet)
+    attributes = MOI.AbstractModelAttribute[]
+    if model.sense != MOI.FEASIBILITY_SENSE
+        push!(attributes, MOI.ObjectiveSense())
+    end
+    if model.objective != nothing
+        F = MOI.get(model, MOI.ObjectiveFunctionType())
+        push!(attributes, MOI.ObjectiveFunction{F}())
+    end
+    if !isempty(model.name)
+        push!(attributes, MOI.Name())
+    end
+    return attributes
+end
 
 ###
 ### MOI.Silent
@@ -247,7 +247,8 @@ end
 function MOI.set(
     model::CATSolver,
     ::MOI.ObjectiveFunction,
-    func::Union{MOI.VariableIndex,MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction},
+    # func::Union{MOI.VariableIndex,MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction},
+    func::Union{MOI.ScalarQuadraticFunction,MOI.ScalarNonlinearFunction},
 )
     check_inbounds(model, func)
     model.objective = func
@@ -376,6 +377,7 @@ function convertStatusCodeToStatusString(status)
         CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
             "TRUST_REGION_SUBPROBLEM_ERROR",
         CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
+        CAT.TerminationStatusCode.INVALID_MODEL => "INVALID_MODEL",
     )
     return dict_status_code[status]
 end
@@ -387,6 +389,7 @@ function convertStatusToJuMPStatusCode_TerminationStatus(status)
         :IterationLimit => MOI.ITERATION_LIMIT,
         :TimeLimit => MOI.TIME_LIMIT,
         :UserLimit => MOI.OTHER_LIMIT,
+        :InvalidModel => MOI.INVALID_MODEL,
         :Error => MOI.OTHER_ERROR,
     )
     return dict_status_code[status]
@@ -399,6 +402,7 @@ function convertStatusToJuMPStatusCode(status)
         :IterationLimit => MOI.INFEASIBILITY_CERTIFICATE,
         :TimeLimit => MOI.INFEASIBILITY_CERTIFICATE,
         :UserLimit => MOI.INFEASIBILITY_CERTIFICATE,
+        :InvalidModel => MOI.INVALID_MODEL,
         :Error => MOI.NO_SOLUTION,
     )
     return dict_status_code[status]
@@ -415,20 +419,22 @@ function status_CAT_To_JuMP(status::String)
            status == "STEP_SIZE_LIMIT" ||
            status == "MEMORY_LIMIT"
         return :UserLimit
+    elseif status ==  "INVALID_MODEL"
+        return :InvalidModel
     else
         return :Error
     end
 end
 
-function check_inbounds(model::CATSolver, vi::MOI.VariableIndex)
-    return MOI.throw_if_not_valid(model, vi)
-end
+# function check_inbounds(model::CATSolver, vi::MOI.VariableIndex)
+#     return MOI.throw_if_not_valid(model, vi)
+# end
 
-function check_inbounds(model::CATSolver, aff::MOI.ScalarAffineFunction)
-    for term in aff.terms
-        MOI.throw_if_not_valid(model, term.variable)
-    end
-end
+# function check_inbounds(model::CATSolver, aff::MOI.ScalarAffineFunction)
+#     for term in aff.terms
+#         MOI.throw_if_not_valid(model, term.variable)
+#     end
+# end
 
 function check_inbounds(model::CATSolver, quad::MOI.ScalarQuadraticFunction)
     for term in quad.affine_terms
@@ -448,8 +454,8 @@ function MOI.supports(
     ::CATSolver,
     ::MOI.ObjectiveFunction{
         <:Union{
-            MOI.VariableIndex,
-            MOI.ScalarAffineFunction{Float64},
+            # MOI.VariableIndex,
+            # MOI.ScalarAffineFunction{Float64},
             MOI.ScalarQuadraticFunction{Float64},
             MOI.ScalarNonlinearFunction,
         },
