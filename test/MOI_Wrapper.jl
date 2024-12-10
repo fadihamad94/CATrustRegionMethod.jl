@@ -54,11 +54,12 @@ function test_runtests()
         CONFIG,
         exclude = [
             r"^test_attribute_NumberThreads$",
-            r"^test_objective_get_ObjectiveFunction_ScalarAffineFunction$", # TODO check
-            # This to test an unbounded linear program. CAT works only with functions that are at least twice differentiable.
-            r"^test_solve_TerminationStatus_DUAL_INFEASIBLE$", # TODO check
             # CAT is not compliant with the MOI.ListOfModelAttributesSet attribute
-            "_in_ListOfModelAttributesSet",
+            r"^test_objective_get_ObjectiveFunction_ScalarAffineFunction$", # TODO SUPPORT
+            # This to test an unbounded linear program. CAT works only with functions that are at least twice differentiable.
+            r"^test_solve_TerminationStatus_DUAL_INFEASIBLE$", # TODO support
+            # CAT is not compliant with the MOI.ListOfModelAttributesSet attribute
+            "_in_ListOfModelAttributesSet",  # TODO support
         ],
         # This argument is useful to prevent tests from failing on future
         # releases of MOI that add new tests. Don't let this number get too far
@@ -68,28 +69,6 @@ function test_runtests()
     )
     return
 end
-
-# function test_runtests()
-#     MOI.Test.runtests(
-#         OPTIMIZER, CONFIG,
-#         exclude=[
-#             # behaviour to implement: list of model, constraint attributes set
-#             "test_model_ListOfConstraintAttributesSet",
-#             "test_model_ModelFilter_AbstractModelAttribute",
-#             "test_model_ModelFilter_ListOfConstraintIndices",
-#             "test_model_ModelFilter_ListOfConstraintTypesPresent",
-#             "test_model_Name",
-#             "test_objective_set_via_modify",
-#             # requires get quadratic objective
-#             "test_objective_get_ObjectiveFunction_ScalarAffineFunction",
-#             # Tulip not compliant with MOI convention for primal/dual infeasible models
-#             # See expected behavior at https://jump.dev/MathOptInterface.jl/dev/background/infeasibility_certificates/
-#             "test_unbounded",
-#             # Tulip is not compliant with the MOI.ListOfModelAttributesSet attribute
-#             "_in_ListOfModelAttributesSet",
-#         ]
-#     )
-# end
 
 """
     test_SolverName()
