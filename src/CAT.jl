@@ -1,6 +1,6 @@
 __precompile__()
 
-module CAT
+module TrustCAT
 using NLPModels,
     LinearAlgebra,
     DataFrames,

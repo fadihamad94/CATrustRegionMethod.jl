@@ -5,11 +5,11 @@ using Test
 import MathOptInterface as MOI
 
 const OPTIMIZER = MOI.instantiate(
-    MOI.OptimizerWithAttributes(CAT.Optimizer, MOI.Silent() => true),
+    MOI.OptimizerWithAttributes(TrustCAT.Optimizer, MOI.Silent() => true),
 )
 
 const BRIDGED = MOI.instantiate(
-    MOI.OptimizerWithAttributes(CAT.Optimizer, MOI.Silent() => true),
+    MOI.OptimizerWithAttributes(TrustCAT.Optimizer, MOI.Silent() => true),
     with_bridge_type = Float64,
 )
 
@@ -77,7 +77,7 @@ You can also write new tests for solver-specific functionality. Write each new
 test as a function with a name beginning with `test_`.
 """
 function test_SolverName()
-    @test MOI.get(CAT.Optimizer(), MOI.SolverName()) == "Optimizer"
+    @test MOI.get(TrustCAT.Optimizer(), MOI.SolverName()) == "Optimizer"
     return
 end
 

@@ -21,7 +21,7 @@ function rosenbrook2()
 end
 
 function createHardCaseUsingSimpleBivariateConvexProblemJuMP()
-    model = Model(CAT.Optimizer)
+    model = Model(TrustCAT.Optimizer)
     @variable(model, x)
     @variable(model, y)
     @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
@@ -32,7 +32,7 @@ end
 ####Utility Method####
 ######################
 function attachSolverWithAttributesToJuMPModel(model::Model, options::Dict{String,Any})
-    set_optimizer(model, CAT.Optimizer)
+    set_optimizer(model, TrustCAT.Optimizer)
     for (name, value) in options
         sname = string(name)
         set_optimizer_attribute(model, sname, value)
@@ -82,11 +82,11 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = CAT.TerminationCriteria()
-    algorithm_params = CAT.AlgorithmicParameters()
+    termination_criteria = TrustCAT.TerminationCriteria()
+    algorithm_params = TrustCAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
+        TrustCAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -100,7 +100,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status == CAT.TerminationStatusCode.OPTIMAL
+    @test status == TrustCAT.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==
@@ -165,8 +165,8 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = CAT.TerminationCriteria()
-    algorithm_params = CAT.AlgorithmicParameters()
+    termination_criteria = TrustCAT.TerminationCriteria()
+    algorithm_params = TrustCAT.AlgorithmicParameters()
 
     algorithm_params.β = β
     algorithm_params.ω_2 = ω_2
@@ -175,7 +175,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     termination_criteria.MAX_ITERATIONS = MAX_ITERATIONS
     termination_criteria.gradient_termination_tolerance = gradient_termination_tolerance
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
+        TrustCAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -189,7 +189,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status == CAT.TerminationStatusCode.ITERATION_LIMIT
+    @test status == TrustCAT.TerminationStatusCode.ITERATION_LIMIT
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==
@@ -220,7 +220,7 @@ end
 
 function optimize_model_with_constraints_failure_expected()
     model = rosenbrook2()
-    set_optimizer(model, CAT.Optimizer)
+    set_optimizer(model, TrustCAT.Optimizer)
     try
         optimize!(model)
     catch e
@@ -246,11 +246,11 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     optimizer = backend(model).optimizer.model
 
     nlp = MathOptNLPModel(model)
-    termination_criteria = CAT.TerminationCriteria()
-    algorithm_params = CAT.AlgorithmicParameters()
+    termination_criteria = TrustCAT.TerminationCriteria()
+    algorithm_params = TrustCAT.AlgorithmicParameters()
 
     x_k, status, iteration_stats, algorithm_counter, itr =
-        CAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
+        TrustCAT.optimize(nlp, termination_criteria, algorithm_params, nlp.meta.x0, 0.0)
 
     @test algorithm_counter.total_function_evaluation == nlp.counters.neval_obj
     @test algorithm_counter.total_gradient_evaluation == nlp.counters.neval_grad
@@ -288,7 +288,7 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     @test x_k == [x, y]
     @test itr == optimizer.inner.itr
     @test x_k == optimizer.inner.x
-    @test status == CAT.TerminationStatusCode.OPTIMAL
+    @test status == TrustCAT.TerminationStatusCode.OPTIMAL
     @test iteration_stats == optimizer.inner.iteration_stats
 
     @test algorithm_counter.total_function_evaluation ==

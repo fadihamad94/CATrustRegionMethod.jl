@@ -240,8 +240,8 @@ function runModelFromProblem(
         @info "$dates_format-----------EXECUTING PROBLEM----------$cutest_problem"
         nlp = CUTEstModel(cutest_problem)
 
-        termination_criteria = CAT.TerminationCriteria(max_it, tol_opt, max_time)
-        algorithm_params = CAT.AlgorithmicParameters(
+        termination_criteria = TrustCAT.TerminationCriteria(max_it, tol_opt, max_time)
+        algorithm_params = TrustCAT.AlgorithmicParameters(
             β,
             θ,
             ω_1,
@@ -262,7 +262,7 @@ function runModelFromProblem(
         algorithm_counter,
         total_iterations_count,
         total_execution_time =
-            CAT.optimize(nlp, termination_criteria, algorithm_params, x_1, δ)
+            TrustCAT.optimize(nlp, termination_criteria, algorithm_params, x_1, δ)
         status_string = convertStatusCodeToStatusString(status)
         function_value = NaN
         gradient_value = NaN
@@ -288,7 +288,7 @@ function runModelFromProblem(
     catch e
         @show e
         status = "INCOMPLETE"
-        algorithm_counter = CAT.AlgorithmCounter()
+        algorithm_counter = TrustCAT.AlgorithmCounter()
         algorithm_counter.total_function_evaluation = 2 * max_it + 1
         algorithm_counter.total_gradient_evaluation = 2 * max_it + 1
         algorithm_counter.total_hessian_evaluation = 2 * max_it + 1
@@ -506,16 +506,16 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        CAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
-        CAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
-        CAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
-        CAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
-        CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
-        CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
-        CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
+        TrustCAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+        TrustCAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+        TrustCAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+        TrustCAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+        TrustCAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+        TrustCAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
+        TrustCAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        TrustCAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
             "TRUST_REGION_SUBPROBLEM_ERROR",
-        CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
+        TrustCAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
     )
     return dict_status_code[status]
 end
@@ -525,7 +525,7 @@ function outputIterationsStatusToCSVFile(
     cutest_problem::String,
     status::String,
     total_execution_time::Float64,
-    algorithm_counter::CAT.AlgorithmCounter,
+    algorithm_counter::TrustCAT.AlgorithmCounter,
     function_value::Float64,
     gradient_value::Float64,
     optimization_method::String,

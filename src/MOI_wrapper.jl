@@ -367,17 +367,17 @@ end
 
 function convertStatusCodeToStatusString(status)
     dict_status_code = Dict(
-        CAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
-        CAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
-        CAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
-        CAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
-        CAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
-        CAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
-        CAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
-        CAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
+        TrustCAT.TerminationStatusCode.OPTIMAL => "OPTIMAL",
+        TrustCAT.TerminationStatusCode.UNBOUNDED => "UNBOUNDED",
+        TrustCAT.TerminationStatusCode.ITERATION_LIMIT => "ITERATION_LIMIT",
+        TrustCAT.TerminationStatusCode.TIME_LIMIT => "TIME_LIMIT",
+        TrustCAT.TerminationStatusCode.MEMORY_LIMIT => "MEMORY_LIMIT",
+        TrustCAT.TerminationStatusCode.STEP_SIZE_LIMIT => "STEP_SIZE_LIMIT",
+        TrustCAT.TerminationStatusCode.NUMERICAL_ERROR => "NUMERICAL_ERROR",
+        TrustCAT.TerminationStatusCode.TRUST_REGION_SUBPROBLEM_ERROR =>
             "TRUST_REGION_SUBPROBLEM_ERROR",
-        CAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
-        CAT.TerminationStatusCode.INVALID_MODEL => "INVALID_MODEL",
+        TrustCAT.TerminationStatusCode.OTHER_ERROR => "OTHER_ERROR",
+        TrustCAT.TerminationStatusCode.INVALID_MODEL => "INVALID_MODEL",
     )
     return dict_status_code[status]
 end
