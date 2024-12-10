@@ -618,7 +618,7 @@ function test_compute_l_2_norm_symmetric_matrix_2_by_2()
     symmetric_matrix = Symmetric(sparse_matrix)
 
     # Create a symmetric sparse matrix
-    symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
+    symmetric_matrix = Symmetric(sparse_matrix, :U)
 
     l2_norm_our_approach = CAT.matrix_l2_norm(symmetric_matrix)
 
@@ -637,7 +637,7 @@ function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
     sparse_matrix = sparse(i, j, v)
 
     # Create a symmetric sparse matrix
-    symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
+    symmetric_matrix = Symmetric(sparse_matrix, :U)
 
     l2_norm_our_approach = CAT.matrix_l2_norm(symmetric_matrix)
 
