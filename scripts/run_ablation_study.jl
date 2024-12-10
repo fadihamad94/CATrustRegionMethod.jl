@@ -222,7 +222,7 @@ function parse_command_line()
         "--γ_3"
         help = "γ_3 parameter for CAT"
         arg_type = Float64
-        default = 1.0
+        default = 0.5
 
         "--ξ"
         help = "ξ parameter for CAT"

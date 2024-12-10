@@ -3,7 +3,7 @@
 ## and KNITRO.jl
 ########################################################
 
-export CATSolver
+export Optimizer
 
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities
@@ -31,7 +31,7 @@ mutable struct CATProblem
     solve_time::Float64
     itr::Int64 #Total number of iterations
 
-    # Custom attributes of the CATSolver
+    # Custom attributes of the Optimizer
     iteration_stats::DataFrame
     algorithm_counter::AlgorithmCounter
     termination_criteria::TerminationCriteria
@@ -57,7 +57,7 @@ function MOI.eval_hessian_lagrangian(::EmptyNLPEvaluator, H, x, s, mu)
     return
 end
 
-mutable struct CATSolver <: MOI.AbstractOptimizer
+mutable struct Optimizer <: MOI.AbstractOptimizer
     #inner::CATProblem
     inner::Union{CATProblem,Nothing}
 
@@ -84,14 +84,14 @@ mutable struct CATSolver <: MOI.AbstractOptimizer
     solve_time::Float64
 end
 
-function CATSolver(; options...)
+function Optimizer(; options...)
     options_dict = Dict{String,Any}()
 
     for (name, value) in options
         options_dict[string(name)] = value
     end
 
-    CATSolverModel = CATSolver(
+    OptimizerModel = Optimizer(
         CATProblem(),
         "",
         [],
@@ -102,12 +102,12 @@ function CATSolver(; options...)
         options_dict,
         NaN,
     )
-    set_options(CATSolverModel, options)
+    set_options(OptimizerModel, options)
 
-    return CATSolverModel
+    return OptimizerModel
 end
 
-function set_options(model::CATSolver, options)
+function set_options(model::Optimizer, options)
     for (name, value) in options
         sname = string(name)
         MOI.set(model, MOI.RawOptimizerAttribute(sname), value)
@@ -116,7 +116,7 @@ function set_options(model::CATSolver, options)
 end
 
 # TODO support
-# function MOI.get(model::CATSolver, ::MOI.ObjectiveFunctionType)
+# function MOI.get(model::Optimizer, ::MOI.ObjectiveFunctionType)
 #     if model.nlp_data.evaluator === EmptyNLPEvaluator
 #         return MOI.ScalarAffineFunction{Float64}
 #     else
@@ -125,7 +125,7 @@ end
 # end
 
 # TODO support
-function MOI.get(model::CATSolver, ::MOI.ListOfModelAttributesSet)
+function MOI.get(model::Optimizer, ::MOI.ListOfModelAttributesSet)
     attributes = MOI.AbstractModelAttribute[]
     if model.sense != MOI.FEASIBILITY_SENSE
         push!(attributes, MOI.ObjectiveSense())
@@ -144,13 +144,13 @@ end
 ### MOI.Silent
 ###
 
-MOI.supports(::CATSolver, ::MOI.Silent) = true
+MOI.supports(::Optimizer, ::MOI.Silent) = true
 
-function MOI.get(model::CATSolver, ::MOI.Silent)
+function MOI.get(model::Optimizer, ::MOI.Silent)
     return MOI.get(model, MOI.RawOptimizerAttribute("output_flag"))
 end
 
-function MOI.set(model::CATSolver, ::MOI.Silent, flag::Bool)
+function MOI.set(model::Optimizer, ::MOI.Silent, flag::Bool)
     MOI.set(model, MOI.RawOptimizerAttribute("output_flag"), flag)
     return
 end
@@ -159,15 +159,15 @@ end
 ### MOI.Name
 ###
 
-MOI.supports(::CATSolver, ::MOI.Name) = true
+MOI.supports(::Optimizer, ::MOI.Name) = true
 
-MOI.get(model::CATSolver, ::MOI.Name) = model.name
+MOI.get(model::Optimizer, ::MOI.Name) = model.name
 
-MOI.set(model::CATSolver, ::MOI.Name, name::String) = (model.name = name)
+MOI.set(model::Optimizer, ::MOI.Name, name::String) = (model.name = name)
 
-MOI.get(::CATSolver, ::MOI.SolverName) = "CATSolver"
+MOI.get(::Optimizer, ::MOI.SolverName) = "Optimizer"
 
-function MOI.get(::CATSolver, ::MOI.SolverVersion)
+function MOI.get(::Optimizer, ::MOI.SolverVersion)
     X, Y, Z = 1, 0, 0
     return "v$X.$Y.$Z"
 end
@@ -177,35 +177,35 @@ end
 ### MOI.TimeLimitSec
 ###
 
-MOI.supports(::CATSolver, ::MOI.TimeLimitSec) = true
+MOI.supports(::Optimizer, ::MOI.TimeLimitSec) = true
 
-function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, ::Nothing)
+function MOI.set(model::Optimizer, ::MOI.TimeLimitSec, ::Nothing)
     return MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), Inf)
 end
 
-function MOI.set(model::CATSolver, ::MOI.TimeLimitSec, limit::Real)
+function MOI.set(model::Optimizer, ::MOI.TimeLimitSec, limit::Real)
     if limit < 0
         limit = Inf
     end
     return MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), Float64(limit))
 end
 
-function MOI.get(model::CATSolver, ::MOI.TimeLimitSec)
+function MOI.get(model::Optimizer, ::MOI.TimeLimitSec)
     value = MOI.get(model, MOI.RawOptimizerAttribute("time_limit"))
     return value == Inf ? nothing : value
 end
 
 """
-    MOI.is_empty(model::CATSolver )
+    MOI.is_empty(model::Optimizer )
 """
 
-function MOI.is_empty(model::CATSolver)
+function MOI.is_empty(model::Optimizer)
     return isempty(model.variable_info) &&
            model.nlp_data.evaluator isa EmptyNLPEvaluator &&
            model.sense == MOI.FEASIBILITY_SENSE
 end
 
-function MOI.empty!(model::CATSolver)
+function MOI.empty!(model::Optimizer)
     model.inner = CATProblem()
     model.name = ""
     empty!(model.variable_info)
@@ -215,37 +215,37 @@ function MOI.empty!(model::CATSolver)
     model.nlp_dual_start = nothing
 end
 
-function MOI.get(model::CATSolver, ::MOI.ListOfVariableIndices)
+function MOI.get(model::Optimizer, ::MOI.ListOfVariableIndices)
     return [MOI.VariableIndex(i) for i = 1:length(model.variable_info)]
 end
 
-function MOI.add_variable(model::CATSolver)
+function MOI.add_variable(model::Optimizer)
     push!(model.variable_info, VariableInfo())
     return MOI.VariableIndex(length(model.variable_info))
 end
 
-function MOI.add_variables(model::CATSolver, n::Int)
+function MOI.add_variables(model::Optimizer, n::Int)
     return [MOI.add_variable(model) for i = 1:n]
 end
 
-function MOI.is_valid(model::CATSolver, vi::MOI.VariableIndex)
+function MOI.is_valid(model::Optimizer, vi::MOI.VariableIndex)
     return vi.value in eachindex(model.variable_info)
 end
 
-function has_upper_bound(model::CATSolver, vi::MOI.VariableIndex)
+function has_upper_bound(model::Optimizer, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].has_upper_bound
 end
 
-function has_lower_bound(model::CATSolver, vi::MOI.VariableIndex)
+function has_lower_bound(model::Optimizer, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].has_lower_bound
 end
 
-function is_fixed(model::CATSolver, vi::MOI.VariableIndex)
+function is_fixed(model::Optimizer, vi::MOI.VariableIndex)
     return model.variable_info[vi.value].is_fixed
 end
 
 function MOI.set(
-    model::CATSolver,
+    model::Optimizer,
     ::MOI.ObjectiveFunction,
     # func::Union{MOI.VariableIndex,MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction},
     func::Union{MOI.ScalarQuadraticFunction,MOI.ScalarNonlinearFunction},
@@ -283,12 +283,12 @@ function create_pars_JuMP(options)
     return termination_criteria, algorithm_params
 end
 
-MOI.get(model::CATSolver, ::MOI.RawSolver) = model
+MOI.get(model::Optimizer, ::MOI.RawSolver) = model
 
 # copy
-MOI.supports_incremental_interface(solver::CATSolver) = true
+MOI.supports_incremental_interface(solver::Optimizer) = true
 
-function MOI.optimize!(solver::CATSolver)
+function MOI.optimize!(solver::Optimizer)
     t = time()
 
     has_nlp_objective = false
@@ -426,17 +426,17 @@ function status_CAT_To_JuMP(status::String)
     end
 end
 
-# function check_inbounds(model::CATSolver, vi::MOI.VariableIndex)
+# function check_inbounds(model::Optimizer, vi::MOI.VariableIndex)
 #     return MOI.throw_if_not_valid(model, vi)
 # end
 
-# function check_inbounds(model::CATSolver, aff::MOI.ScalarAffineFunction)
+# function check_inbounds(model::Optimizer, aff::MOI.ScalarAffineFunction)
 #     for term in aff.terms
 #         MOI.throw_if_not_valid(model, term.variable)
 #     end
 # end
 
-function check_inbounds(model::CATSolver, quad::MOI.ScalarQuadraticFunction)
+function check_inbounds(model::Optimizer, quad::MOI.ScalarQuadraticFunction)
     for term in quad.affine_terms
         MOI.throw_if_not_valid(model, term.variable)
     end
@@ -446,12 +446,12 @@ function check_inbounds(model::CATSolver, quad::MOI.ScalarQuadraticFunction)
     end
 end
 
-MOI.supports(::CATSolver, ::MOI.NLPBlock) = true
+MOI.supports(::Optimizer, ::MOI.NLPBlock) = true
 
 # MOI.ObjectiveFunction
 
 function MOI.supports(
-    ::CATSolver,
+    ::Optimizer,
     ::MOI.ObjectiveFunction{
         <:Union{
             # MOI.VariableIndex,
@@ -464,9 +464,9 @@ function MOI.supports(
     return true
 end
 
-MOI.supports(::CATSolver, ::MOI.ObjectiveSense) = true
+MOI.supports(::Optimizer, ::MOI.ObjectiveSense) = true
 
-MOI.supports(::CATSolver, ::MOI.RawOptimizerAttribute) = true
+MOI.supports(::Optimizer, ::MOI.RawOptimizerAttribute) = true
 
 const SUPPORTED_MODEL_ATTR = Union{
     MOI.Name,
@@ -487,33 +487,33 @@ const SUPPORTED_MODEL_ATTR = Union{
     MOI.DualStatus
 }
 
-MOI.supports(::CATSolver, ::SUPPORTED_MODEL_ATTR) = true
+MOI.supports(::Optimizer, ::SUPPORTED_MODEL_ATTR) = true
 
-MOI.supports(::CATSolver, ::MOI.ObjectiveLimit) = false
+MOI.supports(::Optimizer, ::MOI.ObjectiveLimit) = false
 
-MOI.supports(::CATSolver, ::MOI.AbsoluteGapTolerance) = false
+MOI.supports(::Optimizer, ::MOI.AbsoluteGapTolerance) = false
 
-MOI.supports(::CATSolver, ::MOI.RelativeGapTolerance) = false
+MOI.supports(::Optimizer, ::MOI.RelativeGapTolerance) = false
 
-MOI.supports(::CATSolver, ::MOI.SolutionLimit) = false
+MOI.supports(::Optimizer, ::MOI.SolutionLimit) = false
 
-MOI.supports(::CATSolver, ::MOI.SolveTimeSec) = true
+MOI.supports(::Optimizer, ::MOI.SolveTimeSec) = true
 
-function MOI.get(model::CATSolver, ::MOI.SolveTimeSec)
+function MOI.get(model::Optimizer, ::MOI.SolveTimeSec)
     return model.inner.solve_time;
 end
 
 #
 #   NumberOfVariables
 #
-MOI.get(model::CATSolver, ::MOI.NumberOfVariables) = length(model.variable_info)
+MOI.get(model::Optimizer, ::MOI.NumberOfVariables) = length(model.variable_info)
 
-function MOI.get(model::CATSolver, ::MOI.ObjectiveFunction)
+function MOI.get(model::Optimizer, ::MOI.ObjectiveFunction)
     return model.objective
 end
 
 # Only supports equality
-function MOI.set(model::CATSolver, ::MOI.NLPBlock, nlp_data::MOI.NLPBlockData)
+function MOI.set(model::Optimizer, ::MOI.NLPBlock, nlp_data::MOI.NLPBlockData)
     model.nlp_data = nlp_data
     index = 1
     for constraint_bound in model.nlp_data.constraint_bounds
@@ -523,19 +523,19 @@ function MOI.set(model::CATSolver, ::MOI.NLPBlock, nlp_data::MOI.NLPBlockData)
     return
 end
 
-function MOI.set(model::CATSolver, ::MOI.ObjectiveSense, sense::MOI.OptimizationSense)
+function MOI.set(model::Optimizer, ::MOI.ObjectiveSense, sense::MOI.OptimizationSense)
     model.sense = sense
     return
 end
 
-MOI.get(model::CATSolver, ::MOI.ObjectiveSense) = model.sense
+MOI.get(model::Optimizer, ::MOI.ObjectiveSense) = model.sense
 
-function MOI.supports(::CATSolver, ::MOI.VariablePrimalStart, ::Type{MOI.VariableIndex})
+function MOI.supports(::Optimizer, ::MOI.VariablePrimalStart, ::Type{MOI.VariableIndex})
     return true
 end
 
 function MOI.set(
-    model::CATSolver,
+    model::Optimizer,
     ::MOI.VariablePrimalStart,
     vi::MOI.VariableIndex,
     value::Union{Real,Nothing},
@@ -546,7 +546,7 @@ function MOI.set(
 end
 
 function MOI.get(
-    model::CATSolver,
+    model::Optimizer,
     ::MOI.VariablePrimalStart,
     vi::MOI.VariableIndex,
 )
@@ -557,29 +557,29 @@ function MOI.get(model::MOIU.CachingOptimizer, args...)
     return MOI.get(model.model.optimizer, args)
 end
 
-function MOI.get(model::CATSolver, attr::MOI.VariablePrimal, v::VariableRef)
+function MOI.get(model::Optimizer, attr::MOI.VariablePrimal, v::VariableRef)
     return MOI.get(model, attr, v.variable)
 end
 
-function MOI.get(model::CATSolver, attr::MOI.VariablePrimal, vi::MOI.VariableIndex)
+function MOI.get(model::Optimizer, attr::MOI.VariablePrimal, vi::MOI.VariableIndex)
     MOI.check_result_index_bounds(model, attr)
     MOI.throw_if_not_valid(model, vi)
     return model.inner.x[vi.value]
 end
 
-function MOI.set(model::CATSolver, p::MOI.RawOptimizerAttribute, value)
+function MOI.set(model::Optimizer, p::MOI.RawOptimizerAttribute, value)
     model.options[p.name] = value
     return
 end
 
-function MOI.get(model::CATSolver, p::MOI.RawOptimizerAttribute)
+function MOI.get(model::Optimizer, p::MOI.RawOptimizerAttribute)
     if haskey(model.options, p.name)
         return model.options[p.name]
     end
     error("RawParameter with name $(p.name) is not set.")
 end
 
-function MOI.get(model::CATSolver, ::MOI.TerminationStatus)
+function MOI.get(model::Optimizer, ::MOI.TerminationStatus)
     try
         model.inner.status
     catch
@@ -589,7 +589,7 @@ function MOI.get(model::CATSolver, ::MOI.TerminationStatus)
     return status_
 end
 
-function MOI.get(model::CATSolver, ::MOI.RawStatusString)
+function MOI.get(model::Optimizer, ::MOI.RawStatusString)
     try
         model.inner.status
     catch
@@ -599,11 +599,11 @@ function MOI.get(model::CATSolver, ::MOI.RawStatusString)
     return string(status_)
 end
 
-function MOI.get(model::CATSolver, ::MOI.ResultCount)
+function MOI.get(model::Optimizer, ::MOI.ResultCount)
     return (model.inner !== nothing) ? 1 : 0
 end
 
-function MOI.get(model::CATSolver, attr::MOI.PrimalStatus)
+function MOI.get(model::Optimizer, attr::MOI.PrimalStatus)
     try
         model.inner.status
     catch
@@ -614,7 +614,7 @@ function MOI.get(model::CATSolver, attr::MOI.PrimalStatus)
     return status_
 end
 
-function MOI.get(model::CATSolver, attr::MOI.DualStatus)
+function MOI.get(model::Optimizer, attr::MOI.DualStatus)
     try
         model.inner.status
     catch
@@ -625,7 +625,7 @@ function MOI.get(model::CATSolver, attr::MOI.DualStatus)
     return status_
 end
 
-function MOI.get(model::CATSolver, attr::MOI.ObjectiveValue)
+function MOI.get(model::Optimizer, attr::MOI.ObjectiveValue)
     MOI.check_result_index_bounds(model, attr)
     return model.inner.obj_val
 end

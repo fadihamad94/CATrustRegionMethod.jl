@@ -21,7 +21,7 @@ function rosenbrook2()
 end
 
 function createHardCaseUsingSimpleBivariateConvexProblemJuMP()
-    model = Model(CAT.CATSolver)
+    model = Model(CAT.Optimizer)
     @variable(model, x)
     @variable(model, y)
     @NLobjective(model, Min, x^2 - 10 * x * y + y^2)
@@ -32,7 +32,7 @@ end
 ####Utility Method####
 ######################
 function attachSolverWithAttributesToJuMPModel(model::Model, options::Dict{String,Any})
-    set_optimizer(model, CAT.CATSolver)
+    set_optimizer(model, CAT.Optimizer)
     for (name, value) in options
         sname = string(name)
         set_optimizer_attribute(model, sname, value)
@@ -220,7 +220,7 @@ end
 
 function optimize_model_with_constraints_failure_expected()
     model = rosenbrook2()
-    set_optimizer(model, CAT.CATSolver)
+    set_optimizer(model, CAT.Optimizer)
     try
         optimize!(model)
     catch e

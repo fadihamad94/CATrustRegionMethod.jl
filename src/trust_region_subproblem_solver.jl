@@ -5,7 +5,7 @@ using DelimitedFiles
 using Distributions
 
 """
-solveTrustRegionSubproblem(problem_name, f, g, H, x, δ, γ_1, γ_2, r, min_grad, print_level)
+solveTrustRegionSubproblem(problem_name, f, g, H, x, δ, γ_1, γ_2, γ_3, r, min_grad, print_level)
 See optimizeSecondOrderModel
 """
 function solveTrustRegionSubproblem(
@@ -21,6 +21,7 @@ function solveTrustRegionSubproblem(
     δ::Float64,
     γ_1::Float64,
     γ_2::Float64,
+    γ_3::Float64,
     r::Float64,
     min_grad::Float64,
     algorithm_counter::AlgorithmCounter,
@@ -37,7 +38,7 @@ function solveTrustRegionSubproblem(
     temp_total_number_factorizations_bisection,
     temp_total_number_factorizations_compute_search_direction,
     temp_total_number_factorizations_inverse_power_iteration =
-        optimizeSecondOrderModel(problem_name, g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+        optimizeSecondOrderModel(problem_name, g, H, δ, γ_1, γ_2, γ_3, r, min_grad, print_level)
 
     increment!(
         algorithm_counter,
@@ -70,7 +71,6 @@ function solveTrustRegionSubproblem(
             algorithm_counter.total_number_factorizations_compute_search_direction +
             algorithm_counter.total_number_factorizations_inverse_power_iteration
 
-    γ_3 = 0.5
     if print_level >= 2
         println("success_subproblem_solve is $success_subproblem_solve.")
         norm_d_k = norm(d_k)
@@ -112,27 +112,27 @@ end
   # Inputs:
     - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
 	- `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
 	See (1). The Hessian at the current iterate x.
-	- `δ::BigFloat`. See (1). A warm start value for solving the above system (2).
-	- `γ_1::BigFloat`. See (2). Specify how much the step d_k should be close from the exact solution.
-	- `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-	- `r::BigFloat`. See (1). The trsut-region radius.
-	- `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
-	- `print_level::BigFloat`. The verbosity level of logs.
+	- `δ::Float64`. See (1). A warm start value for solving the above system (2).
+	- `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+	- `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+	- `r::Float64`. See (1). The trsut-region radius.
+	- `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+	- `print_level::Float64`. The verbosity level of logs.
 
   # Outputs:
 	'success_find_interval::Bool'. See (3). It specifies if we found an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0.
 	'success_bisection::Bool'. See (3). It specifies if we found δ_m ∈ [δ, δ_prime] such that ϕ(δ_m) = 0.
-	'δ_m::BigFloat'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
-	'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-	'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+	'δ_m::Float64'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
+	'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+	'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
 	'd_k:Vector{Float64}`. See (1). The search direction which is the solution of (1).
-	'temp_total_number_factorizations::BigInt'. The total number of choelsky factorization done for H + δ I.
+	'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
 	'hard_case::Bool'. See (2). It specifies if δ_m = -λ_1(H) where λ_1 is the minimum eigenvalue of the matrix H.
-	'temp_total_number_factorizations_findinterval::BigInt'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
-	'temp_total_number_factorizations_bisection::BigInt'. The number of choelsky factorization done for H + δ I when doing the bisection.
-	'total_number_factorizations_compute_search_direction::BigInt'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
+	'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+	'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
+	'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
 	temp_total_number_factorizations = temp_total_number_factorizations_findinterval + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
 """
 function computeSearchDirection(
@@ -266,18 +266,18 @@ end
     - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
 	- 'd_k:Vector{Float64}`. See (1). The search direction which is the solution of (1).
 	- `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+	- `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
 	See (1). The Hessian at the current iterate x.
-	- `δ_original::BigFloat`. See (1). A warm start value for solving the above system (2).
-	- 'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-	- 'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
-	- `γ_1::BigFloat`. See (2). Specify how much the step d_k should be close from the exact solution.
-	- `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-	- `γ_3::BigFloat`. See (2). Specify upper bound on the Model value.
-	- `r::BigFloat`. See (1). The trsut-region radius.
-	- `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
+	- `δ_original::Float64`. See (1). A warm start value for solving the above system (2).
+	- 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+	- 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+	- `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+	- `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+	- `γ_3::Float64`. See (2). Specify upper bound on the Model value.
+	- `r::Float64`. See (1). The trsut-region radius.
+	- `min_grad::Float64`. See (2). The minumum gradient over all iterates.
 	- 'hard_case::Bool'. See (2). It specifies if δ_m = -λ_1(H) where λ_1 is the minimum eigenvalue of the matrix H.
-	- `print_level::BigFloat`. The verbosity level of logs.
+	- `print_level::Float64`. The verbosity level of logs.
 
   # Outputs:
 	If subproblem termination conditions are satisfied or not.
@@ -326,7 +326,6 @@ function validateTrustRegionSubproblemTerminationCriteria(
         return true
     end
 
-    γ_3 = 0.5
     # condition (6a)
     error_message = "Trust-region subproblem failure."
     failure = false
@@ -420,7 +419,7 @@ function validateTrustRegionSubproblemTerminationCriteria(
 end
 
 """
-optimizeSecondOrderModel(problem_name, g, H, δ, γ_1, γ_2, r, min_grad, print_level)
+optimizeSecondOrderModel(problem_name, g, H, δ, γ_1, γ_2, γ_3, r, min_grad, print_level)
 This function finds a solution to the quadratic problem
 
 	argmin_d 1/2 d ^ T * H * d + g ^ T  * d
@@ -432,6 +431,7 @@ This problem (1) is solved approximately by solving the follwoing system of equa
 ||H d_k + g + δ d_k|| <= γ_1 * min_grad           (2)
 γ_2 * ||d_k||) <=  γ_2 * r
 ||d_k|| <= r
+M_k(d_k) <= - γ_3 * 0.5 * δ * ||d_k|| ^ 2
 H + δ I ≥ 0
 
 The logic to find the solution either by defining a univariate function ϕ (See (3)) in δ. Then, we construct an interval [δ, δ_prime]
@@ -443,25 +443,27 @@ The logic to find the solution either by defining a univariate function ϕ (See 
 # Inputs:
   - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - `γ_1::BigFloat`. See (2). Specify how much the step d_k should be close from the exact solution.
-  - `δ::BigFloat`. See (1). A warm start value for solving the above system (2)
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `δ::Float64`. See (1). A warm start value for solving the above system (2)
+  - `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `γ_3::Float64`. See (2). Specify how much reduction in the model relative to the norm of the search direction.
+
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
 # Outputs:
   'success_subproblem_solve::Bool'
-  'δ_k::BigFloat'.  See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_k) = 0.
+  'δ_k::Float64'.  See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_k) = 0.
   This is used to compute d_k.
   'd_k::Vector{Float64}`. See (1). The search direction which is the solution of (1).
-  'temp_total_number_factorizations::BigInt'. The total number of choelsky factorization done for H + δ I.
+  'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
   'hard_case::Bool'. See (2). It specifies if δ_k = -λ_1(H) where λ_1 is the minimum eigenvalue of the matrix H.
-  'temp_total_number_factorizations_findinterval::BigInt'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
-  'temp_total_number_factorizations_bisection::BigInt'. The number of choelsky factorization done for H + δ I when doing the bisection.
-  'total_number_factorizations_compute_search_direction::BigInt'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
-  'temp_total_number_factorizations_inverse_power_iteration::BigInt'. The number of choelsky factorization done when solving the hard case instance.
+  'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+  'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
+  'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k = (H + δ_m * I) ^ {-1} (-g)
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
   temp_total_number_factorizations = temp_total_number_factorizations_findinterval
   + temp_total_number_factorizations_bisection + total_number_factorizations_compute_search_direction
   + temp_total_number_factorizations_inverse_power_iteration
@@ -477,6 +479,7 @@ function optimizeSecondOrderModel(
     δ::Float64,
     γ_1::Float64,
     γ_2::Float64,
+    γ_3::Float64,
     r::Float64,
     min_grad::Float64,
     print_level::Int64 = 0,
@@ -675,7 +678,7 @@ function optimizeSecondOrderModel(
             δ = δ_initial
             #Try bisection again with perturbed gradient
             # g_k’ = g_k + u_k \gamma_1 \varepsilon_k / 2 where u_k = randn(d), u_k = u_k / || u_k ||
-            u_k = rand(Normal(), length(g))
+            u_k = rand(length(g))
             u_k /= norm(u_k)
             g_ = g + 0.5 * u_k * γ_1 * min_grad
             success_find_interval,
@@ -748,12 +751,12 @@ The function is a decreasing univariate function in δ. It is equal to -1 when H
 
 # Inputs:
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - `δ::BigFloat`. See (1). The variable in the function.
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `δ::Float64`. See (1). The variable in the function.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `print_level::Float64`. The verbosity level of logs.
 
 # Outputs:
   An integer values that takes the values -1, 0, or 1.
@@ -810,19 +813,19 @@ findinterval(g, H, δ, γ_2, r, print_level)
 Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (3)) such that ϕ(δ) >= 0 and ϕ(δ_prime) <=0.
 # Inputs:
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - `δ::BigFloat`. See (1). A warm start value for solving the above system (2).
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `δ::Float64`. See (1). A warm start value for solving the above system (2).
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `print_level::Float64`. The verbosity level of logs.
 
 # Outputs:
   'success_find_interval::Bool'. See (3). It specifies if we found an interval [δ, δ_prime] such that ϕ(δ) * ϕ(δ_prime) <= 0.
-  'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-  'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
   'd_δ_prime:Vector{Float64}`. See (1). The search direction which is computed using δ_prime.
-  'temp_total_number_factorizations_findinterval::BigInt'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
+  'temp_total_number_factorizations_findinterval::Int64'. The number of choelsky factorization done for H + δ I when finding the interval [δ, δ_prime].
 """
 function findinterval(
     g::Vector{Float64},
@@ -900,24 +903,24 @@ Constructs an interval [δ, δ_prime] based on the univariate function ϕ (See (
 # Inputs:
   - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - 'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-  - `γ_1::BigFloat`. See (2). Specify how much the step d_k should be close from the exact solution.
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - 'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - `γ_1::Float64`. See (2). Specify how much the step d_k should be close from the exact solution.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
   - 'd_δ_prime:Vector{Float64}`. See (1). The search direction which is computed using δ_prime.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
 
 # Outputs:
   'success_bisectionl::Bool'. See (3). It specifies if we found δ_m ∈ the interval [δ, δ_prime] such that ϕ(δ_m) = 0.
-  'δ_m::BigFloat'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
-  'δ::BigFloat'. See (3). The new lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-  'δ_prime::BigFloat'. See (3). The new upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  'δ_m::Float64'. See (1), (2), and (3). The solution of the above system of equations such that ϕ(δ_m) = 0.
+  'δ::Float64'. See (3). The new lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  'δ_prime::Float64'. See (3). The new upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
   'd_k:Vector{Float64}`. See (1). The search direction which is the solution of (1).
-  'temp_total_number_factorizations_bisection::BigInt'. The number of choelsky factorization done for H + δ I when doing the bisection.
+  'temp_total_number_factorizations_bisection::Int64'. The number of choelsky factorization done for H + δ I when doing the bisection.
 """
 function bisection(
     problem_name::String,
@@ -1042,25 +1045,25 @@ Find a solution to (2) if for a reason, we failed to construct the interval or t
 # Inputs:
   - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - `γ_1::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - 'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-  - 'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
-  - `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `γ_1::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - `print_level::Float64`. The verbosity level of logs.
 
 # Outputs:
   'success::Bool'. See (3). It specifies if we found the solution of (1).
-  'δ::BigFloat'. See (1), (2), and (3). The solution of the above system of equations (2) such that ϕ(δ) = 0.
+  'δ::Float64'. See (1), (2), and (3). The solution of the above system of equations (2) such that ϕ(δ) = 0.
    It has the minimum eigenvalue of H.
   'd_k::Vector{Float64}'. See (1). The search direction which is the solution of (1).
    d_k = cholesky(H + δ' * I) ^ {-1} (-g) + α y where y is the eigenvector associated with the minimum eigenvalue and α computed such that ||d_k|| = r
-  'temp_total_number_factorizations::BigInt'. The total number of choelsky factorization done for H + δ I.
-  'total_number_factorizations_compute_search_direction::BigInt'. The number of choelsky factorization done when computing d_k
-  'temp_total_number_factorizations_inverse_power_iteration::BigInt'. The number of choelsky factorization done when solving the hard case instance.
+  'temp_total_number_factorizations::Int64'. The total number of choelsky factorization done for H + δ I.
+  'total_number_factorizations_compute_search_direction::Int64'. The number of choelsky factorization done when computing d_k
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
 """
 function solveHardCaseLogic(
     problem_name::String,
@@ -1208,23 +1211,23 @@ Compute iteratively an approximate value to the minimum eigenvalue of H.
 # Inputs:
   - `problem_name::String`. Name of the problem being optimized for example a CUTEst benchamrk problem SCURLY10.
   - `g::Vector{Float64}`. See (1). The gradient at the current iterate x.
-  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, BigInt}, Symmetric{Float64, SparseMatrixCSC{Float64, BigInt}}}`.
+  - `H::Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}, Symmetric{Float64, SparseMatrixCSC{Float64, Int64}}}`.
   See (1). The Hessian at the current iterate x.
-  - `min_grad::BigFloat`. See (2). The minumum gradient over all iterates.
-  - 'δ::BigFloat'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
-  - 'δ_prime::BigFloat'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
-  - `r::BigFloat`. See (1). The trsut-region radius.
-  - `γ_1::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `γ_2::BigFloat`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
-  - `max_iter::BigInt`. The maximum number of iterations to run.
-  - `ϵ::BigFloat`. The tolerance to specify how close the solution should be from the minimum eigenvalue.
-  - `print_level::BigFloat`. The verbosity level of logs.
+  - `min_grad::Float64`. See (2). The minumum gradient over all iterates.
+  - 'δ::Float64'. See (3). The lower bound of the interval [δ, δ_prime] such that ϕ(δ) >= 0.
+  - 'δ_prime::Float64'. See (3). The upper bound of the interval [δ, δ_prime] such that ϕ(δ) <= 0.
+  - `r::Float64`. See (1). The trsut-region radius.
+  - `γ_1::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `γ_2::Float64`. See (2). Specify how close the step d_k should be close from the trust-region boundary when δ > 0.
+  - `max_iter::Int64`. The maximum number of iterations to run.
+  - `ϵ::Float64`. The tolerance to specify how close the solution should be from the minimum eigenvalue.
+  - `print_level::Float64`. The verbosity level of logs.
 
 # Outputs:
   'success::Bool'. See (3). It specifies if we found the minimum eigenvalue of H or not.
-  'eigenvalue::BigFloat'. The minimum eigenvalue of H.
+  'eigenvalue::Float64'. The minimum eigenvalue of H.
   'eigenvector::::Vector{Float64}'. The eigenvector for the minimum eigenvalue of H.
-  'temp_total_number_factorizations_inverse_power_iteration::BigInt'. The number of choelsky factorization done when solving the hard case instance.
+  'temp_total_number_factorizations_inverse_power_iteration::Int64'. The number of choelsky factorization done when solving the hard case instance.
   'temp_d_k::Vector{Float64}'. temp_d_k = cholesky(H + δ_prime * I) / (-g) + α * eigenvector
 """
 function inverse_power_iteration(
@@ -1242,11 +1245,11 @@ function inverse_power_iteration(
     ϵ::Float64 = 1e-3,
     print_level::Int64 = 0,
 )
-    γ_3 = 0.5
+    standard_normal = Normal()
     sigma = δ_prime
     start_time_temp = time()
     n = size(H, 1)
-    y = rand(Normal(), n)
+    y = rand(standard_normal, n)
     if print_level >= 2
         println(
             "++++++++STARTING INVERSE POWER ITERATION WITH δ = $δ and δ_prime = $δ_prime++++++++",

@@ -169,7 +169,6 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(δ_k == 2.1) <= tol
     @test norm((x_k + d_k) - [0.00021], 2) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
     @test abs(obj(nlp, x_k + d_k) - (-4.00004e-8)) <= tol

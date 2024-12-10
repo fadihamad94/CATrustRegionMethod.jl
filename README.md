@@ -20,13 +20,13 @@ pkg> test CAT
 Install Julia 1.10.4 or later. From the root directory of the repository, run:
 
 ```console
-$ julia --project=scripts -e 'import Pkg; Pkg.instantiate()'
+$ julia --project=. -e 'import Pkg; Pkg.instantiate()'
 ```
 
 Validate setup by running the unit tests:
 
 ```console
-$ julia --project=scripts test/runtests.jl
+$ julia --project=. test/runtests.jl
 ```
 
 ## Running
@@ -39,7 +39,7 @@ model = Model()
 @variable(model, x)
 @variable(model, y)
 @NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
-set_optimizer(model, CAT.CATSolver)
+set_optimizer(model, CAT.Optimizer)
 MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 1800.0)
 MOI.set(model, MOI.RawOptimizerAttribute("algorithm_params!r_1"), 100.0)
 optimize!(model)
@@ -60,18 +60,18 @@ solve_cutest.jl
 To see the meaning of each argument:
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --help
+$ julia --project=. scripts/solve_cutest.jl --help
 ```
 
 Here is a simple example:
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
+$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
 ```
 
 ### Plots for CUTEst test set
 ```shell
-$ julia --project=scripts scripts/plot_CUTEst_results.jl --output_dir ./scripts/benchmark/results/cutest
+$ julia --project=. scripts/plot_CUTEst_results.jl --output_dir ./scripts/benchmark/results/cutest
 ```
 
 ## Instructions for reproducing our experiments
@@ -79,15 +79,15 @@ $ julia --project=scripts scripts/plot_CUTEst_results.jl --output_dir ./scripts/
 ### CUTEst test set
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
+$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
 ```
 
 ```shell
-$ julia --project=scripts scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --θ 0.0
+$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --θ 0.0
 ```
 
 ```shell
-$ julia --project=scripts scripts/run_ablation_study.jl --output_dir ./scripts/benchmark/results_ablation_study/cutest --default_problems true
+$ julia --project=. scripts/run_ablation_study.jl --output_dir ./scripts/benchmark/results_ablation_study/cutest --default_problems true
 ```
 
 ### Examples

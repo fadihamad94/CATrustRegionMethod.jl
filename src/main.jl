@@ -137,6 +137,7 @@ function sub_routine_trust_region_sub_problem_solver(
     δ_k::Float64,
     γ_1::Float64,
     γ_2::Float64,
+    γ_3::Float64,
     r_k::Float64,
     min_gval_norm::Float64,
     nlp::Union{AbstractNLPModel,MathOptNLPModel,MathOptInterface.NLPBlockData,CUTEstModel},
@@ -178,6 +179,7 @@ function sub_routine_trust_region_sub_problem_solver(
             δ_k,
             γ_1,
             γ_2,
+            γ_3,
             r_k,
             min_gval_norm,
             algorithm_counter,
@@ -247,7 +249,7 @@ function _i_not_fixed(variable_info::Vector{VariableInfo})
 end
 
 function CAT_solve(
-    solver::CATSolver,
+    solver::Optimizer,
     termination_criteria::TerminationCriteria,
     algorithm_params::AlgorithmicParameters,
 )
@@ -412,6 +414,7 @@ function optimize(
                     δ_k,
                     γ_1,
                     γ_2,
+                    γ_3,
                     r_k,
                     min_gval_norm,
                     nlp,
