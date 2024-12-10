@@ -2,7 +2,7 @@
 This package is the implementation of a simple and practical adaptive trust-region method for finding stationary points of nonconvex functions with L-Lipschitz Hessians and bounded optimality gap.
 
 ## License
-CAT.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
+TrustCAT.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
 
 ## Installation
 Installing the CAT solver can be done in two different ways:
@@ -12,8 +12,8 @@ Install Julia 1.10.4 or later. CAT can be installed and tested through the Julia
 
 ```julia
 julia> ]
-pkg> add https://github.com/fadihamad94/CAT-Journal.git
-pkg> test CAT
+pkg> add https://github.com/fadihamad94/TrustCAT.jl.git
+pkg> test TrustCAT
 ```
 
 ### One-time setup
@@ -34,12 +34,12 @@ $ julia --project=. test/runtests.jl
 ### How to use with JuMP
 Here is a simple example where a JuMP model is passed to the CAT solver
 ```julia
-using CAT, JuMP
+using TrustCAT, JuMP
 model = Model()
 @variable(model, x)
 @variable(model, y)
 @NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
-set_optimizer(model, CAT.Optimizer)
+set_optimizer(model, TrustCAT.Optimizer)
 MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 1800.0)
 MOI.set(model, MOI.RawOptimizerAttribute("algorithm_params!r_1"), 100.0)
 optimize!(model)
