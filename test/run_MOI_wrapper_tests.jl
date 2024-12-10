@@ -69,7 +69,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_default_arguments()
     x = JuMP.value.(model[:x])
     y = JuMP.value.(model[:y])
     status = MOI.get(model, MOI.TerminationStatus())
-    @test status == :Optimal
+    @test status == MOI.OPTIMAL
     @test MOI.get(model, MOI.RawStatusString()) == "Optimal"
     @test MOI.get(model, MOI.DualStatus()) == MOI.FEASIBLE_POINT
     @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
@@ -159,7 +159,7 @@ function optimize_rosenbrook1_model_MOI_wrapper_with_user_specified_arguments()
     x = JuMP.value.(model[:x])
     y = JuMP.value.(model[:y])
     status = MOI.get(model, MOI.TerminationStatus())
-    @test status == :UserLimit
+    @test status == MOI.OTHER_LIMIT
 
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
@@ -241,7 +241,7 @@ function optimizeHardCaseUsingSimpleBivariateConvexProblem()
     x = JuMP.value.(model[:x])
     y = JuMP.value.(model[:y])
     status = MOI.get(model, MOI.TerminationStatus())
-    @test status == :Optimal
+    @test status == MOI.OPTIMAL
     # Retrieve the solver instance
     optimizer = backend(model).optimizer.model
 

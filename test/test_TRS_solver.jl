@@ -292,9 +292,6 @@ function test_optimize_second_order_model_phi_zero()
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    # @test norm(d_k - [0.106, 0.139], 2) <= tol
-    # @test abs(δ_k - 64.0) <= tol
-    @test abs(δ_k - 88.0) <= tol
     @test abs(norm(d_k, 2) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -319,7 +316,6 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     @test q_1 <= q_2
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    # @test norm(d_k - [-0.0032, 0.179], 2) <= tol
     @test abs(δ_k - 500.0) <= tol
     @test abs(norm(d_k) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -397,7 +393,6 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm((H + δ_k * I) \ g, 2) - r) <= γ_2
-    # @test δ_k == 2.5
     @test δ_k == 2.0
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -438,7 +433,6 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    # γ_2 = 1 - 1e-5
     γ_2 = 0.8
     r = 0.00029
     g = grad(nlp, x_k)
@@ -466,7 +460,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    # γ_2 = 1 - 1e-5
     γ_2 = 0.8
     r = 4.0e-4
     g = grad(nlp, x_k)
@@ -495,7 +488,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    # γ_2 = 1 - 1e-5
     γ_2 = 0.8
     r = 0.00245
     g = grad(nlp, x_k)
@@ -524,7 +516,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     x_k = [1e-5, 1e-5]
     δ = 0.0
     γ_1 = 0.01
-    # γ_2 = 1 - 1e-5
     γ_2 = 0.8
     r = 0.00114
     g = grad(nlp, x_k)
@@ -564,7 +555,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test status
     @test hard_case
     @test q_1 <= q_2
-    # @test γ_2 * r <= norm((H + δ_k * I) \ (-g), 2) <= r
     @test abs(norm(d_k) - r) <= tol
     @test abs(δ_k - 2.0) <= tol
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
@@ -594,12 +584,8 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, γ_2, r)
     @test success
-    # @test abs(δ - 2.5e-8) <= tol
     @test abs(δ - 1.5e-8) <= tol
     @test abs(δ_prime - 1.5e-8) <= tol
-    # @test abs(δ_prime - 0.0133096) <= tol
-    # @test abs(δ_prime - 0.000104) <= tol
-    # @test abs(δ_prime - 0.00666) <= tol
     min_grad = norm(g, 2)
     success, δ_m, temp_total_number_factorizations = CAT.bisection(
         "problem_name",
@@ -754,15 +740,12 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     r = 0.2
     success, δ, δ_prime, temp_total_number_factorizations, temp_d_δ_prime =
         CAT.findinterval(g, H, δ, ϵ, r)
-    # @test δ == δ_prime == 64.0
     @test δ == 16.0
     @test δ_prime == 512.0
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, ϵ, r)
-    # @test Φ_δ == 0
     @test Φ_δ == 1
     @test positive_definite
     Φ_δ_prime, temp_d, positive_definite = CAT.phi(g, H, δ_prime, ϵ, r)
-    # @test Φ_δ_prime == 0
     @test Φ_δ_prime == -1
     @test positive_definite
 end
@@ -777,8 +760,6 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     ϵ = 0.8
     r = 0.2
     success, δ, δ_prime, temp_total_number_factorizations = CAT.findinterval(g, H, δ, ϵ, r)
-    # @test δ == 4.0
-    # @test δ_prime == 64.0
     @test δ == 2.0
     @test δ_prime == 16.0
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, ϵ, r)
@@ -894,18 +875,13 @@ function test_bisection_with_starting_on_root_δ_not_zero()
         0,
     )
     @test success
-    # @test δ_m == 34.0
-    # @test δ == 4.0
-    # @test δ_prime == 64.0
     @test δ_m == 16.0
     @test δ == 16.0
     @test δ_prime == 16.0
     Φ_δ, temp_d, positive_definite = CAT.phi(g, H, δ, γ_2, r)
-    # @test Φ_δ == 1
     @test Φ_δ == 0
     @test positive_definite
     Φ_δ_prime, temp_d, positive_definite = CAT.phi(g, H, δ_prime, γ_2, r)
-    # @test Φ_δ_prime == -1
     @test Φ_δ_prime == 0
     @test positive_definite
     Φ_δ_m, temp_d, positive_definite = CAT.phi(g, H, δ_m, γ_2, r)
@@ -1078,7 +1054,7 @@ function test_compute_l_2_norm_symmetric_matrix_2_by_2()
     symmetric_matrix = Symmetric(sparse_matrix)
 
     # Create a symmetric sparse matrix
-    symmetric_matrix = Symmetric(sparse_matrix, :U) # ':U' means to use the upper triangle
+    symmetric_matrix = Symmetric(sparse_matrix, :U)
 
     l2_norm_our_approach = CAT.matrix_l2_norm(symmetric_matrix)
 

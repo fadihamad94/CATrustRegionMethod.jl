@@ -22,6 +22,8 @@ An Enum of possible values for the `TerminationStatus` attribute.
     TRUST_REGION_SUBPROBLEM_ERROR
     "The algorithm stopped because of an error not covered by one of the statuses defined above."
     OTHER_ERROR
+    "The algorithm stopped because the model is invalid."
+    INVALID_MODEL
 end
 
 "A description of trust-region subproblem termination failure reason."

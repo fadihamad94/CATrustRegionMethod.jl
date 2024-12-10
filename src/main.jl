@@ -628,8 +628,10 @@ function optimize(
         end
         # Handle exceptions
     catch e
-        @error e
         status = TerminationStatusCode.OTHER_ERROR
+        if e == ErrorException("Hessian computation is not supported.") || e == ErrorException("Gradient computation is not supported.")
+            status = TerminationStatusCode.INVALID_MODEL
+        end
         if isa(e, OutOfMemoryError)
             status = TerminationStatusCode.MEMORY_LIMIT
         end
@@ -700,6 +702,9 @@ function evalGradient(
        typeof(nlp) == CUTEstModel
         return grad(nlp, x)
     else
+        if :Grad ∉ MOI.features_available( nlp.evaluator)
+            throw(ErrorException("Gradient computation is not supported."))
+        end
         gval = zeros(length(x))
         MOI.eval_objective_gradient(nlp.evaluator, gval, x)
         return gval
@@ -717,12 +722,15 @@ function evalHessian(
        typeof(nlp) == CUTEstModel
         return hess(nlp, x)
     else
+        if :Hess ∉ MOI.features_available( nlp.evaluator)
+            throw(ErrorException("Hessian computation is not supported."))
+        end
         hessian = spzeros(Float64, (length(x), length(x)))
         d = nlp.evaluator
         hessian_sparsity = MOI.hessian_lagrangian_structure(d)
         #Sparse hessian entry vector
         H_vec = zeros(Float64, length(hessian_sparsity))
-        MOI.eval_hessian_lagrangian(d, H_vec, x, 1.0, zeros(0))
+        MOI.eval_hessian_lagrangian(d, H_vec, x, 1.0, zeros(length(x)))
         if !isempty(hessian_sparsity)
             index = 1
             if length(hessian_sparsity) < 3

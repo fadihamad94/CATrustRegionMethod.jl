@@ -81,7 +81,7 @@ function solveTrustRegionSubproblem(
             "----------validating solution  with δ_k * ||d_k|| = $(δ_k * norm_d_k) and γ_1 * min_grad = $(γ_1 * min_grad)",
         )
     end
-    
+
     validateTrustRegionSubproblemTerminationCriteria(
         problem_name,
         d_k,
@@ -799,7 +799,6 @@ function phi(
             return 0, temp_d, positive_definite
         end
     catch e
-        # @info e
         positive_definite = false
         return 1, temp_d, positive_definite
     end
@@ -1180,7 +1179,6 @@ function solveHardCaseLogic(
         temp_total_number_factorizations_compute_search_direction,
         temp_total_number_factorizations_inverse_power_iteration
     catch e
-        @info e
         # We failed to find the minimum eigenvalue of the Hessian matrix using inverse power iteration
         if print_level >= 2
             matrix_H = Matrix(H)
