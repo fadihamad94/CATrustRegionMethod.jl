@@ -2,7 +2,7 @@ import ArgParse
 using JuMP, CUTEst, CSV, DataFrames, StatsBase, Dates, Statistics
 
 using Random
-include("../src/CAT.jl")
+include("../src/CATrustRegionMethod.jl")
 
 """
 Defines parses and args.

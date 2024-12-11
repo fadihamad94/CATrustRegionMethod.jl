@@ -1,6 +1,6 @@
 # ============================ /test/MOI_wrapper.jl ============================
 module TestCAT
-include("../src/CAT.jl")
+include("../src/CATrustRegionMethod.jl")
 using Test
 import MathOptInterface as MOI
 

@@ -10,7 +10,7 @@ using JuMP,
     StatsBase,
     Random,
     Dates
-include("../src/CAT.jl")
+include("../src/CATrustRegionMethod.jl")
 
 const optimization_method_CAT = "CAT"
 const optimization_method_CAT_theta_0 = "CAT_THETA_ZERO"
