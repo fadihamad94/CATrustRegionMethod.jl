@@ -1,6 +1,6 @@
 __precompile__()
 
-module TrustCAT
+module CATrustRegionMethod
 using NLPModels,
     LinearAlgebra,
     DataFrames,

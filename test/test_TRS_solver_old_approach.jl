@@ -14,7 +14,7 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -36,7 +36,7 @@ function test_optimize_second_order_model_phi_zero()
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -59,7 +59,7 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     r = 0.2
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -83,7 +83,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -105,7 +105,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     r = 2.0
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -130,7 +130,7 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     r = 0.5
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -154,7 +154,7 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
     temp_ = norm(g)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -178,7 +178,7 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     r = 0.00029
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -203,7 +203,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 4.0e-4
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -229,7 +229,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00245
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -255,7 +255,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     r = 0.00114
     g = grad(nlp, x_k)
     H = hess(nlp, x_k)
-    status, δ_k, d_k = TrustCAT.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     γ_1 = 1e-2
     q_1 = norm(H * d_k + g + δ_k * d_k)
     q_2 = γ_1 * norm(g)
@@ -294,7 +294,7 @@ function test_phi_negative_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, ϵ, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, ϵ, r)
     @test Φ_δ == -1
 end
 
@@ -307,7 +307,7 @@ function test_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.4
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, ϵ, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, ϵ, r)
     @test Φ_δ == 0
 
 end
@@ -321,7 +321,7 @@ function test_phi_positive_one()
     δ = 3.0
     γ_2 = 1.0
     r = 1.0
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, γ_2, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 1
 end
 
@@ -334,12 +334,12 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, ϵ, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, ϵ, r)
     @test δ == δ_prime == 64.0
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, ϵ, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, ϵ, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == 0
 
 end
@@ -353,13 +353,13 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     δ = 0.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, ϵ, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, ϵ, r)
     @test δ == 8.0
     @test δ_prime == 8.0
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, ϵ, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, ϵ, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == 0
 
 end
@@ -373,12 +373,12 @@ function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
     δ = 9.0
     ϵ = 0.8
     r = 0.2
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, ϵ, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, ϵ, r)
     @test δ == δ_prime == 9.0
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, ϵ, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, ϵ, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, ϵ, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, ϵ, r)
     @test Φ_δ_prime == 0
 
 end
@@ -392,12 +392,12 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     δ = 250.0
     γ_2 = 0.2
     r = 0.3
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, γ_2, r)
     @test (δ, δ_prime) == (500.0, 500.0)
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, γ_2, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
 
 end
@@ -412,17 +412,17 @@ function test_bisection_with_starting_on_root_δ_zero()
     γ_1 = 0.01
     γ_2 = 0.8
     r = 0.2
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m = TrustCAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CATrustRegionMethod.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test δ_m == δ == δ_prime
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, γ_2, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
 
-    Φ_δ_m = TrustCAT.phiOldApproach(g, H, δ_m, γ_2, r)
+    Φ_δ_m = CATrustRegionMethod.phiOldApproach(g, H, δ_m, γ_2, r)
     @test Φ_δ_prime == 0
 
 end
@@ -437,19 +437,19 @@ function test_bisection_with_starting_on_root_δ_not_zero()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.2
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m = TrustCAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CATrustRegionMethod.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test δ_m == 8.0
     @test δ == 8.0
     @test δ_prime == 8.0
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, γ_2, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
 
-    Φ_δ_m = TrustCAT.phiOldApproach(g, H, δ_m, γ_2, r)
+    Φ_δ_m = CATrustRegionMethod.phiOldApproach(g, H, δ_m, γ_2, r)
     @test Φ_δ_m == 0
 
 end
@@ -464,17 +464,17 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
     γ_1 = 0.01
     γ_2 = 0.2
     r = 0.3
-    δ, δ_prime = TrustCAT.findintervalOldApproach(g, H, δ, γ_2, r)
+    δ, δ_prime = CATrustRegionMethod.findintervalOldApproach(g, H, δ, γ_2, r)
     min_grad = norm(g, 2)
-    δ_m = TrustCAT.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
+    δ_m = CATrustRegionMethod.bisectionOldApproach(g, H, δ, γ_2, δ_prime, r)
     @test abs(δ_m - 500.0) <= 1e-3
-    Φ_δ = TrustCAT.phiOldApproach(g, H, δ, γ_2, r)
+    Φ_δ = CATrustRegionMethod.phiOldApproach(g, H, δ, γ_2, r)
     @test Φ_δ == 0
 
-    Φ_δ_prime = TrustCAT.phiOldApproach(g, H, δ_prime, γ_2, r)
+    Φ_δ_prime = CATrustRegionMethod.phiOldApproach(g, H, δ_prime, γ_2, r)
     @test Φ_δ_prime == 0
 
-    Φ_δ_m = TrustCAT.phiOldApproach(g, H, δ_m, γ_2, r)
+    Φ_δ_m = CATrustRegionMethod.phiOldApproach(g, H, δ_m, γ_2, r)
     @test Φ_δ_prime == 0
 
 end
@@ -488,7 +488,7 @@ function test_compute_second_order_model_negative_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
     second_order_model_value =
-        TrustCAT.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+        CATrustRegionMethod.computeSecondOrderModel(gradient_value, hessian_value, d_k)
     @test second_order_model_value == 104.0 - function_value
 end
 
@@ -501,7 +501,7 @@ function test_compute_second_order_model_zero_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
     second_order_model_value =
-        TrustCAT.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+        CATrustRegionMethod.computeSecondOrderModel(gradient_value, hessian_value, d_k)
     @test second_order_model_value == 1.0 - function_value
 end
 
@@ -514,7 +514,7 @@ function test_compute_second_order_model_positive_direction()
     gradient_value = grad(nlp, x_k)
     hessian_value = hess(nlp, x_k)
     second_order_model_value =
-        TrustCAT.computeSecondOrderModel(gradient_value, hessian_value, d_k)
+        CATrustRegionMethod.computeSecondOrderModel(gradient_value, hessian_value, d_k)
     @test second_order_model_value == 100.0 - function_value
 end
 
@@ -532,7 +532,7 @@ function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_min
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = TrustCAT.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)
+    ρ = CATrustRegionMethod.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)
 end
 
 function test_compute_ρ_hat_phi_zero()
@@ -550,7 +550,7 @@ function test_compute_ρ_hat_phi_zero()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = TrustCAT.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    ρ = CATrustRegionMethod.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
     @test norm(ρ - 0.980423689675886, 2) <= tol
 end
 
@@ -569,7 +569,7 @@ function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     gval_current = grad(nlp, x_k)
     gval_next = grad(nlp, x_k + d_k)
     H = hess(nlp, x_k)
-    ρ = TrustCAT.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
+    ρ = CATrustRegionMethod.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)[1]
     @test norm(ρ - 1.126954013438328, 2) <= tol
 end
 
@@ -585,7 +585,7 @@ function test_compute_l_2_norm_diagonal_matrix()
     # Create a symmetric sparse matrix
     symmetric_diagonal_matrix = Symmetric(diagonal_sparse_matrix)
 
-    l2_norm_our_approach = TrustCAT.matrix_l2_norm(symmetric_diagonal_matrix)
+    l2_norm_our_approach = CATrustRegionMethod.matrix_l2_norm(symmetric_diagonal_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_diagonal_matrix), 2)
 
@@ -607,7 +607,7 @@ function test_compute_l_2_norm_symmetric_matrix_2_by_2()
     # Create a symmetric sparse matrix
     symmetric_matrix = Symmetric(sparse_matrix, :U)
 
-    l2_norm_our_approach = TrustCAT.matrix_l2_norm(symmetric_matrix)
+    l2_norm_our_approach = CATrustRegionMethod.matrix_l2_norm(symmetric_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
 
@@ -626,7 +626,7 @@ function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
     # Create a symmetric sparse matrix
     symmetric_matrix = Symmetric(sparse_matrix, :U)
 
-    l2_norm_our_approach = TrustCAT.matrix_l2_norm(symmetric_matrix)
+    l2_norm_our_approach = CATrustRegionMethod.matrix_l2_norm(symmetric_matrix)
 
     l2_norm_using_linear_algebra = opnorm(Matrix(symmetric_matrix), 2)
 
