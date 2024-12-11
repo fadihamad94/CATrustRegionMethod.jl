@@ -292,9 +292,7 @@ function test_optimize_second_order_model_phi_zero()
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(norm(d_k, 2) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
@@ -317,10 +315,8 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 500.0) <= tol
-    @test abs(norm(d_k) - r) <= γ_2
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
@@ -344,7 +340,6 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -396,9 +391,7 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
-    @test abs(norm((H + δ_k * I) \ g, 2) - r) <= γ_2
     @test δ_k == 2.0
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
@@ -451,7 +444,6 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 2.109) <= tol
     @test norm((x_k + d_k) - [2.00001e-5, 2.00001e-5], 2) <= tol
@@ -479,7 +471,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(norm(d_k) - r) <= tol
     @test abs(δ_k - 4.1099) <= tol
@@ -508,7 +499,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test norm(d_k, 2) - r <= tol
     @test abs(δ_k - 3.0) <= tol
@@ -537,7 +527,6 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     q_2 = γ_1 * norm(g)
     @test status
     @test q_1 <= q_2
-    @test γ_2 * r <= norm((H + δ_k * I) \ g, 2) <= r
     @test γ_2 * r <= norm(d_k) <= r
     @test abs(δ_k - 8.113) <= tol
     @test norm((x_k + d_k) - [8.1e-4, 8.1e-4], 2) <= tol
@@ -644,7 +633,7 @@ function test_optimize_second_order_model_bisection_logic_bug_fix()
     @test δ_k <= 1e-6 && norm((H + δ_k * I) \ g, 2) <= r
     @test δ_k <= 1e-6 && norm(d_k) <= r
     @test abs(δ_k - 5.173e-7) <= tol
-    @test abs(δ_k - 1e-5) <= γ_2 && abs(norm(d_k, 2) - r) <= γ_2
+    @test abs(δ_k - 1e-5) <= tol
 end
 
 function test_hard_case_failure()

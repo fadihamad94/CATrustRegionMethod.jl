@@ -165,7 +165,7 @@ MOI.get(model::Optimizer, ::MOI.Name) = model.name
 
 MOI.set(model::Optimizer, ::MOI.Name, name::String) = (model.name = name)
 
-MOI.get(::Optimizer, ::MOI.SolverName) = "Optimizer"
+MOI.get(::Optimizer, ::MOI.SolverName) = "CATOptimizer"
 
 function MOI.get(::Optimizer, ::MOI.SolverVersion)
     X, Y, Z = 1, 0, 0
