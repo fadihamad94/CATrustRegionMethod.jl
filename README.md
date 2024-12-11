@@ -1,19 +1,22 @@
-# CAT
-This package is the implementation of a simple and practical adaptive trust-region method for finding stationary points of nonconvex functions with L-Lipschitz Hessians and bounded optimality gap.
+# CATrustRegionMethod
+This package implements a trust-region method for unconstrained optimization i.e., 
 
+$$\min_{x \in \mathbb{R}^n} f(x).$$
+
+The method finds stationary points i.e. points with $|| \nabla f(x) || \leq \epsilon$. In particular, in our paper we show that the method acieves the best possible convergence bound up to an additive log factor, for finding an $\epsilon$-approximate stationary point, i.e., $O( \Delta_f L^{1/2}  \epsilon^{-3/2}) + \tilde{O}(1)$ iterations where $L$ is the Lipschitz constant of the Hessian, $\Delta_f$ is the optimality gap, and $\epsilon$ is the termination tolerance for the gradient norm.
 ## License
-TrustCAT.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
+CATrustRegionMethod.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
 
 ## Installation
-Installing the CAT solver can be done in two different ways:
+Installing the CATrustRegionMethod solver can be done in two different ways:
 
-### Install CAT as a package
-Install Julia 1.10.4 or later. CAT can be installed and tested through the Julia package manager:
+### Install CATrustRegionMethod as a package
+Install Julia 1.10.4 or later. CATrustRegionMethod can be installed and tested through the Julia package manager:
 
 ```julia
 julia> ]
-pkg> add https://github.com/fadihamad94/TrustCAT.jl.git
-pkg> test TrustCAT
+pkg> add CATrustRegionMethod
+pkg> test CATrustRegionMethod
 ```
 
 ### One-time setup
@@ -39,7 +42,7 @@ model = Model()
 @variable(model, x)
 @variable(model, y)
 @NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
-set_optimizer(model, TrustCAT.Optimizer)
+set_optimizer(model, CATrustRegionMethod.Optimizer)
 MOI.set(model, MOI.RawOptimizerAttribute("time_limit"), 1800.0)
 MOI.set(model, MOI.RawOptimizerAttribute("algorithm_params!r_1"), 100.0)
 optimize!(model)
@@ -96,3 +99,23 @@ Examples can be found under the [test directory](https://github.com/fadihamad94/
 ## References
 * [Hamad, Fadi, and Oliver Hinder. "A simple and practical adaptive trust-region method."](https://arxiv.org/abs/2412.02079)
 * [Hamad, Fadi, and Oliver Hinder. "A consistently adaptive trust-region method."](https://proceedings.neurips.cc/paper_files/paper/2022/hash/2c19666cbb2c14d45d39e2dcf6ab0b99-Abstract-Conference.html)
+
+## Citing
+```markdown
+If you use our method in your research, you are kindly asked to cite the relevant papers:
+
+@article{hamad2024simple,
+  title={A simple and practical adaptive trust-region method},
+  author={Hamad, Fadi and Hinder, Oliver},
+  journal={arXiv preprint arXiv:2412.02079},
+  year={2024}
+}
+
+@article{hamad2022consistently,
+  title={A consistently adaptive trust-region method},
+  author={Hamad, Fadi and Hinder, Oliver},
+  journal={Advances in Neural Information Processing Systems},
+  volume={35},
+  pages={6640--6653},
+  year={2022}
+}
