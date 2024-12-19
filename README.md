@@ -1,5 +1,5 @@
 # CATrustRegionMethod
-This package implements a trust-region method for unconstrained optimization i.e., 
+This package implements a trust-region method for unconstrained optimization: 
 
 $$\min_{x \in \mathbb{R}^n} f(x).$$
 
