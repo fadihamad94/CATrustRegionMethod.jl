@@ -3,7 +3,7 @@ This package implements a trust-region method for unconstrained optimization i.e
 
 $$\min_{x \in \mathbb{R}^n} f(x).$$
 
-The method finds stationary points i.e. points with $|| \nabla f(x) || \leq \epsilon$. In particular, in our paper we show that the method acieves the best possible convergence bound up to an additive log factor, for finding an $\epsilon$-approximate stationary point, i.e., $O( \Delta_f L^{1/2}  \epsilon^{-3/2}) + \tilde{O}(1)$ iterations where $L$ is the Lipschitz constant of the Hessian, $\Delta_f$ is the optimality gap, and $\epsilon$ is the termination tolerance for the gradient norm.
+The method finds stationary points i.e. points with $|| \nabla f(x) || \leq \epsilon$. In particular, in our paper we show that the method achieves the best possible convergence bound up to an additive log factor, for finding an $\epsilon$-approximate stationary point, i.e., $O( \Delta_f L^{1/2}  \epsilon^{-3/2}) + \tilde{O}(1)$ iterations where $L$ is the Lipschitz constant of the Hessian, $\Delta_f$ is the optimality gap, and $\epsilon$ is the termination tolerance for the gradient norm.
 
 Consistently adaptive (CA) in the package name refers to the method achieving the best possible convergence bound without requiring knowledge of the Lipschitz constant ($L$) of the Hessian.
 ## License
