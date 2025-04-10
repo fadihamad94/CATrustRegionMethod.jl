@@ -23,11 +23,11 @@ export phi,
     CAT,
     CAT_solve
 
-include("./common.jl")
-include("./utils.jl")
-include("./old_trust_region_subproblem_solver.jl")
-include("./trust_region_subproblem_solver.jl")
-include("./MOI_wrapper.jl")
-include("./main.jl")
+include("common.jl")
+include("utils.jl")
+include("old_trust_region_subproblem_solver.jl")
+include("trust_region_subproblem_solver.jl")
+include("MOI_wrapper.jl")
+include("main.jl")
 
 end

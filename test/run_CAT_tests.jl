@@ -1,7 +1,6 @@
 using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, DataFrames, SparseArrays
 
-include("../src/CATrustRegionMethod.jl")
-include("./test_TRS_solver.jl")
+import CATrustRegionMethod
 
 function solve_NLP1_starting_at_global_optimum()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()

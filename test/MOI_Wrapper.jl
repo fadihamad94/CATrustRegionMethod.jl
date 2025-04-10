@@ -1,7 +1,8 @@
 # ============================ /test/MOI_wrapper.jl ============================
 module TestCAT
-include("../src/CATrustRegionMethod.jl")
+
 using Test
+import CATrustRegionMethod
 import MathOptInterface as MOI
 
 const OPTIMIZER = MOI.instantiate(

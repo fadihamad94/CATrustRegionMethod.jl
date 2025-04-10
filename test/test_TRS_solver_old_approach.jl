@@ -1,10 +1,15 @@
-using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, EnumX
+using EnumX
+using JuMP
+using LinearAlgebra
+using NLPModels
+using NLPModelsJuMP
+using SparseArrays
+using Test
 
-include("../src/common.jl")
-include("../src/old_trust_region_subproblem_solver.jl")
+import CATrustRegionMethod
 
 #Unit test optimize second order model function
-function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+function test_old_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = [1.0, 1.0]
@@ -25,7 +30,7 @@ function test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function test_optimize_second_order_model_phi_zero()
+function test_old_optimize_second_order_model_phi_zero()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
@@ -48,7 +53,7 @@ function test_optimize_second_order_model_phi_zero()
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
+function test_old_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
 
@@ -71,7 +76,7 @@ function test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative(
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function test_optimize_second_order_model_for_simple_univariate_convex_model()
+function test_old_optimize_second_order_model_for_simple_univariate_convex_model()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_simple_univariate_convex_model()
@@ -93,7 +98,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model()
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function test_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
+function test_old_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_simple_univariate_convex_model_solved_same_as_Newton()
@@ -119,7 +124,7 @@ function test_optimize_second_order_model_for_simple_univariate_convex_model_sol
     @test norm(obj(nlp, x_k + d_k) - 0, 2) <= tol
 end
 
-function test_optimize_second_order_model_for_simple_bivariate_convex_model()
+function test_old_optimize_second_order_model_for_simple_bivariate_convex_model()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params = test_create_simple_convex_nlp_model()
 
@@ -141,7 +146,7 @@ function test_optimize_second_order_model_for_simple_bivariate_convex_model()
     @test obj(nlp, x_k + d_k) <= obj(nlp, x_k)
 end
 
-function test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
+function test_old_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_hard_case_using_simple_univariate_convex_model()
@@ -166,7 +171,7 @@ function test_optimize_second_order_model_hard_case_using_simple_univariate_conv
     @test abs(obj(nlp, x_k + d_k) - (-4.00004e-8)) <= tol
 end
 
-function test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
+function test_old_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_hard_case_using_simple_bivariate_convex_model()
@@ -191,7 +196,7 @@ function test_optimize_second_order_model_hard_case_using_simple_bivariate_conve
     @test norm(obj(nlp, x_k + d_k) - (-8.000079e-8), 2) <= tol
 end
 
-function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
+function test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_hard_case_using_bivariate_convex_model_1()
@@ -217,7 +222,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test abs(obj(nlp, x_k + d_k) - (-32.004e-8)) <= tol
 end
 
-function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
+function test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
     tol = 1e-2
     nlp, termination_criteria, algorithm_params =
         test_create_hard_case_using_bivariate_convex_model_2()
@@ -243,7 +248,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test abs(obj(nlp, x_k + d_k) - (-1.8459e-5)) <= tol
 end
 
-function test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
+function test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params =
         test_create_hard_case_using_bivariate_convex_model_3()
@@ -268,7 +273,7 @@ function test_optimize_second_order_model_hard_case_using_bivariate_convex_model
     @test abs(obj(nlp, x_k + d_k) - (-5.2488e-6)) <= tol
 end
 
-function test_optimize_second_order_model_bisection_failure_non_hard_case()
+function test_old_optimize_second_order_model_bisection_failure_non_hard_case()
     nlp = createHardCaseUsingSimpleBivariateConvexProblem3()
     x = [3.0, 2.0]
     g = grad(nlp, x)
@@ -278,14 +283,14 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     γ_1 = 0.01
     γ_2 = 1 - 1e-5
     print_level = 0
-    status, δ_k, d_k, hard_case = optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
+    status, δ_k, d_k, hard_case = CATrustRegionMethod.optimizeSecondOrderModelOldApproach(g, H, δ, γ_2, r)
     @test status == true
     @test abs(norm(d_k) - 0.0) <= 1e-3
     @test hard_case == false
 end
 
 
-function test_phi_negative_one()
+function test_old_phi_negative_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = [0.0, 0.0]
@@ -298,7 +303,7 @@ function test_phi_negative_one()
     @test Φ_δ == -1
 end
 
-function test_phi_zero()
+function test_old_phi_zero()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = nlp.meta.x0
@@ -312,7 +317,7 @@ function test_phi_zero()
 
 end
 
-function test_phi_positive_one()
+function test_old_phi_positive_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = nlp.meta.x0
@@ -325,7 +330,7 @@ function test_phi_positive_one()
     @test Φ_δ == 1
 end
 
-function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
+function test_old_find_interval_with_both_phi_zero_starting_from_phi_zero()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = nlp.meta.x0
@@ -344,7 +349,7 @@ function test_find_interval_with_both_phi_zero_starting_from_phi_zero()
 
 end
 
-function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
+function test_old_find_interval_with_both_phi_0_starting_from_phi_negative_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = [0.0, 0.0]
@@ -364,7 +369,7 @@ function test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
 
 end
 
-function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
+function test_old_find_interval_with_both_phi_0_starting_from_phi_positive_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
 
     x_k = [0.0, 0.0]
@@ -383,7 +388,7 @@ function test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
 
 end
 
-function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
+function test_old_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
 
     x_k = [0.0, 1.0]
@@ -402,7 +407,7 @@ function test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
 
 end
 
-function test_bisection_with_starting_on_root_δ_zero()
+function test_old_bisection_with_starting_on_root_δ_zero()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = nlp.meta.x0
@@ -427,7 +432,7 @@ function test_bisection_with_starting_on_root_δ_zero()
 
 end
 
-function test_bisection_with_starting_on_root_δ_not_zero()
+function test_old_bisection_with_starting_on_root_δ_not_zero()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = [0.0, 0.0]
@@ -454,7 +459,7 @@ function test_bisection_with_starting_on_root_δ_not_zero()
 
 end
 
-function test_bisection_with_starting_from_negative_one_and_positive_one()
+function test_old_bisection_with_starting_from_negative_one_and_positive_one()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
 
     x_k = [0.0, 1.0]
@@ -479,7 +484,7 @@ function test_bisection_with_starting_from_negative_one_and_positive_one()
 
 end
 
-function test_compute_second_order_model_negative_direction()
+function test_old_compute_second_order_model_negative_direction()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [-1.0, -1.0]
@@ -492,7 +497,7 @@ function test_compute_second_order_model_negative_direction()
     @test second_order_model_value == 104.0 - function_value
 end
 
-function test_compute_second_order_model_zero_direction()
+function test_old_compute_second_order_model_zero_direction()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [0.0, 0.0]
@@ -505,7 +510,7 @@ function test_compute_second_order_model_zero_direction()
     @test second_order_model_value == 1.0 - function_value
 end
 
-function test_compute_second_order_model_positive_direction()
+function test_old_compute_second_order_model_positive_direction()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
     x_k = [0.0, 0.0]
     d_k = [1.0, 1.0]
@@ -518,7 +523,7 @@ function test_compute_second_order_model_positive_direction()
     @test second_order_model_value == 100.0 - function_value
 end
 
-function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+function test_old_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
     x_k = [1.0, 1.0]
@@ -535,7 +540,7 @@ function test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_min
     ρ = CATrustRegionMethod.compute_ρ_hat(fval_current, fval_next, gval_current, gval_next, H, d_k, θ)
 end
 
-function test_compute_ρ_hat_phi_zero()
+function test_old_compute_ρ_hat_phi_zero()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem()
 
@@ -554,7 +559,7 @@ function test_compute_ρ_hat_phi_zero()
     @test norm(ρ - 0.980423689675886, 2) <= tol
 end
 
-function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
+function test_old_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     tol = 1e-3
     nlp, termination_criteria, algorithm_params = test_create_dummy_problem2()
 
@@ -573,7 +578,7 @@ function test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
     @test norm(ρ - 1.126954013438328, 2) <= tol
 end
 
-function test_compute_l_2_norm_diagonal_matrix()
+function test_old_compute_l_2_norm_diagonal_matrix()
     tol = 1e-3
 
     # Create a diagonal sparse matrix
@@ -592,7 +597,7 @@ function test_compute_l_2_norm_diagonal_matrix()
     @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
 end
 
-function test_compute_l_2_norm_symmetric_matrix_2_by_2()
+function test_old_compute_l_2_norm_symmetric_matrix_2_by_2()
     tol = 1e-3
 
     # Define the indices and values for a sparse matrix
@@ -614,7 +619,7 @@ function test_compute_l_2_norm_symmetric_matrix_2_by_2()
     @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
 end
 
-function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
+function test_old_compute_l_2_norms_ymmetric_matrix_3_by_3()
     tol = 1e-3
 
     # Create a sparse matrix
@@ -633,58 +638,58 @@ function test_compute_l_2_norms_ymmetric_matrix_3_by_3()
     @test abs(l2_norm_our_approach - l2_norm_using_linear_algebra) <= tol
 end
 
-function unit_tests()
+function old_unit_tests()
     #Unit test for the ϕ function
-    test_phi_negative_one()
-    test_phi_zero()
-    test_phi_positive_one()
+    test_old_phi_negative_one()
+    test_old_phi_zero()
+    test_old_phi_positive_one()
 
     #Unit test for the find interval function
-    test_find_interval_with_both_phi_zero_starting_from_phi_zero()
-    test_find_interval_with_both_phi_0_starting_from_phi_negative_one()
-    test_find_interval_with_both_phi_0_starting_from_phi_positive_one()
-    test_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
+    test_old_find_interval_with_both_phi_zero_starting_from_phi_zero()
+    test_old_find_interval_with_both_phi_0_starting_from_phi_negative_one()
+    test_old_find_interval_with_both_phi_0_starting_from_phi_positive_one()
+    test_old_find_interval_with_phi_δ_positive_one_phi_δ_prime_negative_one()
 
     #Unit test for the bisection function
-    test_bisection_with_starting_on_root_δ_zero()
-    test_bisection_with_starting_on_root_δ_not_zero()
-    test_bisection_with_starting_from_negative_one_and_positive_one()
+    test_old_bisection_with_starting_on_root_δ_zero()
+    test_old_bisection_with_starting_on_root_δ_not_zero()
+    test_old_bisection_with_starting_from_negative_one_and_positive_one()
 
     #Unit test compute second order model function
-    test_compute_second_order_model_negative_direction()
-    test_compute_second_order_model_zero_direction()
-    test_compute_second_order_model_positive_direction()
+    test_old_compute_second_order_model_negative_direction()
+    test_old_compute_second_order_model_zero_direction()
+    test_old_compute_second_order_model_positive_direction()
 
     #Unit test compute ρ function
-    test_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
-    test_compute_ρ_hat_phi_zero()
-    test_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
+    test_old_compute_ρ_hat_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+    test_old_compute_ρ_hat_phi_zero()
+    test_old_compute_ρ_hat_phi_δ_positive_phi_δ_prime_negative()
 
     #Unit test for the matrix l2 norm function
-    test_compute_l_2_norm_diagonal_matrix()
-    test_compute_l_2_norm_symmetric_matrix_2_by_2()
-    test_compute_l_2_norms_ymmetric_matrix_3_by_3()
+    test_old_compute_l_2_norm_diagonal_matrix()
+    test_old_compute_l_2_norm_symmetric_matrix_2_by_2()
+    test_old_compute_l_2_norms_ymmetric_matrix_3_by_3()
 end
 
-function optimize_models_test()
-    test_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
-    test_optimize_second_order_model_phi_zero()
-    test_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
-    test_optimize_second_order_model_for_simple_univariate_convex_model()
-    test_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
-    test_optimize_second_order_model_for_simple_bivariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
-    test_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
-    test_optimize_second_order_model_bisection_failure_non_hard_case()
+function old_optimize_models_test()
+    test_old_optimize_second_order_model_δ_0_H_positive_semidefinite_starting_on_global_minimizer()
+    test_old_optimize_second_order_model_phi_zero()
+    test_old_optimize_second_order_model_phi_δ_positive_phi_δ_prime_negative()
+    test_old_optimize_second_order_model_for_simple_univariate_convex_model()
+    test_old_optimize_second_order_model_for_simple_univariate_convex_model_solved_same_as_Newton()
+    test_old_optimize_second_order_model_for_simple_bivariate_convex_model()
+    test_old_optimize_second_order_model_hard_case_using_simple_univariate_convex_model()
+    test_old_optimize_second_order_model_hard_case_using_simple_bivariate_convex_model()
+    test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_1()
+    test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_2()
+    test_old_optimize_second_order_model_hard_case_using_bivariate_convex_model_3()
+    test_old_optimize_second_order_model_bisection_failure_non_hard_case()
 end
 
 @testset "basic_unit_tests_old_TRS" begin
-    unit_tests()
+    old_unit_tests()
 end
 
 @testset "OLD_TRS_Solver_Tests" begin
-    optimize_models_test()
+    old_optimize_models_test()
 end

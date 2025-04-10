@@ -1,7 +1,13 @@
-using Test, NLPModels, NLPModelsJuMP, JuMP, LinearAlgebra, EnumX
+import CATrustRegionMethod
 
-include("../src/common.jl")
-include("../src/trust_region_subproblem_solver.jl")
+using DelimitedFiles: readdlm
+using EnumX
+using JuMP
+using LinearAlgebra
+using NLPModels
+using NLPModelsJuMP
+using SparseArrays
+using Test
 
 #Functions to create NLP models
 
@@ -639,14 +645,15 @@ end
 function test_hard_case_failure()
     tol = 1e-3
     problem_name = "MSQRTBLS"
-    g = vec(readdlm("./test/examples_CUTEST/$(problem_name)_gradient.txt", ','))
+    dir = joinpath(@__DIR__, "examples_CUTEST")
+    g = vec(readdlm(joinpath(dir, "$(problem_name)_gradient.txt"), ','))
     g = map(Float64, g)
-    H = readdlm("./test/examples_CUTEST/$(problem_name)_hessian.txt")
+    H = readdlm(joinpath(dir, "$(problem_name)_hessian.txt"))
     H = sparse(H)
     hard_case_sol, δ, γ_1, γ_2, γ_3, r, min_grad =
-        readdlm("./test/examples_CUTEST/$(problem_name)_params.txt")
+        readdlm(joinpath(dir, "$(problem_name)_params.txt"))
     status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
-        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, min_grad, 0)
+        CATrustRegionMethod.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, min_grad, 0)
     @test status == true
     @test !hard_case == hard_case_sol == true
     q_1 = norm(H * d_k + g + δ_k * d_k)
@@ -655,14 +662,14 @@ function test_hard_case_failure()
     @test norm(d_k) <= r
 
     problem_name = "SPIN2LS"
-    g = vec(readdlm("./test/examples_CUTEST/$(problem_name)_gradient.txt", ','))
+    g = vec(readdlm(joinpath(dir, "$(problem_name)_gradient.txt"), ','))
     g = map(Float64, g)
-    H = readdlm("./test/examples_CUTEST/$(problem_name)_hessian.txt")
+    H = readdlm(joinpath(dir, "$(problem_name)_hessian.txt"))
     H = sparse(H)
     hard_case_sol, δ, γ_1, γ_2, γ_3, r, min_grad =
-        readdlm("./test/examples_CUTEST/$(problem_name)_params.txt")
+        readdlm(joinpath(dir, "$(problem_name)_params.txt"))
     status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
-        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, min_grad, 0)
+        CATrustRegionMethod.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, min_grad, 0)
     @test status == true
     @test !hard_case == hard_case_sol == true
     q_1 = norm(H * d_k + g + δ_k * d_k)
@@ -683,7 +690,7 @@ function test_optimize_second_order_model_bisection_failure_non_hard_case()
     γ_3 = 0.5
     print_level = 0
     status, δ_k, δ_prime_k, d_k, temp_total_number_factorizations, hard_case =
-        optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, norm(g), print_level)
+        CATrustRegionMethod.optimizeSecondOrderModel("problem_name", g, H, δ, γ_1, γ_2, γ_3, r, norm(g), print_level)
     @test status == false
     @test norm(d_k) == 0.0
     @test hard_case == true
