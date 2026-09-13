@@ -1,117 +1,98 @@
-# CATrustRegionMethod
+# CAT paper replication code
 
-This package implements a trust-region method for unconstrained optimization: 
+This repository contains the code to reproduce `A simple and practical adaptive trust-region method by Fadi Hamad and Oliver Hinder'
+https://arxiv.org/abs/2412.02079
 
-$$\min_{x \in \mathbb{R}^n} f(x).$$
+## Repository layout
 
-The method finds stationary points, specifically points with $|| \nabla f(x) || \leq \epsilon$. In particular, in our paper, we show that the method achieves the best possible convergence bound up to an additive logarithmic factor, for finding an $\epsilon$-approximate stationary point, namely $O( \Delta_f L^{1/2} \epsilon^{-3/2}) + \tilde{O}(1)$ iterations, where $L$ is the Lipschitz constant of the Hessian, $\Delta_f$ is the optimality gap, and $\epsilon$ is the termination tolerance for the gradient norm."
+- `CAT-solver/`: the current CAT method and its JuMP/MathOptInterface wrapper.
+- `CAT-NeurIPS/`: the conference-version CAT outer method.
+- `UTR/`: the universal trust-region method.
+- `trust-region-subproblem-solvers/`: the current direct subproblem solver and
+  the conference-version `OLD` implementation.
+- `shared_code/`: shared solver infrastructure.
+- `benchmark-unconstrained-optimization-solvers/`: the pinned CUTEst problem
+  profiles and serial experiment runner.
 
-Consistently adaptive (CA) in the package name refers to the method achieving the best possible convergence bound without requiring knowledge of the Lipschitz constant ($L$) of the Hessian.
+The benchmark project depends on the other five local projects. Julia's
+`[sources]` entries resolve those dependencies directly from this checkout.
 
-## License
+## Requirements and installation
 
-CATrustRegionMethod.jl is licensed under the [MIT License](https://github.com/fadihamad94/CAT-Journal/blob/master/LICENSE).
-
-## Installation
-
-Install CATrustRegionMethod as follows:
-
-```julia
-import Pkg
-Pkg.add("CATrustRegionMethod")
-```
-
-## Running
-
-### Use with JuMP
-
-To use CATrustRegionMethod with JuMP, use `CATrustRegionMethod.Optimizer`:
-
-```julia
-using CATrustRegionMethod, JuMP
-model = Model(CATrustRegionMethod.Optimizer)
-@variable(model, x)
-@variable(model, y)
-@NLobjective(model, Min, (2.0 - x)^2 + 100 * (y - x^2)^2)
-set_attribute(model, "time_limit", 1800.0)
-set_attribute(model, "algorithm_params!r_1", 100.0)
-optimize!(model)
-status = termination_status(model)
-# Retrieve the solver instance
-optimizer = unsafe_backend(model)
-# Algorithm stats (total function evalation, ...)
-algorithm_counter = optimizer.inner.algorithm_counter
-```
-
-### CUTEst test set
-
-To test our solver on CUTEst test set, please use the script:
-
-```julia
-solve_cutest.jl
-```
-
-To see the meaning of each argument:
+Install Julia 1.12 or later, clone this repository, and instantiate each
+environment from the repository root:
 
 ```shell
-$ julia --project=. scripts/solve_cutest.jl --help
+julia --project=shared_code -e 'using Pkg; Pkg.instantiate()'
+julia --project=trust-region-subproblem-solvers -e 'using Pkg; Pkg.instantiate()'
+julia --project=CAT-solver -e 'using Pkg; Pkg.instantiate()'
+julia --project=CAT-NeurIPS -e 'using Pkg; Pkg.instantiate()'
+julia --project=UTR -e 'using Pkg; Pkg.instantiate()'
+julia --project=benchmark-unconstrained-optimization-solvers \
+  -e 'using Pkg; Pkg.instantiate()'
 ```
 
-Here is a simple example:
+The benchmark environment installs `CUTEst.jl`, SIFDecode, and their Julia
+artifacts. The first CUTEst run downloads and compiles the selected problem,
+so a Fortran/C toolchain may be required by the platform's CUTEst setup.
+
+The retained CAT, CAT-NeurIPS, and UTR implementations do not require GALAHAD
+or HSL. To reproduce the paper's external GALAHAD TRU/ARC comparisons, obtain
+GALAHAD separately and obtain the licensed HSL MA57 sources from the
+[HSL website](https://www.hsl.rl.ac.uk/). Follow the HSL licence terms, install
+MA57 where the GALAHAD build can find it, and use the configuration recorded in
+[`modify_GALAHAD.md`](modify_GALAHAD.md). Neither package is redistributed here.
+
+## Tests
+
+Run the permanent suites serially:
 
 ```shell
-$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
+julia --project=shared_code -e 'using Pkg; Pkg.test()'
+julia --project=trust-region-subproblem-solvers -e 'using Pkg; Pkg.test()'
+julia --project=CAT-solver -e 'using Pkg; Pkg.test()'
+julia --project=CAT-NeurIPS -e 'using Pkg; Pkg.test()'
+julia --project=UTR -e 'using Pkg; Pkg.test()'
+julia --project=benchmark-unconstrained-optimization-solvers \
+  benchmark-unconstrained-optimization-solvers/test/runtests.jl
 ```
 
-### Plots for CUTEst test set
+## Reproducing the numerical results
+
+Each command runs CUTEst problems serially in fresh Julia processes. Start
+with `--super_fast`, then use `--full` for the pinned 125-problem paper set:
 
 ```shell
-$ julia --project=. scripts/plot_CUTEst_results.jl --output_dir ./scripts/benchmark/results/cutest
+cd benchmark-unconstrained-optimization-solvers
+./scripts/run_benchmark.sh --super_fast --solver CAT \
+  --results results/cat-smoke
+
+./scripts/run_benchmark.sh --full --solver CAT \
+  --results results/paper/cat
+./scripts/run_benchmark.sh --full --solver CAT-NeurIPS \
+  --results results/paper/cat-neurips
+./scripts/run_benchmark.sh --full --solver UTR \
+  --results results/paper/utr
 ```
 
-## Instructions for reproducing our experiments
-
-### CUTEst test set
+Run the seven paper ablations separately:
 
 ```shell
-$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true
+for variant in original rho-hat-rule radius-update-rule initial-radius \
+  conference-subproblem-solver xi-zero b-k-zero; do
+  ./scripts/run_benchmark.sh --full --ablation \
+    --ablation-variant "$variant" \
+    --results "results/paper/ablation-$variant"
+done
 ```
 
-```shell
-$ julia --project=. scripts/solve_cutest.jl --output_dir ./scripts/benchmark/results/cutest --default_problems true --θ 0.0
-```
+The default seed is `1`; the full profile uses at most 100,000 outer
+iterations and 18,000 seconds per problem. Use `--threads N`, `--seed N`, or
+`--manual_skip NAME...` when needed. A resumed command reuses valid raw JSON
+files only when its recorded environment and numerical settings match.
 
-```shell
-$ julia --project=. scripts/run_ablation_study.jl --output_dir ./scripts/benchmark/results_ablation_study/cutest --default_problems true
-```
-
-### Examples
-
-Examples can be found under the [test directory](https://github.com/fadihamad94/CAT-Journal/tree/master/test)
-
-## References
-
-* [Hamad, Fadi, and Oliver Hinder. "A simple and practical adaptive trust-region method."](https://arxiv.org/abs/2412.02079)
-* [Hamad, Fadi, and Oliver Hinder. "A consistently adaptive trust-region method."](https://proceedings.neurips.cc/paper_files/paper/2022/hash/2c19666cbb2c14d45d39e2dcf6ab0b99-Abstract-Conference.html)
-
-## Citing
-
-If you use our method in your research, you are kindly asked to cite the relevant papers:
-
-```raw
-@article{hamad2024simple,
-  title={A simple and practical adaptive trust-region method},
-  author={Hamad, Fadi and Hinder, Oliver},
-  journal={arXiv preprint arXiv:2412.02079},
-  year={2024}
-}
-
-@article{hamad2022consistently,
-  title={A consistently adaptive trust-region method},
-  author={Hamad, Fadi and Hinder, Oliver},
-  journal={Advances in Neural Information Processing Systems},
-  volume={35},
-  pages={6640--6653},
-  year={2022}
-}
-```
+Each results directory contains `run_settings.json`, per-problem JSON under
+`raw/`, logs, an aggregate CSV under the method directory, and either
+`run_summary.json` or `ablation_summary.json`. Successful solver claims are
+checked with a fresh CUTEst gradient evaluation at tolerance `1e-5` outside
+the recorded solver time.

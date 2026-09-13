@@ -1,0 +1,10 @@
+{
+    "termination": {
+        "max_iterations": 100000,
+        "gradient_termination_tolerance": 1e-5,
+        "max_time": 18000.0,
+        "step_size_limit": 2e-16,
+        "minimum_objective_function": -1e30,
+        "iterative_refinement_max_iterations": 3
+    }
+}

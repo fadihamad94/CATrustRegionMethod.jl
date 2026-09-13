@@ -1,0 +1,30 @@
+name = "CATNeurIPS"
+uuid = "30450438-4881-4f4d-b123-460b336490c3"
+authors = ["Fadi Hamad", "Oliver Hinder"]
+version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+TrustRegionSubproblemSolvers = "7ec0aa31-8b53-4ac9-b538-cae387aa84c3"
+
+[sources]
+CATrustRegionShared = {path = "../shared_code"}
+TrustRegionSubproblemSolvers = {path = "../trust-region-subproblem-solvers"}
+
+[compat]
+julia = "1.12"
+CATrustRegionShared = "0.1"
+JuMP = "1.22"
+NLPModels = "0.21.12"
+NLPModelsJuMP = "0.13"
+TrustRegionSubproblemSolvers = "0.1"
+
+[extras]
+CATrustRegionShared = "f38dbb53-a65a-458e-9378-bb46621ba7a7"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+NLPModelsJuMP = "792afdf1-32c1-5681-94e0-d7bf7a5df49e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["CATrustRegionShared", "JuMP", "NLPModelsJuMP", "Test"]

@@ -1,0 +1,12 @@
+{
+    "benchmark_execution": {
+        "num_threads": 1
+    },
+    "default_problem_list_update": {
+        "profiles_file": "benchmark/run-profiles.json",
+        "min_nvar": 100,
+        "max_nvar": 0,
+        "max_con": 0,
+        "only_free_var": true
+    }
+}

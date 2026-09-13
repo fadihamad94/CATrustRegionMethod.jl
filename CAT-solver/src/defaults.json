@@ -1,0 +1,22 @@
+{
+    "algorithm": {
+        "beta": 0.1,
+        "theta": 0.1,
+        "omega_1": 8.0,
+        "omega_2": 16.0,
+        "xi": 0.1,
+        "initial_radius": 0.0,
+        "initial_radius_multiplicative_rule": 10.0,
+        "seed": 1,
+        "print_level": 0,
+        "radius_update_rule_approach": "DEFAULT",
+        "eval_offset": 1e-8,
+        "trust_region_subproblem_solver": "DIRECT-NEW",
+        "delta": 0.0
+    },
+    "internal": {
+        "common": {
+            "power_iteration_max_iterations": 20
+        }
+    }
+}

@@ -1,0 +1,37 @@
+name = "TrustRegionSubproblemSolvers"
+uuid = "7ec0aa31-8b53-4ac9-b538-cae387aa84c3"
+authors = ["Fadi Hamad", "Oliver Hinder"]
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+CSV = "0.10"
+DataFrames = "1.6"
+JSON = "1.5"
+JuMP = "1.22.2"
+NLPModels = "0.21.5"
+NLPModelsJuMP = "0.13.1"
+julia = "1.12"
+
+[extras]
+CATrustRegionShared = "f38dbb53-a65a-458e-9378-bb46621ba7a7"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+NLPModelsJuMP = "792afdf1-32c1-5681-94e0-d7bf7a5df49e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+CATrustRegionShared = {path = "../shared_code"}
+
+[targets]
+test = ["Test", "CATrustRegionShared", "JuMP", "NLPModels", "NLPModelsJuMP"]

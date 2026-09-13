@@ -1,6 +1,0 @@
-# Log files
-*.txt
-*.log
-
-# Benchmark directory experiments
-results_benchmark_*/

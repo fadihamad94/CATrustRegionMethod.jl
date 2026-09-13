@@ -1,0 +1,185 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,array,enumitem}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+
+\newcounter{algorithm}
+\setlist{itemsep=0.35em,topsep=0.35em}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\grad}{\nabla}
+\newcommand{\hess}{\nabla^2}
+\newcommand{\lammin}{\lambda_{\min}}
+
+\title{Implementation Details for the Paper's First-Order Adaptive UTR Method}
+\author{Adapted from the adaptive UTR algorithm in arXiv:2311.11489}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{quote}\small
+This note keeps only the information needed to implement the adaptive
+universal trust-region method described in the paper when the goal is an
+approximately first-order stationary point.  The second-order phase,
+assumptions, lemmas, complexity bounds, and convergence proofs are
+intentionally omitted.
+\end{quote}
+
+\vspace{0.5em}
+
+\section{Paper implementation (only for getting small gradient)}
+
+\subsection{Quantities used by the method}
+
+At outer iteration $k$, define
+\[
+    g_k=\grad f(x_k),
+    \qquad
+    H_k=\hess f(x_k).
+\]
+Given a tolerance $\epsilon>0$, stop and return $x_k$ if
+\[
+    \norm{g_k}<\epsilon.
+\]
+Thus every trial below is computed only while $\norm{g_k}\geq\epsilon$.  The
+Hessian is still used to select the regularization and trust-region parameters,
+but it is not part of the stopping test.
+
+The method maintains a persistent penalty parameter $\rho_k>0$.  At the start
+of the inner loop, set
+\[
+    \rho_k^{(0)}=\rho_k.
+\]
+The inner-loop value $\rho_k^{(j)}$ is used to choose the regularization
+parameter $\sigma_k^{(j)}$ and radius scale $r_k^{(j)}$.
+
+\subsection{Acceptance tests}
+
+The method accepts an inner-loop trial when the monotonicity condition
+\[
+    f(x_k+d_k^{(j)})-f(x_k)\leq 0
+\]
+holds and at least one of the following first-order conditions holds:
+\[
+    f(x_k+d_k^{(j)})-f(x_k)
+    \leq
+    -\frac{\eta}{\rho_k^{(j)}}\norm{g_k}^{3/2}
+    \quad\text{or}\quad
+    \norm{\grad f(x_k+d_k^{(j)})}\leq \xi\norm{g_k}.
+\]
+
+\subsection{Parameter-selection strategy}
+
+The following strategy chooses $(\sigma_k^{(j)},r_k^{(j)})$ from the current
+inner penalty value $\rho_k^{(j)}$ while $\norm{g_k}\geq\epsilon$.
+
+\begin{enumerate}[leftmargin=2.2em,label=\textbf{Case \arabic*.}]
+    \item If
+    \[
+        \left|\lammin(H_k)\right|
+        \geq \rho_k^{(j)}\norm{g_k}^{1/2},
+    \]
+    choose
+    \[
+        \sigma_k^{(j)}=0,\qquad
+        r_k^{(j)}=\frac{1}{2\rho_k^{(j)}}.
+    \]
+
+    \item If
+    \[
+        \left|\lammin(H_k)\right|
+        < \rho_k^{(j)}\norm{g_k}^{1/2},
+    \]
+    choose
+    \[
+        \sigma_k^{(j)}=\rho_k^{(j)},\qquad
+        r_k^{(j)}=\frac{1}{4\rho_k^{(j)}}.
+    \]
+\end{enumerate}
+
+\paragraph{Remark (avoiding an explicit eigenvalue calculation).}
+Let
+\[
+    \tau_k^{(j)}=\rho_k^{(j)}\norm{g_k}^{1/2}.
+\]
+Because $H_k$ is symmetric, the two shifted matrices satisfy
+\[
+    H_k-\tau_k^{(j)}I\succ 0
+    \iff \lammin(H_k)>\tau_k^{(j)},
+    \qquad
+    H_k+\tau_k^{(j)}I\succ 0
+    \iff \lammin(H_k)>-\tau_k^{(j)}.
+\]
+Consequently, the minimum eigenvalue need not be computed explicitly.  Attempt
+Cholesky factorizations of the shifted matrices.  Use Case~1 if
+$H_k+\tau_k^{(j)}I$ is not positive definite or if
+$H_k-\tau_k^{(j)}I$ is positive definite; otherwise use Case~2.  A failed
+Cholesky factorization detects a nonpositive pivot.  This test is often cheaper
+than an eigendecomposition and can exploit sparse factorizations.
+
+\subsection{Algorithmic form}
+
+\begin{center}
+\begin{minipage}{0.96\linewidth}
+\hrule
+\vspace{0.4em}
+\refstepcounter{algorithm}\label{alg:paper-adaptive-utr}
+\noindent\textbf{Algorithm~\thealgorithm: First-order adaptive universal trust-region method}
+
+\smallskip
+\noindent\textbf{Data:} Initial point $x_0$, tolerance $\epsilon>0$,
+acceptance constants $0<\eta<1/32$ and $1/4<\xi<1$, initial penalty
+$\rho_0>0$, minimum penalty $\rho_{\min}>0$, penalty increase factor
+$\mu_1>1$, penalty decrease factor $\mu_2>1$, and maximum number of inner
+trials per outer iteration $J_{\max}\in\mathbb{N}$.
+
+\begin{enumerate}[leftmargin=2.2em,label=\arabic*.]
+    \item For $k=0,1,\ldots$:
+    \begin{enumerate}[leftmargin=2.4em,label*=\arabic*.]
+        \item Compute $g_k=\grad f(x_k)$.  If
+        $\norm{g_k}<\epsilon$, output $x_k$ and terminate.  Otherwise, compute
+        $H_k=\hess f(x_k)$ and set $\rho_k^{(0)}=\rho_k$.
+
+        \item For $j=0,\ldots,J_{\max}-1$:
+        \begin{enumerate}[leftmargin=2.4em,label*=\arabic*.]
+            \item Choose $(\sigma_k^{(j)},r_k^{(j)})$ using the
+            parameter-selection strategy above.
+
+            \item Solve the shared trust-region subproblem
+            using $(\sigma_k,r_k)=(\sigma_k^{(j)},r_k^{(j)})$ and obtain
+            $d_k^{(j)}$.
+
+            \item If the monotonicity condition and the first-order acceptance
+            test hold, accept the inner-loop trial and break.
+
+            \item Otherwise reject the trial and set
+            \[
+                \rho_k^{(j+1)}=\mu_1\rho_k^{(j)}.
+            \]
+        \end{enumerate}
+
+        \item If no trial was accepted, output $x_k$ and terminate with status
+        \texttt{INNER\_ITERATION\_LIMIT}. Otherwise, update
+        \[
+            x_{k+1}=x_k+d_k^{(j)},
+            \qquad
+            \rho_{k+1}
+            =
+            \max\left\{\rho_{\min},\frac{\rho_k^{(j)}}{\mu_2}\right\}.
+        \]
+    \end{enumerate}
+\end{enumerate}
+\vspace{0.1em}
+\hrule
+\end{minipage}
+\end{center}
+
+\subsection{Default algorithmic parameters}
+
+$\rho_0 = 1$, $\eta = 29/1200$, $\rho_{\min} = 10^{-5}$, $\xi = 0.5$, $\mu_1 = 2.25$, $\mu_2 = 1.75$, $\epsilon = 10^{-5}$, $J_{\max}=100$
+
+\end{document}

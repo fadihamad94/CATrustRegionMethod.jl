@@ -1,0 +1,28 @@
+{
+    "solver": {
+        "gamma_1": 0.01,
+        "gamma_2": 0.8,
+        "gamma_3": 0.5,
+        "seed": 1,
+        "print_level": 2,
+        "dense_hessian_threshold": 0.2,
+        "reuse_sparse_symbolic_factorization": true,
+        "handle_hard_case": true,
+        "use_backup_trust_region_subproblem_solver": true,
+        "iterative_refinement_max_iterations": 3
+    },
+    "internal": {
+        "common": {
+            "power_iteration_max_iterations": 20,
+            "power_iteration_tolerance": 1e-6
+        },
+        "DIRECT-NEW": {
+            "find_interval_max_iterations": 100,
+            "bisection_max_iterations": 100,
+            "inverse_power_max_iterations": 100
+        },
+        "OLD": {
+            "old_solver_eigendecomposition_memory_fraction": 0.5
+        }
+    }
+}

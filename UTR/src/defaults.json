@@ -1,0 +1,16 @@
+{
+    "termination": {
+        "max_inner_iterations": 100
+    },
+    "algorithm": {
+        "rho_0": 1.0,
+        "rho_min": 1e-5,
+        "eta": 0.024166666666666666,
+        "xi": 0.5,
+        "mu_1": 2.25,
+        "mu_2": 1.75,
+        "seed": 1,
+        "print_level": 0,
+        "trust_region_subproblem_solver": "DIRECT-NEW"
+    }
+}
