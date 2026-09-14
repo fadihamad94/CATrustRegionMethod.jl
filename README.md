@@ -59,6 +59,9 @@ julia --project=benchmark-unconstrained-optimization-solvers \
 
 ## Reproducing the numerical results
 
+Curated results from the completed full experiment are available in
+[`results/`](results/README.md).
+
 Each command runs CUTEst problems serially in fresh Julia processes. Start
 with `--super_fast`, then use `--full` for the pinned 125-problem paper set:
 
@@ -91,8 +94,7 @@ iterations and 18,000 seconds per problem. Use `--threads N`, `--seed N`, or
 `--manual_skip NAME...` when needed. A resumed command reuses valid raw JSON
 files only when its recorded environment and numerical settings match.
 
-Each results directory contains `run_settings.json`, per-problem JSON under
-`raw/`, logs, an aggregate CSV under the method directory, and either
-`run_summary.json` or `ablation_summary.json`. Successful solver claims are
-checked with a fresh CUTEst gradient evaluation at tolerance `1e-5` outside
-the recorded solver time.
+Each newly generated results directory contains `run_settings.json`,
+per-problem JSON under `raw/`, logs, an aggregate CSV under the method
+directory, and either
+`run_summary.json` or `ablation_summary.json`.
